@@ -86,7 +86,7 @@ async def on_guild_join(guild):
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
-@commands.has_permissions(administrator=true)
+@commands.has_permissions(administrator=True)
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         prison_role = discord.utils.get(ctx.guild.roles, name="🔒 Prisoner")
@@ -135,7 +135,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
 
 # أمر عفو: -عفو @username
 @bot.command()
-@commands.has_permissions(administrator=true)
+@commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member = None):
     try:
         prison_role = discord.utils.get(ctx.guild.roles, name="🔒 Prisoner")
