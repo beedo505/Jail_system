@@ -25,10 +25,17 @@ jailed_roles = {}
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
+async def on_command_error(ctx, error):
+if isinstance(error, commands.MissingRequiredArgument):
+    await ctx.send(":x: | يرجى منشنة العضو")
+elif isinstance(error, commands.BadArgument):
+    await ctx.send(":x: | المنشن غير صحيح")
+else:
+    await ctx.send(f":x: | حدث خطأ: {str(error)}")
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
-async def سجن(ctx, member: discord.Member, time_unit: str = "1d", *, reason = "No reason"):
+async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
         if not member:
