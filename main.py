@@ -28,13 +28,15 @@ async def on_ready():
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
-async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
-    try:
+async def سجن(ctx, member: discord.Member = None, time: str = "1d", *, reason = "No reason"):
+    """Put a member in jail for a specified duration"""
     
+    try:
+        # Check if a valid mention was provided
         if not member:
             await ctx.reply("❌ You must mention a valid member.")
             return
-    
+        
         if isinstance(member, discord.Role) or isinstance(member, discord.TextChannel) or member == bot.user:
             await ctx.reply("❌ Please mention a member, not a role, channel, or the bot.")
             return
@@ -80,11 +82,16 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
         await member.edit(roles=[jail_role] + previous_roles)
         await ctx.reply(f"✅ {member.name} has been released after the specified duration.")
 
+    except Exception as e:
+        logging.error(f"Error occurred during jail operation: {e}")
+        await ctx.reply("❌ An error occurred while executing the jail command.")
+
 # أمر عفو
 @bot.command()
 async def عفو(ctx, member: discord.Member = None):
-    try:
+    """Release a member from jail"""
     
+    try:
         if not member:
             await ctx.reply("❌ You must mention a valid member.")
             return
@@ -96,7 +103,7 @@ async def عفو(ctx, member: discord.Member = None):
 
             # Remove the jail role
             await member.remove_roles(jail_role)
-        
+            
             # Return the member's previous roles
             await member.edit(roles=[jail_role] + previous_roles)
             await ctx.reply(f"✅ {member.name} has been released from jail.")
@@ -104,7 +111,7 @@ async def عفو(ctx, member: discord.Member = None):
             await ctx.reply(f"❌ {member.name} is not in jail.")
 
     except Exception as e:
-        await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
-        logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
+        logging.error(f"Error occurred during pardon operation: {e}")
+        await ctx.reply("❌ An error occurred while executing the pardon command.")
         
 bot.run(os.environ['B'])
