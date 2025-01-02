@@ -31,20 +31,17 @@ async def on_ready():
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
-        if not ctx.message.mentions:
-            await ctx.send("❌ Please mention members only by name or ID.")
+        if not member
+            await ctx.message.reply("❌ Please mention a member!")
             return
 
     # التحقق من أن جميع المنشنات هي أعضاء
-        invalid_mentions = False
-        for mentioned in ctx.message.mentions:
-            if not isinstance(mentioned, discord.Member):
-                invalid_mentions = True
-                break
-
-        if invalid_mentions:
-            await ctx.send("❌ Please mention members only by name or ID.")
-            return
+        for mentioned in member:
+            if isinstance(mentioned, discord.Member):
+                continue
+            else:
+                await ctx.message.reply("❌ Please mention members only by name or ID.")
+                return
 
         if member.id in jailed_roles:
             await ctx.message.reply(f"⚠️ The member {member.mention} is already jailed!")
@@ -98,20 +95,17 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
 @bot.command()
 async def عفو(ctx, member: discord.Member = None):
     try:
-        if not ctx.message.mentions:
-            await ctx.send("❌ Please mention members only by name or ID.")
+        if not member:
+            await ctx.send("❌ Please mention a member!")
             return
 
     # التحقق من أن جميع المنشنات هي أعضاء
-        invalid_mentions = False
-        for mentioned in ctx.message.mentions:
-            if not isinstance(mentioned, discord.Member):
-                invalid_mentions = True
-                break
-
-        if invalid_mentions:
-            await ctx.send("❌ Please mention members only by name or ID.")
-            return
+        for mentioned in member:
+            if isinstance(mentioned, discord.Member):
+                continue
+            else:
+                await ctx.message.reply("❌ Please mention members only by name or ID.")
+                return
 
         print("The pardon command 'عفو' was invoked")  # رسالة تحقق
         if member.id not in jailed_roles:
