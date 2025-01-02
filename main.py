@@ -31,10 +31,10 @@ async def on_ready():
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
-      if not member:
+        if not member:
             await ctx.message.reply("⚠️ Please mention the member you want to jail.")
             return
-        
+
         if member.id in jailed_roles:
             await ctx.message.reply(f"⚠️ The member {member.mention} is already jailed!")
             return
@@ -110,5 +110,5 @@ async def عفو(ctx, member: discord.Member = None):
     except Exception as e:
         await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
         logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
-
+        
 bot.run(os.environ['B'])
