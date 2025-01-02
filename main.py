@@ -28,9 +28,9 @@ async def on_ready():
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
-        await ctx.send("❌ | The mention is incorrect")
+        await ctx.message.reply("❌ | The mention is incorrect")
     else:
-        await ctx.send(f"❌ | An error occurred: {str(error)}")
+        await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
