@@ -27,12 +27,10 @@ async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
 @bot.event
 async def on_command_error(ctx, error):
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(":x: | يرجى منشنة العضو")
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(":x: | المنشن غير صحيح")
+    if isinstance(error, commands.BadArgument):
+        await ctx.message.reply(":x: | Invalid mention")
     else:
-        await ctx.send(f":x: | حدث خطأ: {str(error)}")
+        await ctx.message.reply(f":x: | An error occurred: {str(error)}")
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
