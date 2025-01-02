@@ -32,8 +32,8 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
     try:
         # التحقق من المنشن للعضو المراد سجنه
         if not ctx.message.mentions:
-        await ctx.send("❌ Please mention members only by name or ID.")
-        return
+            await ctx.send("❌ Please mention members only by name or ID.")
+            return
 
     # التحقق من أن جميع المنشنات هي أعضاء
         invalid_mentions = False
