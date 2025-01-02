@@ -36,7 +36,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
             return
 
         if not isinstance(mentioned, discord.Member):
-            await ctx.send("❌ Please mention members only!")
+            await ctx.message.reply("❌ Please mention members only!")
             return
 
         if member.id in jailed_roles:
@@ -96,7 +96,7 @@ async def عفو(ctx, member: discord.Member = None):
             return
 
         if not isinstance(mentioned, discord.Member):
-            await ctx.send("❌ Please mention members only!")
+            await ctx.message.reply("❌ Please mention members only!")
             return
 
         print("The pardon command 'عفو' was invoked")  # رسالة تحقق
