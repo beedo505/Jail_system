@@ -81,7 +81,6 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
         await ctx.reply(f"✅ {member.name} has been released after the specified duration.")
 
 # أمر عفو
-"""Release a member from jail"""
 @bot.command()
 async def عفو(ctx, member: discord.Member = None):
     try:
