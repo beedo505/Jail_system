@@ -94,8 +94,8 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
             return
 
         # حفظ الرولات الأصلية للعضو قبل السجن
-        if member.id not in prison_roles:
-            prison_roles[member.id] = [role for role in member.roles if role != ctx.guild.default_role]
+        if member.id not in prison_role:
+            prison_role[member.id] = [role for role in member.roles if role != ctx.guild.default_role]
 
         # إضافة رول السجن وإزالة باقي الرولات
         await member.edit(roles=[prison_role], reason=reason)
@@ -146,14 +146,14 @@ async def عفو(ctx, member: discord.Member = None):
             return
 
         # ارجاع كل الرولات كما كانت
-        original_roles = jailed_roles.pop(member.id)  # إزالة العضو من القاموس بعد استعادة رولاته
+        original_roles = prison_role.pop(member.id)  # إزالة العضو من القاموس بعد استعادة رولاته
         await member.edit(roles=original_roles)
         await ctx.message.reply(f"✅ The member {member.mention} has been pardoned.")
 
         # حذف جميع الرولات بعد تنفيذ امر العفو
-        jail_role = discord.utils.get(ctx.guild.roles, name="Jail")
-        if jail_role:
-            await member.remove_roles(jail_role, reason="Pardon from jail")
+        prison_role = discord.utils.get(ctx.guild.roles, name="Jail")
+        if prison_role:
+            await member.remove_roles(prison_role, reason="Pardon from jail")
 
     except Exception as e:
         await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
