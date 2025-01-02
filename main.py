@@ -28,7 +28,7 @@ async def on_ready():
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
-async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
+async def سجن(ctx, member: discord.Member, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
         if not member:
