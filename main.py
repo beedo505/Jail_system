@@ -29,9 +29,10 @@ async def on_ready():
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
-       if not member:
-           await ctx.reply("❌ You must mention a valid member.")
-           return
+    
+    if not member:
+        await ctx.reply("❌ You must mention a valid member.")
+        return
     
     if isinstance(member, discord.Role) or isinstance(member, discord.TextChannel) or member == bot.user:
         await ctx.reply("❌ Please mention a member, not a role, channel, or the bot.")
