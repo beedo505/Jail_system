@@ -29,99 +29,77 @@ async def on_ready():
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
-    try:
-        # التحقق من المنشن للعضو المراد سجنه
-        if not member:
-            await ctx.message.reply("❌ Please mention a member!")
-            return
+       if not member:
+           await ctx.reply("❌ You must mention a valid member.")
+           return
+    
+    if isinstance(member, discord.Role) or isinstance(member, discord.TextChannel) or member == bot.user:
+        await ctx.reply("❌ Please mention a member, not a role, channel, or the bot.")
+        return
 
-    # التحقق من أن جميع المنشنات هي أعضاء
-        for mentioned in member:
-            if isinstance(mentioned, discord.Member):
-                continue
-            else:
-                await ctx.message.reply("❌ Please mention members only by name or ID.")
-                return
+    # Validate the time format
+    time_match = re.match(r'(\d+)([mhd])', time)
+    if not time_match:
+        await ctx.reply("❌ Invalid time format. Please use: [number][m/h/d] (e.g., 1d, 10m, 2h).")
+        return
 
-        if member.id in jailed_roles:
-            await ctx.message.reply(f"⚠️ The member {member.mention} is already jailed!")
-            return
-            
-        print("The jail command 'سجن' was invoked")  # رسالة تحقق
-        jail_role = discord.utils.get(ctx.guild.roles, name="Jail")
-        if not jail_role:
-            await ctx.message.reply("⚠️ The 'Jail' role was not found. Please create the role first")
-            logging.error("The role 'Jail' was not found.")  # سجل الخطأ إذا لم يكن الدور موجودًا
-            return
+    # Extract the time
+    amount, unit = time_match.groups()
+    amount = int(amount)
 
-        # حفظ الرولات الأصلية للعضو قبل السجن
-        if member.id not in jailed_roles:
-            jailed_roles[member.id] = [role for role in member.roles if role != ctx.guild.default_role]
+    # Convert the time to timedelta
+    if unit == 'm':
+        delta = timedelta(minutes=amount)
+    elif unit == 'h':
+        delta = timedelta(hours=amount)
+    elif unit == 'd':
+        delta = timedelta(days=amount)
 
-        # إضافة رول السجن وإزالة باقي الرولات
-        await member.edit(roles=[jail_role], reason=reason)
-        await ctx.message.reply(f"✅ The member {member.mention} has been jailed for {time_unit}!")
+    # Save the member's previous roles
+    previous_roles = member.roles[1:]  # Exclude @everyone role
 
-        match = re.match(r"(\d+)([a-zA-Z]+)", time_unit)
-        if not match:
-            await ctx.message.reply("⚠️ Invalid time format. Please use something like '1d', '2h', or '30m'.")
-            return
+    # Create or get the "Jailed" role
+    jail_role = discord.utils.get(ctx.guild.roles, name="Jailed")
+    if not jail_role:
+        # If the "Jailed" role doesn't exist, create it
+        jail_role = await ctx.guild.create_role(name="Jailed", permissions=discord.Permissions(send_messages=False, read_messages=True))
 
-        time = int(match.group(1))  # The number part
-        unit = match.group(2).lower()  # The unit part (d, h, m)
+    # Assign the jail role to the member
+    await member.add_roles(jail_role)
 
-         # Convert the time to seconds based on the chosen unit
-        if unit in ["minute", "minutes", "m"]:
-            seconds = time * 60
-        elif unit in ["hour", "hours", "h"]:
-            seconds = time * 3600
-        elif unit in ["day", "days", "d"]:
-            seconds = time * 86400
-        else:
-            await ctx.message.reply("⚠️ Invalid unit. Please choose from 'minute', 'hour', or 'day' and their shortcuts.")
-            return
+    # Remove all other roles from the member
+    await member.edit(roles=[jail_role])
+    await ctx.reply(f"✅ {member.name} has been jailed for {time}.")
 
-        # Wait for the specified time and then release the member from jail
-        await asyncio.sleep(seconds)  # Wait in seconds
-        original_roles = jailed_roles.pop(member.id)  # Restore the original roles
-        await member.edit(roles=original_roles)  # Restore the roles
-        await ctx.message.reply(f"✅ {member.mention} has been released from jail.")
+    # Wait for the specified time and then release the member
+    await asyncio.sleep(delta.total_seconds())
 
-    except Exception as e:
-        await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
-        logging.error(f"Error in 'سجن' command: {str(e)}")  # سجل الخطأ في سجل الأخطاء
+    # Return the member's previous roles
+    await member.edit(roles=[jail_role] + previous_roles)
+    await ctx.reply(f"✅ {member.name} has been released after the specified duration.")
 
-# أمر عفو: -عفو @username
+# أمر عفو
 @bot.command()
 async def عفو(ctx, member: discord.Member = None):
-    try:
-        if not member:
-            await ctx.send("❌ Please mention a member!")
-            return
+    """Release a member from jail"""
+    
+    if not member:
+        await ctx.reply("❌ You must mention a valid member.")
+        return
 
-    # التحقق من أن جميع المنشنات هي أعضاء
-        for mentioned in member:
-            if isinstance(mentioned, discord.Member):
-                continue
-            else:
-                await ctx.message.reply("❌ Please mention members only by name or ID.")
-                return
+    jail_role = discord.utils.get(ctx.guild.roles, name="Jailed")
+    if jail_role and jail_role in member.roles:
+        # Save the member's previous roles
+        previous_roles = member.roles[1:]  # Exclude @everyone role
 
-        print("The pardon command 'عفو' was invoked")  # رسالة تحقق
-        if member.id not in jailed_roles:
-            await ctx.message.reply(f"⚠️ {member.mention} is not jailed.")
-            logging.warning(f"{member.mention} is not jailed")  # سجل تحذير إذا لم يكن العضو مسجونًا
-            return
-
-        # ارجاع كل الرولات كما كانت
-        original_roles = jailed_roles.pop(member.id)  # إزالة العضو من القاموس بعد استعادة رولاته
-        await member.edit(roles=original_roles)
-        await ctx.message.reply(f"✅ The member {member.mention} has been pardoned.")
-
-        # حذف جميع الرولات بعد تنفيذ امر العفو
-        jail_role = discord.utils.get(ctx.guild.roles, name="Jail")
-        if jail_role:
-            await member.remove_roles(jail_role, reason="Pardon from jail")
+        # Remove the jail role
+        await member.remove_roles(jail_role)
+        
+        # Return the member's previous roles
+        await member.edit(roles=[jail_role] + previous_roles)
+        await ctx.reply(f"✅ {member.name} has been released from jail.")
+    else:
+        await ctx.reply(f"❌ {member.name} is not in jail.")
 
     except Exception as e:
         await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
