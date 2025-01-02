@@ -4,7 +4,6 @@ import logging
 import asyncio
 import re
 import os
-from keep_alive import keep_alive
 TOKEN = os.getenv('BOT_TOKEN')
 
 
@@ -111,6 +110,5 @@ async def عفو(ctx, member: discord.Member = None):
     except Exception as e:
         await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
         logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
-        
-keep_alive()
+
 bot.run(os.environ['B'])
