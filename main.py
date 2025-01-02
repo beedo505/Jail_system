@@ -31,7 +31,7 @@ async def on_ready():
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
-       if not ctx.message.mentions:
+      if not member:
             await ctx.message.reply("⚠️ Please mention the member you want to jail.")
             return
             
@@ -39,6 +39,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
             if not isinstance(mentioned, discord.Member):
                 await ctx.send("❌ Please mention members only!")
                 return
+        
         await ctx.send("✅ Thank you for following the instructions!")
 
         if member.id in jailed_roles:
