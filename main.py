@@ -103,8 +103,8 @@ async def عفو(ctx, member: discord.Member = None):
         else:
             await ctx.reply(f"❌ {member.name} is not in jail.")
 
-        except Exception as e:
-            await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
-            logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
+    except Exception as e:
+        await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
+        logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
         
 bot.run(os.environ['B'])
