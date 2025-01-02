@@ -35,7 +35,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
             await ctx.message.reply("⚠️ Please mention the member you want to jail.")
             return
             
-        for mentioned in ctx.message.mentions:
+        for mentioned in ctx.member:
             if not isinstance(mentioned, discord.Member):
                 await ctx.send("❌ Please mention members only!")
                 return
