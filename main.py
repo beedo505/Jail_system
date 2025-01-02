@@ -154,11 +154,11 @@ async def عفو(ctx, member: discord.Member = None):
         if prison_role in member.roles:
             await member.remove_roles(prison_role)
 
-       if member.id in prisoner_roles:
-                roles_to_add = [ctx.guild.get_role(role_id) for role_id in prisoner_roles[member.id]]
-                roles_to_add = [role for role in roles_to_add if role is not None]
-                await member.add_roles(*roles_to_add)
-                del prisoner_roles[member.id]
+        if member.id in prisoner_roles:
+            roles_to_add = [ctx.guild.get_role(role_id) for role_id in prisoner_roles[member.id]]
+            roles_to_add = [role for role in roles_to_add if role is not None]
+            await member.add_roles(*roles_to_add)
+            del prisoner_roles[member.id]
             await ctx.send(f"The release of {member.mention} has been issued!")
         else:
             await ctx.send(f"{member.mention} is not imprisoned!")
