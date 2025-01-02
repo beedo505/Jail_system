@@ -31,7 +31,7 @@ async def on_ready():
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
         # التحقق من المنشن للعضو المراد سجنه
-        if not member
+        if not member:
             await ctx.message.reply("❌ Please mention a member!")
             return
 
