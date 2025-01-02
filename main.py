@@ -97,7 +97,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
             return
             
         # حفظ الرولات الأصلية للعضو قبل السجن
-            prisoner_roles[member.id] = [role.id for role in member.roles if role != ctx.guild.default_role]
+        prisoner_roles[member.id] = [role.id for role in member.roles if role != ctx.guild.default_role]
 
         # إضافة رول السجن وإزالة باقي الرولات
         await member.remove_roles(member.roles[1:])
