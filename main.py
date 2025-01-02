@@ -86,19 +86,22 @@ async def on_guild_join(guild):
 
 # أمر سجن: -سجن @username reason
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
+@commands.has_permissions(administrator=true)
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
+        prison_role = discord.utils.get(ctx.guild.roles, name="🔒 Prisoner")
+        
         # التحقق من المنشن للعضو المراد سجنه
         if not member:
             await ctx.message.reply("⚠️ Please mention the member you want to jail.")
             return
-
+            
         # حفظ الرولات الأصلية للعضو قبل السجن
-        if member.id not in prison_role:
-            prison_role[member.id] = [role for role in member.roles if role != ctx.guild.default_role]
+            prisoner_roles[member.id] = [role.id for role in member.roles if role != ctx.guild.default_role]
 
         # إضافة رول السجن وإزالة باقي الرولات
-        await member.edit(roles=[prison_role], reason=reason)
+        await member.remove_roles(member.roles[1:])
+        await member.add_roles(prison_role)
         await ctx.message.reply(f"✅ The member {member.mention} has been jailed for {time_unit}!")
 
         match = re.match(r"(\d+)([a-zA-Z]+)", time_unit)
@@ -132,8 +135,11 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
 
 # أمر عفو: -عفو @username
 @bot.command()
+@commands.has_permissions(administrator=true)
 async def عفو(ctx, member: discord.Member = None):
     try:
+        prison_role = discord.utils.get(ctx.guild.roles, name="🔒 Prisoner")
+        
         # التحقق من المنشن للعضو المراد العفو عنه
         if not member:
             await ctx.message.reply("⚠️ Please mention the member you want to pardon.")
@@ -144,16 +150,24 @@ async def عفو(ctx, member: discord.Member = None):
             await ctx.message.reply(f"⚠️ {member.mention} is not jailed.")
             logging.warning(f"{member.mention} is not jailed")  # سجل تحذير إذا لم يكن العضو مسجونًا
             return
+            
+        if prison_role in member.roles:
+            await member.remove_roles(prison_role)
 
-        # ارجاع كل الرولات كما كانت
-        original_roles = prison_role.pop(member.id)  # إزالة العضو من القاموس بعد استعادة رولاته
-        await member.edit(roles=original_roles)
-        await ctx.message.reply(f"✅ The member {member.mention} has been pardoned.")
+       if member.id in prisoner_roles:
+                roles_to_add = [ctx.guild.get_role(role_id) for role_id in prisoner_roles[member.id]]
+                roles_to_add = [role for role in roles_to_add if role is not None]
+                await member.add_roles(*roles_to_add)
+                del prisoner_roles[member.id]
+            await ctx.send(f"The release of {member.mention} has been issued!")
+        else:
+            await ctx.send(f"{member.mention} is not imprisoned!")
+            
 
-        # حذف جميع الرولات بعد تنفيذ امر العفو
-        prison_role = discord.utils.get(ctx.guild.roles, name="Jail")
-        if prison_role:
-            await member.remove_roles(prison_role, reason="Pardon from jail")
+        """حذف جميع الرولات بعد تنفيذ امر العفو"""
+        # prison_role = discord.utils.get(ctx.guild.roles, name="Jail")
+        # if prison_role:
+        #     await member.remove_roles(prison_role, reason="Pardon from jail")
 
     except Exception as e:
         await ctx.message.reply(f"⚠️ An error occurred while executing the command: {str(e)}")
