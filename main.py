@@ -61,6 +61,16 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    if message.content.startswith("-"):
+        # الحصول على الأمر الذي يبدأ بالبريفيكس
+        command_name = message.content.split(" ")[0][1:]
+        
+        # تحقق إذا كان الأمر أو أي من اختصاراته موجود
+        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
+            return
+    await bot.process_commands(message)
+    
+    
     if message.author.bot:
         return  # تجاهل رسائل البوتات
 
@@ -131,19 +141,6 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     # Automatic release after the specified time
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
-    
-
-@bot.event
-async def on_message(message):
-    # تحقق من أن الرسالة تحتوي على البريفيكس
-    if message.content.startswith("-"):
-        # الحصول على الأمر الذي يبدأ بالبريفيكس
-        command_name = message.content.split(" ")[0][1:]
-        
-        # تحقق إذا كان الأمر أو أي من اختصاراته موجود
-        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
-            return
-    await bot.process_commands(message)
 
 # Pardon command
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
@@ -167,18 +164,6 @@ async def release_member(ctx, member):
     del prison_data[member.id]
 
     await ctx.message.reply(f"{member.mention} has been released from jail.")
-
-@bot.event
-async def on_message(message):
-    # تحقق من أن الرسالة تحتوي على البريفيكس
-    if message.content.startswith("-"):
-        # الحصول على الأمر الذي يبدأ بالبريفيكس
-        command_name = message.content.split(" ")[0][1:]
-        
-        # تحقق إذا كان الأمر أو أي من اختصاراته موجود
-        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
-            return
-    await bot.process_commands(message)
 
 
 bot.run(os.environ['B'])
