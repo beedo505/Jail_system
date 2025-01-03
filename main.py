@@ -100,20 +100,20 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if not prisoner_role:
-        await ctx.send("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+        await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
         return
 
     # Calculate jail time
     time_units = {"m": "minutes", "h": "hours", "d": "days"}
     unit = duration[-1]
     if unit not in time_units:
-        await ctx.send("Please specify a valid duration unit (m for minutes, h for hours, d for days).")
+        await ctx.message.reply("Please specify a valid duration unit (m for minutes, h for hours, d for days).")
         return
 
     try:
         time_value = int(duration[:-1])
     except ValueError:
-        await ctx.send("Invalid jail duration. Example: 1h, 30m.")
+        await ctx.message.reply("Invalid jail duration. Example: 1h, 30m.")
         return
 
     delta = timedelta(**{time_units[unit]: time_value})
@@ -126,7 +126,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     # Store jail data
     prison_data[member.id] = {"roles": previous_roles, "release_time": release_time}
 
-    await ctx.send(f"{member.mention} has been jailed for {duration}.")
+    await ctx.message.reply(f"{member.mention} has been jailed for {duration}.")
     
     # Automatic release after the specified time
     await asyncio.sleep(delta.total_seconds())
@@ -141,7 +141,7 @@ async def عفو(ctx, member: discord.Member):
 # Function to release a member
 async def release_member(ctx, member):
     if member.id not in prison_data:
-        await ctx.send(f"{member.mention} is not in jail.")
+        await ctx.message.reply(f"{member.mention} is not in jail.")
         return
 
     guild = ctx.guild
@@ -153,7 +153,7 @@ async def release_member(ctx, member):
     await member.edit(roles=previous_roles)
     del prison_data[member.id]
 
-    await ctx.send(f"{member.mention} has been released from jail.")
+    await ctx.message.reply(f"{member.mention} has been released from jail.")
     logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
 
 
