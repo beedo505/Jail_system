@@ -62,10 +62,8 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.content.startswith("-"):
-        # الحصول على الأمر الذي يبدأ بالبريفيكس
         command_name = message.content.split(" ")[0][1:]
-        
-        # تحقق إذا كان الأمر أو أي من اختصاراته موجود
+    
         if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
             return
     await bot.process_commands(message)
