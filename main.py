@@ -4,6 +4,8 @@ import logging
 import asyncio
 import re
 import os
+from collections import defaultdict
+import time
 TOKEN = os.getenv('B')
 
 # تفعيل صلاحيات البوت
