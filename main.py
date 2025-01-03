@@ -131,10 +131,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     # Automatic release after the specified time
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
-
-@bot.command(aliases=['safeguard'])
-async def سجن(ctx):
-    await ctx.send('تم سجن الشخص!') 
+    
 
 @bot.event
 async def on_message(message):
@@ -170,9 +167,6 @@ async def release_member(ctx, member):
     del prison_data[member.id]
 
     await ctx.message.reply(f"{member.mention} has been released from jail.")
-@bot.command(aliases=['safeguard'])
-async def سجن(ctx):
-    await ctx.send('تم سجن الشخص!') 
 
 @bot.event
 async def on_message(message):
