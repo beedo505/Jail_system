@@ -154,7 +154,6 @@ async def release_member(ctx, member):
     del prison_data[member.id]
 
     await ctx.message.reply(f"{member.mention} has been released from jail.")
-    logging.error(f"Error in 'عفو' command: {str(e)}")  # تسجيل الخطأ في سجل الأخطاء
 
 
 bot.run(os.environ['B'])
