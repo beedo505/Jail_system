@@ -12,6 +12,7 @@ TOKEN = os.getenv('B')
 intents = discord.Intents.default()
 intents.members = True  # تفعيل الصلاحية للوصول إلى الأعضاء
 intents.messages = True  # تفعيل صلاحية قراءة الرسائل
+intents.guilds = True
 intents.message_content = True # صلاحية الرد والتفاعل مع الرسائل
 
 # إعداد سجل الأخطاء
