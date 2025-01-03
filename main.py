@@ -112,8 +112,8 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
 
     try:
         time_value = int(duration[:-1])
-    except ValueError:
-        await ctx.message.reply("Invalid jail duration. Example: 1h, 30m.")
+    except ValueError as e:
+        await ctx.message.reply("Invalid jail duration. Example: 1h, 30m. Error: {e}")
         return
 
     delta = timedelta(**{time_units[unit]: time_value})
