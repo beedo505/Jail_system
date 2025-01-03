@@ -54,7 +54,7 @@ async def on_message(message):
     if len(user_messages[user_id]) > MESSAGE_LIMIT:
         guild = message.guild
         await guild.ban(message.author, reason="Spam detected")
-        await message.channel.send(f"{message.author.mention} تم حظره بسبب السبام.")
+        await message.channel.send(f"⚠️ {message.author.mention} has been banned for exceeding the allowed message limit!")
         user_messages[user_id] = []  # إعادة تعيين الرسائل
 
     await bot.process_commands(message)
