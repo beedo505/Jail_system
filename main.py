@@ -24,6 +24,17 @@ bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد الباد
 # تخزين رتب الأعضاء المسجونين
 prison_data = {}
 
+async def update_channel_permissions(guild, prisoner_role):
+    for channel in guild.channels:
+        # Get the current permissions for the "Prisoner" role
+        overwrite = channel.overwrites_for(prisoner_role)
+
+        # Deny "View Channel" permission for the "Prisoner" role
+        overwrite.view_channel = False
+
+        # Apply the updated permissions
+        await channel.set_permissions(prisoner_role, overwrite=overwrite)
+
 MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتباره سبام
 TIME_WINDOW = 10  # خلال عدد الثواني هذه
 
@@ -37,14 +48,16 @@ async def on_ready():
         # Check if the "Prisoner" role exists
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
-            await guild.create_role(
+            # Create "Prisoner" role if it doesn't exist
+            prisoner_role = await guild.create_role(
                 name="Prisoner",
-                permissions=discord.Permissions.none(),  # No permissions
+                permissions=discord.Permissions.none(),  # No permissions for the "Prisoner"
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
-        else:
-            print(f"'Prisoner' role already exists in {guild.name}.")
+        
+        # Update permissions for all channels to hide them for "Prisoner"
+        await update_channel_permissions(guild, prisoner_role)
 
 @bot.event
 async def on_message(message):
@@ -120,7 +133,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     await release_member(ctx, member)
 
 # Pardon command
-@bot.command()
+@bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member):
     await release_member(ctx, member)
