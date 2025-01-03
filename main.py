@@ -67,6 +67,7 @@ async def on_command_error(ctx, error):
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 # أمر سجن: -سجن @username reason
+@commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
 async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, reason = "No reason"):
     try:
@@ -123,6 +124,7 @@ async def سجن(ctx, member: discord.Member = None, time_unit: str = "1d", *, r
         logging.error(f"Error in 'سجن' command: {str(e)}")  # سجل الخطأ في سجل الأخطاء
 
 # أمر عفو: -عفو @username
+@commands.has_permissions(administrator=True)
 @bot.command()
 async def عفو(ctx, member: discord.Member = None):
     try:
