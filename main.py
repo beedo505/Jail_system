@@ -20,10 +20,41 @@ bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد الباد
 # تخزين رتب الأعضاء المسجونين
 jailed_roles = {}
 
+MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتباره سبام
+TIME_WINDOW = 10  # خلال عدد الثواني هذه
+
+user_messages = defaultdict(list)
+
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return  # تجاهل رسائل البوتات
+
+    user_id = message.author.id
+    current_time = time.time()
+    
+    # تسجيل الرسائل
+    user_messages[user_id].append(current_time)
+
+    # حذف الرسائل القديمة
+    user_messages[user_id] = [
+        timestamp for timestamp in user_messages[user_id]
+        if current_time - timestamp <= TIME_WINDOW
+    ]
+
+    # تحقق من عدد الرسائل في الإطار الزمني
+    if len(user_messages[user_id]) > MESSAGE_LIMIT:
+        guild = message.guild
+        await guild.ban(message.author, reason="Spam detected")
+        await message.channel.send(f"{message.author.mention} تم حظره بسبب السبام.")
+        user_messages[user_id] = []  # إعادة تعيين الرسائل
+
+    await bot.process_commands(message)
 
 @bot.event
 async def on_command_error(ctx, error):
