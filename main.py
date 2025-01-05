@@ -195,7 +195,7 @@ async def include(ctx, channel_id: int = None):
     existing_channel = cursor.fetchone()
     
     if not existing_channel:
-        print(f"Channel {channel_id} is not excluded.")  # رسائل تصحيح
+        print(f"Channel {channel_id} is not excluded.")  # رسايل تصحيح
         await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is not excluded from permission updates.")
         return
 
