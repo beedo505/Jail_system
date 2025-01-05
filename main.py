@@ -14,7 +14,7 @@ TOKEN = os.getenv('B')
 conn = sqlite3.connect('excluded_channels.db')
 cursor = conn.cursor()
 
-# إنشاء جدول لتخزين القنوات المستثناة
+# إنشاء جدول لتخزين القنوات المستثناه
 cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels (channel_id INTEGER PRIMARY KEY)''')
 conn.commit()
 
