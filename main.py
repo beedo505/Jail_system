@@ -62,43 +62,49 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    # تجاهل رسائل البوتات
     if message.author.bot:
-        return  # تجاهل رسائل البوتات
+        return
 
-    print(f"Message received from {message.author.name}: {message.content}")
-
+    # *** نظام التبنيد ***
     user_id = message.author.id
     now = asyncio.get_event_loop().time()
-    
-    # إضافة الرسالة إلى قائمة المستخدم
+
+    # إضافة وقت الرسالة إلى سجل المستخدم
     spam_records[user_id].append(now)
-    
-    # إزالة الرسائل القديمة
+
+    # تنظيف الرسائل القديمة التي تجاوزت الوقت المحدد
     spam_records[user_id] = [
         timestamp for timestamp in spam_records[user_id]
         if now - timestamp <= TIME_LIMIT
     ]
-    
-    # إذا تجاوز الحد
+
+    # إذا تجاوز المستخدم الحد المسموح به من الرسائل
     if len(spam_records[user_id]) > MESSAGE_LIMIT:
-        print(f"Spam detected from {message.author.name} ({message.author.id})")
         try:
-            # حظر المستخدم
             await message.guild.ban(
-                message.author, reason="Spamming detected"
+                message.author, reason="Detected spamming behavior"
             )
             await message.channel.send(
                 f"{message.author.mention} تم حظره بسبب السّبام."
             )
-            print(f"User {message.author.name} banned successfully.")
+            print(f"User {message.author.name} banned for spamming.")
         except discord.Forbidden:
-            print("لا يمكن حظر المستخدم بسبب عدم وجود صلاحيات.")
+            print("لا أملك الصلاحيات لحظر المستخدم.")
             await message.channel.send(
-                "لا أملك الصلاحيات اللازمة لحظر هذا المستخدم."
+                "لا أملك الصلاحيات لحظر هذا المستخدم."
             )
         except Exception as e:
             print(f"Error banning user: {e}")
-    
+        return  # إنهاء معالجة الرسالة بعد التبنيد
+
+    # *** التحقق من الأوامر ***
+    if message.content.startswith("-"):
+        command_name = message.content.split(" ")[0][1:]  # استخراج اسم الأمر
+        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
+            return  # تجاهل الأوامر غير الموجودة
+
+    # متابعة معالجة الأوامر الأخرى
     await bot.process_commands(message)
 
 @bot.event
