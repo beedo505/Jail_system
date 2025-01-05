@@ -2,12 +2,48 @@ import discord
 from discord.ext import commands
 import logging
 import asyncio
+import sqlite3
 import re
 import os
 from collections import defaultdict
 import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
+
+# الاتصال بقاعدة البيانات (ستنشأ إذا لم تكن موجودة)
+conn = sqlite3.connect('excluded_channels.db')
+cursor = conn.cursor()
+
+# إنشاء جدول لتخزين القنوات المستثناة
+cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels (channel_id INTEGER PRIMARY KEY)''')
+conn.commit()
+
+# دالة لإضافة قناة إلى الاستثناءات
+def add_to_excluded(channel_id):
+    cursor.execute("INSERT OR IGNORE INTO excluded_channels (channel_id) VALUES (?)", (channel_id,))
+    conn.commit()
+
+# دالة لتحميل القنوات المستثناة من قاعدة البيانات
+def load_excluded_channels():
+    cursor.execute("SELECT channel_id FROM excluded_channels")
+    return [row[0] for row in cursor.fetchall()]
+
+# دالة لتحديث أذونات القنوات
+async def update_channel_permissions(guild, prisoner_role):
+    excluded_channels = load_excluded_channels()  # تحميل القنوات المستثناة من قاعدة البيانات
+    # تحديث أذونات القنوات النصية
+    for channel in guild.text_channels:
+        if channel.id not in excluded_channels:  # إذا لم تكن القناة مستثناة
+            await channel.set_permissions(prisoner_role, overwrite=discord.PermissionOverwrite(view_channel=False))
+        else:
+            print(f"Text Channel {channel.name} is excluded from permission updates.")
+    
+    # إضافة دعم للرومات الصوتية
+    for channel in guild.voice_channels:
+        if channel.id not in excluded_channels:  # إذا لم تكن القناة الصوتية مستثناة
+            await channel.set_permissions(prisoner_role, overwrite=discord.PermissionOverwrite(view_channel=False))
+        else:
+            print(f"Voice Channel {channel.name} is excluded from permission updates.")
 
 # تفعيل صلاحيات البوت
 intents = discord.Intents.default()
@@ -108,6 +144,38 @@ async def on_command_error(ctx, error):
     else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
+@bot.command()
+async def exclude(ctx):
+    # التحقق إذا كان المستخدم لديه إذن الإدارة
+    if not ctx.author.guild_permissions.manage_channels:
+        await ctx.message.reply("You do not have permission to exclude channels.")
+        return
+    
+    channel_id = ctx.channel.id  # الحصول على معرف القناة التي تم إرسال الأمر فيها
+    
+    # إضافة القناة إلى قاعدة البيانات
+    add_to_excluded(channel_id)
+    
+    # تأكيد للمستخدم
+    await ctx.message.reply(f"Channel {ctx.channel.name} has been excluded from permission updates.")
+
+# أمر لإزالة القناة من الاستثناءات
+@bot.command()
+async def include(ctx):
+    # التحقق إذا كان المستخدم لديه إذن الإدارة
+    if not ctx.author.guild_permissions.manage_channels:
+        await ctx.message.reply("You do not have permission to include channels back.")
+        return
+    
+    channel_id = ctx.channel.id  # الحصول على معرف القناة التي تم إرسال الأمر فيها
+    
+    # إزالة القناة من قاعدة البيانات
+    cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
+    conn.commit()
+    
+    # تأكيد للمستخدم
+    await ctx.message.reply(f"Channel {ctx.channel.name} has been included back in permission updates.")
+    
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
