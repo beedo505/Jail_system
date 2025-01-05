@@ -19,14 +19,18 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels (channel_id INTEG
 conn.commit()
 
 # دالة لإضافة قناة إلى الاستثناءات
-def add_to_excluded(channel_id):
-    cursor.execute("INSERT OR IGNORE INTO excluded_channels (channel_id) VALUES (?)", (channel_id,))
+def add_to_excluded(channel_id: int, is_excluded: bool):
+    cursor.execute("INSERT OR REPLACE INTO excluded_channels (channel_id, is_excluded) VALUES (?, ?)", (channel_id, is_excluded))
     conn.commit()
 
-# دالة لتحميل القنوات المستثناة من قاعدة البيانات
+def remove_from_excluded(channel_id: int):
+    cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
+    conn.commit()
+
 def load_excluded_channels():
-    cursor.execute("SELECT channel_id FROM excluded_channels")
-    return [row[0] for row in cursor.fetchall()]
+    # تحميل القنوات المستثناة من قاعدة البيانات
+    cursor.execute("SELECT channel_id FROM excluded_channels WHERE is_excluded = 1")
+    return cursor.fetchall()
 
 # دالة لتحديث أذونات القنوات
 async def update_channel_permissions(guild, prisoner_role):
@@ -145,27 +149,24 @@ async def on_command_error(ctx, error):
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 @bot.command()
-async def exclude(ctx):
-    # التحقق إذا كان المستخدم لديه إذن الإدارة
+async def exclude(ctx, channel_id: int):
+    """ لإخفاء القناة عن السجناء باستخدام الـ ID """
     if not ctx.author.guild_permissions.manage_channels:
         await ctx.message.reply("You do not have permission to exclude channels.")
         return
     
-    channel_id = ctx.channel.id  # الحصول على معرف القناة التي تم إرسال الأمر فيها
-    
-    # التحقق إذا كانت القناة قد تم استثناؤها بالفعل
-    cursor.execute("SELECT channel_id FROM excluded_channels WHERE channel_id = ?", (channel_id,))
-    existing_channel = cursor.fetchone()
-    
-    if existing_channel:
-        await ctx.send(f"Channel {ctx.channel.name} is already excluded from permission updates.")
+    channel = ctx.guild.get_channel(channel_id)
+    if not channel:
+        await ctx.message.reply(f"Channel with ID {channel_id} not found.")
         return
-
-    # إضافة القناة إلى قاعدة البيانات
-    add_to_excluded(channel_id)
     
-    # تأكيد للمستخدم
-    await ctx.send(f"Channel {ctx.channel.name} has been excluded from permission updates.")
+    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    if prisoner_role:
+        # إخفاء القناة عن دور "Prisoner"
+        await channel.set_permissions(prisoner_role, overwrite=discord.PermissionOverwrite(view_channel=False))
+        await ctx.message.reply(f"Channel {channel.name} has been excluded from Prisoner role.")
+    else:
+        await ctx.message.reply("The 'Prisoner' role does not exist.")
 
 
 # أمر لإزالة القناة من الاستثناءات
