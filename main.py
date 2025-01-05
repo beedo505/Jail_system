@@ -82,18 +82,12 @@ async def on_message(message):
     # إذا تجاوز المستخدم الحد المسموح به من الرسائل
     if len(spam_records[user_id]) > MESSAGE_LIMIT:
         try:
-            await message.guild.ban(
-                message.author, reason="Detected spamming behavior"
-            )
-            await message.channel.send(
-                f"{message.author.mention} تم حظره بسبب السّبام."
-            )
+            await message.guild.ban(message.author, reason="Detected spamming behavior")
+            await message.channel.send(f"{message.author.mention} has been زوط for spamming.")
             print(f"User {message.author.name} banned for spamming.")
         except discord.Forbidden:
             print("لا أملك الصلاحيات لحظر المستخدم.")
-            await message.channel.send(
-                "لا أملك الصلاحيات لحظر هذا المستخدم."
-            )
+            await message.channel.send("I do not have the permissions to ban this user.")
         except Exception as e:
             print(f"Error banning user: {e}")
         return  # إنهاء معالجة الرسالة بعد التبنيد
