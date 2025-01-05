@@ -19,8 +19,34 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels (channel_id INTEG
 conn.commit()
 
 # دالة لإضافة قناة إلى الاستثناءات
-def add_to_excluded(channel_id: int, is_excluded: bool):
-    cursor.execute("INSERT OR REPLACE INTO excluded_channels (channel_id, is_excluded) VALUES (?, ?)", (channel_id, is_excluded))
+def add_to_excluded(channel_id: int, is_excluded: bool, can_view: bool, can_send_messages: bool, can_connect: bool, can_speak: bool):
+    # تأكد من أن الأعمدة موجودة في قاعدة البيانات
+    cursor.execute('''PRAGMA foreign_keys=off;''')  # تعطيل قيود المفتاح الخارجي مؤقتًا
+    cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels_new (
+                        channel_id INTEGER PRIMARY KEY,
+                        can_view BOOLEAN,
+                        can_send_messages BOOLEAN,
+                        can_connect BOOLEAN,
+                        can_speak BOOLEAN
+                    );''')
+
+    # إذا كانت القناة مستثناة، نقوم بإضافة القيم
+    if is_excluded:
+        cursor.execute('''INSERT OR REPLACE INTO excluded_channels_new 
+                          (channel_id, can_view, can_send_messages, can_connect, can_speak)
+                          VALUES (?, ?, ?, ?, ?)''', 
+                       (channel_id, can_view, can_send_messages, can_connect, can_speak))
+    else:
+        cursor.execute('''DELETE FROM excluded_channels_new WHERE channel_id = ?''', (channel_id,))
+
+    # تحديث قاعدة البيانات
+    cursor.execute('''PRAGMA foreign_keys=on;''')  # إعادة تمكين قيود المفتاح الخارجي
+    conn.commit()
+
+    # الآن يمكن استخدام جدول excluded_channels الجديد مع الأعمدة المضافة
+    # إذا تم تحديث قاعدة البيانات بنجاح
+    cursor.execute('''DROP TABLE IF EXISTS excluded_channels;''')
+    cursor.execute('''ALTER TABLE excluded_channels_new RENAME TO excluded_channels;''')
     conn.commit()
 
 def remove_from_excluded(channel_id: int):
