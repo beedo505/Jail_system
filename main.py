@@ -10,7 +10,7 @@ import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 
-# الاتصال بقاعدة البيانات (ستنشأ إذا لم تكن موجودة)
+# الاتصال بقاعدة البيانات (ستنشأ إذا لم تكن موجودة حنكة وكذا)
 conn = sqlite3.connect('excluded_channels.db')
 cursor = conn.cursor()
 
