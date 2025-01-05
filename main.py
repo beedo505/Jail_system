@@ -159,15 +159,16 @@ async def exclude(ctx, channel_id: int = None):
     existing_channel = cursor.fetchone()
     
     if existing_channel:
+        print(f"Channel {channel_id} is already excluded.")  # رسائل تصحيح
         await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is already excluded from permission updates.")
         return
 
     # إضافة القناة إلى قاعدة البيانات
     cursor.execute("INSERT INTO excluded_channels (channel_id) VALUES (?)", (channel_id,))
     conn.commit()
-    
-    # تأكيد للمستخدم
-    await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been excluded from permission updates.")
+
+    print(f"Added channel {channel_id} to excluded_channels.")  # رسائل تصحيح
+    await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been excluded from permission updates.") # تأكيد المستخدم
     
     # تحديث الأذونات للقناة لتكون مخفية
     prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
@@ -189,12 +190,15 @@ async def include(ctx, channel_id: int = None):
     existing_channel = cursor.fetchone()
     
     if not existing_channel:
+        print(f"Channel {channel_id} is not excluded.")  # رسائل تصحيح
         await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is not excluded from permission updates.")
         return
 
     # إزالة القناة من قاعدة البيانات
     cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
     conn.commit()
+
+    print(f"Removed channel {channel_id} from excluded_channels.")  # رسائل تصحيح
     
     # تأكيد للمستخدم
     await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been included back in permission updates.")
