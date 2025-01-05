@@ -27,16 +27,13 @@ CREATE TABLE IF NOT EXISTS excluded_channels (
 conn.commit()
 
 # دالة لإضافة قناة إلى الاستثناءات
-def add_to_excluded(channel_id: int, is_excluded: bool, can_view: bool, can_send_messages: bool, can_connect: bool, can_speak: bool):
-    # تأكد من أن الأعمدة موجودة في قاعدة البيانات
-    cursor.execute('''PRAGMA foreign_keys=off;''')  # تعطيل قيود المفتاح الخارجي مؤقتًا
-    cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels_new (
-                        channel_id INTEGER PRIMARY KEY,
-                        can_view BOOLEAN,
-                        can_send_messages BOOLEAN,
-                        can_connect BOOLEAN,
-                        can_speak BOOLEAN
-                    );''')
+def add_to_excluded(channel_id: int, can_view: bool, can_send_messages: bool, can_connect: bool, can_speak: bool):
+    cursor.execute('''
+    INSERT OR REPLACE INTO excluded_channels 
+    (channel_id, can_view, can_send_messages, can_connect, can_speak) 
+    VALUES (?, ?, ?, ?, ?)
+    ''', (channel_id, can_view, can_send_messages, can_connect, can_speak))
+    conn.commit()
 
     # إذا كانت القناة مستثناة، نقوم بإضافة القيم
     if is_excluded:
@@ -81,17 +78,6 @@ bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد الباد
 # تخزين رتب الأعضاء المسجونين
 prison_data = {}
 
-async def update_channel_permissions(guild, prisoner_role):
-    for channel in guild.channels:
-        # Get the current permissions for the "Prisoner" role
-        overwrite = channel.overwrites_for(prisoner_role)
-
-        # Deny "View Channel" permission for the "Prisoner" role
-        overwrite.view_channel = False
-
-        # Apply the updated permissions
-        await channel.set_permissions(prisoner_role, overwrite=overwrite)
-
 MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتبارها سبام
 TIME_LIMIT = 10  # الوقت (بالثواني) الذي يتم فيه احتساب عدد الرسائل
 spam_records = defaultdict(list)  # لتتبع الرسائل لكل مستخدم
@@ -102,31 +88,30 @@ user_messages = defaultdict(list)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
+    
     for guild in bot.guilds:
-        # Check if the "Prisoner" role exists
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
-            # Create "Prisoner" role if it doesn't exist
             prisoner_role = await guild.create_role(
                 name="Prisoner",
-                permissions=discord.Permissions.none(),  # No permissions for the "Prisoner"
+                permissions=discord.Permissions.none(),
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
         
-        # Update permissions for all channels to hide them for "Prisoner"
-        await update_channel_permissions(guild, prisoner_role)
-        
-    cursor.execute("SELECT channel_id FROM excluded_channels")
-    excluded_channels = cursor.fetchall()
+        # استرجاع القنوات المستثناة والأذونات الخاصة بها
+        cursor.execute("SELECT channel_id, can_view, can_send_messages, can_connect, can_speak FROM excluded_channels")
+        excluded_channels = cursor.fetchall()
 
-    # تحديث الأذونات للقنوات المستثناة (التأكد أن "Prisoner" يمكنه رؤيتها)
-    for channel_id_tuple in excluded_channels:
-        channel_id = channel_id_tuple[0]
-        channel = guild.get_channel(channel_id)
-        if channel:
-            await channel.set_permissions(prisoner_role, view_channel=True, read_messages=True)
+        for channel_id, can_view, can_send_messages, can_connect, can_speak in excluded_channels:
+            channel = guild.get_channel(channel_id)
+            if channel:
+                if isinstance(channel, discord.VoiceChannel):
+                    await channel.set_permissions(prisoner_role, connect=can_connect, speak=can_speak, view_channel=can_view)
+                elif isinstance(channel, discord.TextChannel):
+                    await channel.set_permissions(prisoner_role, send_messages=can_send_messages, view_channel=can_view)
 
+    print("Permissions updated successfully.")
 
 async def update_channel_permissions(guild, prisoner_role):
     # إخفاء جميع القنوات عن "Prisoner" بشكل افتراضي
@@ -189,71 +174,56 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 async def exclude(ctx, channel_id: int = None):
-    # استخدام القناة التي تم إرسال الأمر فيها إذا لم يتم ذكر ID
     if channel_id is None:
-        channel_id = ctx.channel.id
+        channel_id = ctx.channel.id  # إذا لم يتم تحديد المعرف، نستخدم القناة التي أرسل منها الأمر
     
-    # التحقق إذا كانت القناة مستثناة بالفعل
-    cursor.execute("SELECT channel_id FROM excluded_channels WHERE channel_id = ?", (channel_id,))
-    existing_channel = cursor.fetchone()
-    
-    if existing_channel:
-        await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is already excluded from permission updates.")
-        return
-
-    # الحصول على أذونات القناة الحالية
     channel = ctx.guild.get_channel(channel_id)
-    if isinstance(channel, discord.VoiceChannel):
-        can_view = True
-        can_connect = True
-        can_speak = True
-    elif isinstance(channel, discord.TextChannel):
-        can_view = True
-        can_send_messages = True
-        can_connect = False
-        can_speak = False
+    if not channel:
+        await ctx.message.reply("Channel not found!")
+        return
+    
+    # الحصول على الأذونات الحالية للقناة
+    can_view = channel.permissions_for(ctx.guild.get_member(ctx.author.id)).view_channel
+    can_send_messages = channel.permissions_for(ctx.guild.get_member(ctx.author.id)).send_messages
+    can_connect = False
+    can_speak = False
 
-    # تخزين حالة الأذونات في قاعدة البيانات
-    cursor.execute("INSERT INTO excluded_channels (channel_id, can_view, can_send_messages, can_connect, can_speak) VALUES (?, ?, ?, ?, ?)",
-                   (channel_id, can_view, can_send_messages if isinstance(channel, discord.TextChannel) else None, 
-                    can_connect if isinstance(channel, discord.VoiceChannel) else None, can_speak))
-    conn.commit()
+    if isinstance(channel, discord.VoiceChannel):
+        can_connect = channel.permissions_for(ctx.guild.get_member(ctx.author.id)).connect
+        can_speak = channel.permissions_for(ctx.guild.get_member(ctx.author.id)).speak
     
-    # تأكيد للمستخدم
-    await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been excluded from permission updates.")
+    # تخزين الأذونات في قاعدة البيانات
+    add_to_excluded(channel_id, can_view, can_send_messages, can_connect, can_speak)
     
-    # تحديث الأذونات للقناة لتكون ظاهرة للـ "Prisoner"
+    # تحديث الأذونات للقناة بإخفائها عن "Prisoner"
     prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     if prisoner_role:
         if isinstance(channel, discord.VoiceChannel):
-            await channel.set_permissions(prisoner_role, connect=True, speak=True, view_channel=True)
-        else:
-            await channel.set_permissions(prisoner_role, send_messages=True, view_channel=True)
+            await channel.set_permissions(prisoner_role, connect=False, speak=False, view_channel=False)
+        elif isinstance(channel, discord.TextChannel):
+            await channel.set_permissions(prisoner_role, send_messages=False, view_channel=False)
 
+    await ctx.message.reply(f"Channel {channel.name} has been excluded and hidden from 'Prisoner'.")
 
 # أمر لإزالة القناة من الاستثناءات
 @bot.command()
 async def include(ctx, channel_id: int = None):
-    # استخدام القناة التي تم إرسال الأمر فيها إذا لم يتم ذكر ID
     if channel_id is None:
-        channel_id = ctx.channel.id
+        channel_id = ctx.channel.id  # استخدام القناة الحالية إذا لم يتم تحديدها
     
     # التحقق إذا كانت القناة مستثناة
-    cursor.execute("SELECT channel_id FROM excluded_channels WHERE channel_id = ?", (channel_id,))
+    cursor.execute("SELECT * FROM excluded_channels WHERE channel_id = ?", (channel_id,))
     existing_channel = cursor.fetchone()
     
     if not existing_channel:
-        await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is not excluded from permission updates.")
+        await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is not excluded.")
         return
 
     # إزالة القناة من قاعدة البيانات
     cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
     conn.commit()
-    
-    # تأكيد للمستخدم
-    await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been included back in permission updates.")
-    
-    # تحديث الأذونات للقناة بعد إزالتها من الاستثناء
+
+    # استرجاع الأذونات للقناة بعد إزالتها من الاستثناء
     prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     if prisoner_role:
         channel = ctx.guild.get_channel(channel_id)
@@ -261,6 +231,8 @@ async def include(ctx, channel_id: int = None):
             await channel.set_permissions(prisoner_role, connect=False, speak=False, view_channel=False)
         elif isinstance(channel, discord.TextChannel):
             await channel.set_permissions(prisoner_role, send_messages=False, view_channel=False)
+    
+    await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} has been included back to the normal permissions.")
     
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
