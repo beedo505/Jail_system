@@ -35,8 +35,9 @@ async def update_channel_permissions(guild, prisoner_role):
         # Apply the updated permissions
         await channel.set_permissions(prisoner_role, overwrite=overwrite)
 
-MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتباره سبام
-TIME_WINDOW = 10  # خلال عدد الثواني هذه
+MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتبارها سبام
+TIME_LIMIT = 10  # الوقت (بالثواني) الذي يتم فيه احتساب عدد الرسائل
+spam_records = defaultdict(list)  # لتتبع الرسائل لكل مستخدم
 
 user_messages = defaultdict(list)
 
@@ -63,27 +64,36 @@ async def on_ready():
 async def on_message(message):
     
     if message.author.bot:
-        return  # تجاهل رسائل البوتات
+        return
 
     user_id = message.author.id
-    current_time = time.time()
+    now = asyncio.get_event_loop().time()
     
-    # تسجيل الرسائل
-    user_messages[user_id].append(current_time)
-
-    # حذف الرسائل القديمة
-    user_messages[user_id] = [
-        timestamp for timestamp in user_messages[user_id]
-        if current_time - timestamp <= TIME_WINDOW
+    # إضافة وقت الرسالة إلى قائمة المستخدم
+    spam_records[user_id].append(now)
+    
+    # إزالة الرسائل القديمة التي تجاوزت الوقت المحدد
+    spam_records[user_id] = [
+        timestamp for timestamp in spam_records[user_id]
+        if now - timestamp <= TIME_LIMIT
     ]
-
-    # تحقق من عدد الرسائل في الإطار الزمني
-    if len(user_messages[user_id]) > MESSAGE_LIMIT:
-        guild = message.guild
-        await guild.ban(message.author, reason="Spam detected")
-        await message.channel.send(f"⚠️ {message.author.mention} has been banned for exceeding the allowed message limit!")
-        user_messages[user_id] = []  # إعادة تعيين الرسائل
-
+    
+    # إذا تجاوز عدد الرسائل الحد المسموح به
+    if len(spam_records[user_id]) > MESSAGE_LIMIT:
+        try:
+            await message.guild.ban(
+                message.author, reason="Spamming detected"
+            )
+            await message.channel.send(
+                f"{message.author.mention} تم حظره بسبب السّبام."
+            )
+        except discord.Forbidden:
+            await message.channel.send(
+                "لا أملك الصلاحيات اللازمة لحظر هذا المستخدم."
+            )
+        except Exception as e:
+            print(f"Error banning user: {e}")
+    
     await bot.process_commands(message)
 
 @bot.event
