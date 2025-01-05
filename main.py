@@ -62,32 +62,37 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    
     if message.author.bot:
-        return
+        return  # تجاهل رسائل البوتات
+
+    print(f"Message received from {message.author.name}: {message.content}")
 
     user_id = message.author.id
     now = asyncio.get_event_loop().time()
     
-    # إضافة وقت الرسالة إلى قائمة المستخدم
+    # إضافة الرسالة إلى قائمة المستخدم
     spam_records[user_id].append(now)
     
-    # إزالة الرسائل القديمة التي تجاوزت الوقت المحدد
+    # إزالة الرسائل القديمة
     spam_records[user_id] = [
         timestamp for timestamp in spam_records[user_id]
         if now - timestamp <= TIME_LIMIT
     ]
     
-    # إذا تجاوز عدد الرسائل الحد المسموح به
+    # إذا تجاوز الحد
     if len(spam_records[user_id]) > MESSAGE_LIMIT:
+        print(f"Spam detected from {message.author.name} ({message.author.id})")
         try:
+            # حظر المستخدم
             await message.guild.ban(
                 message.author, reason="Spamming detected"
             )
             await message.channel.send(
                 f"{message.author.mention} تم حظره بسبب السّبام."
             )
+            print(f"User {message.author.name} banned successfully.")
         except discord.Forbidden:
+            print("لا يمكن حظر المستخدم بسبب عدم وجود صلاحيات.")
             await message.channel.send(
                 "لا أملك الصلاحيات اللازمة لحظر هذا المستخدم."
             )
@@ -143,14 +148,6 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
 
-@bot.event
-async def on_message(message):
-    if message.content.startswith("-"):
-        command_name = message.content.split(" ")[0][1:]
-        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
-            return
-    await bot.process_commands(message)
-
 # Pardon command
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
 @commands.has_permissions(administrator=True)
@@ -173,14 +170,6 @@ async def release_member(ctx, member):
     del prison_data[member.id]
 
     await ctx.message.reply(f"{member.mention} has been released from jail.")
-
-@bot.event
-async def on_message(message):
-    if message.content.startswith("-"):
-        command_name = message.content.split(" ")[0][1:]
-        if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
-            return
-    await bot.process_commands(message)
 
 
 bot.run(os.environ['B'])
