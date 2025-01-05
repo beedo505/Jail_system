@@ -149,7 +149,7 @@ async def on_command_error(ctx, error):
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 @bot.command()
-nc def exclude(ctx, channel_id: int = None):
+async def exclude(ctx, channel_id: int = None):
     # استخدام القناة التي تم إرسال الأمر فيها إذا لم يتم ذكر ID
     if channel_id is None:
         channel_id = ctx.channel.id
