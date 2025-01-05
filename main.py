@@ -15,7 +15,15 @@ conn = sqlite3.connect('excluded_channels.db')
 cursor = conn.cursor()
 
 # إنشاء جدول لتخزين القنوات المستثناه
-cursor.execute('''CREATE TABLE IF NOT EXISTS excluded_channels (channel_id INTEGER PRIMARY KEY)''')
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS excluded_channels (
+    channel_id INTEGER PRIMARY KEY,
+    can_view BOOLEAN,
+    can_send_messages BOOLEAN,
+    can_connect BOOLEAN,
+    can_speak BOOLEAN
+);
+''')
 conn.commit()
 
 # دالة لإضافة قناة إلى الاستثناءات
