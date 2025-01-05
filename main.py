@@ -35,25 +35,6 @@ def add_to_excluded(channel_id: int, can_view: bool, can_send_messages: bool, ca
     ''', (channel_id, can_view, can_send_messages, can_connect, can_speak))
     conn.commit()
 
-    # إذا كانت القناة مستثناة، نقوم بإضافة القيم
-    if is_excluded:
-        cursor.execute('''INSERT OR REPLACE INTO excluded_channels_new 
-                          (channel_id, can_view, can_send_messages, can_connect, can_speak)
-                          VALUES (?, ?, ?, ?, ?)''', 
-                       (channel_id, can_view, can_send_messages, can_connect, can_speak))
-    else:
-        cursor.execute('''DELETE FROM excluded_channels_new WHERE channel_id = ?''', (channel_id,))
-
-    # تحديث قاعدة البيانات
-    cursor.execute('''PRAGMA foreign_keys=on;''')  # إعادة تمكين قيود المفتاح الخارجي
-    conn.commit()
-
-    # الآن يمكن استخدام جدول excluded_channels الجديد مع الأعمدة المضافة
-    # إذا تم تحديث قاعدة البيانات بنجاح
-    cursor.execute('''DROP TABLE IF EXISTS excluded_channels;''')
-    cursor.execute('''ALTER TABLE excluded_channels_new RENAME TO excluded_channels;''')
-    conn.commit()
-
 def remove_from_excluded(channel_id: int):
     cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
     conn.commit()
