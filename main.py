@@ -32,23 +32,6 @@ def load_excluded_channels():
     cursor.execute("SELECT channel_id FROM excluded_channels WHERE is_excluded = 1")
     return cursor.fetchall()
 
-# دالة لتحديث أذونات القنوات
-async def update_channel_permissions(guild, prisoner_role):
-    excluded_channels = load_excluded_channels()  # تحميل القنوات المستثناة من قاعدة البيانات
-    # تحديث أذونات القنوات النصية
-    for channel in guild.text_channels:
-        if channel.id not in excluded_channels:  # إذا لم تكن القناة مستثناة
-            await channel.set_permissions(prisoner_role, overwrite=discord.PermissionOverwrite(view_channel=False))
-        else:
-            print(f"Text Channel {channel.name} is excluded from permission updates.")
-    
-    # إضافة دعم للرومات الصوتية
-    for channel in guild.voice_channels:
-        if channel.id not in excluded_channels:  # إذا لم تكن القناة الصوتية مستثناة
-            await channel.set_permissions(prisoner_role, overwrite=discord.PermissionOverwrite(view_channel=False))
-        else:
-            print(f"Voice Channel {channel.name} is excluded from permission updates.")
-
 # تفعيل صلاحيات البوت
 intents = discord.Intents.default()
 intents.members = True  # تفعيل الصلاحية للوصول إلى الأعضاء
@@ -109,7 +92,18 @@ async def on_ready():
         channel = guild.get_channel(channel_id)
         if channel:
             await channel.set_permissions(prisoner_role, view_channel=True, read_messages=True)
-            
+
+
+async def update_channel_permissions(guild, prisoner_role):
+    # إخفاء جميع القنوات عن "Prisoner" بشكل افتراضي
+    for channel in guild.channels:
+        if isinstance(channel, discord.VoiceChannel):
+            # إخفاء قنوات الصوتية
+            await channel.set_permissions(prisoner_role, connect=False, speak=False, view_channel=False)
+        elif isinstance(channel, discord.TextChannel):
+            # إخفاء القنوات النصية
+            await channel.set_permissions(prisoner_role, send_messages=False, view_channel=False)
+
 
 @bot.event
 async def on_message(message):
