@@ -99,6 +99,17 @@ async def on_ready():
         
         # Update permissions for all channels to hide them for "Prisoner"
         await update_channel_permissions(guild, prisoner_role)
+        
+    cursor.execute("SELECT channel_id FROM excluded_channels")
+    excluded_channels = cursor.fetchall()
+
+    # تحديث الأذونات للقنوات المستثناة (التأكد أن "Prisoner" يمكنه رؤيتها)
+    for channel_id_tuple in excluded_channels:
+        channel_id = channel_id_tuple[0]
+        channel = guild.get_channel(channel_id)
+        if channel:
+            await channel.set_permissions(prisoner_role, view_channel=True, read_messages=True)
+            
 
 @bot.event
 async def on_message(message):
