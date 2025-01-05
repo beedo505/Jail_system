@@ -171,7 +171,7 @@ async def exclude(ctx, channel_id: int = None):
     
     if existing_channel:
         print(f"Channel {channel_id} is already excluded.")  # رسائل تصحيح
-        await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is already excluded from permission updates.")
+        await ctx.message.reply(f"Channel {ctx.guild.get_channel(channel_id).name} is already excluded from permission updates!")
         return
 
     # إضافة القناة إلى قاعدة البيانات
