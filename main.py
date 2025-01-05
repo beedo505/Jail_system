@@ -153,11 +153,20 @@ async def exclude(ctx):
     
     channel_id = ctx.channel.id  # الحصول على معرف القناة التي تم إرسال الأمر فيها
     
+    # التحقق إذا كانت القناة قد تم استثناؤها بالفعل
+    cursor.execute("SELECT channel_id FROM excluded_channels WHERE channel_id = ?", (channel_id,))
+    existing_channel = cursor.fetchone()
+    
+    if existing_channel:
+        await ctx.send(f"Channel {ctx.channel.name} is already excluded from permission updates.")
+        return
+
     # إضافة القناة إلى قاعدة البيانات
     add_to_excluded(channel_id)
     
     # تأكيد للمستخدم
-    await ctx.message.reply(f"Channel {ctx.channel.name} has been excluded from permission updates.")
+    await ctx.send(f"Channel {ctx.channel.name} has been excluded from permission updates.")
+
 
 # أمر لإزالة القناة من الاستثناءات
 @bot.command()
@@ -169,12 +178,25 @@ async def include(ctx):
     
     channel_id = ctx.channel.id  # الحصول على معرف القناة التي تم إرسال الأمر فيها
     
+    # التحقق إذا كانت القناة مستثناة في قاعدة البيانات
+    cursor.execute("SELECT channel_id FROM excluded_channels WHERE channel_id = ?", (channel_id,))
+    existing_channel = cursor.fetchone()
+    
+    if not existing_channel:
+        await ctx.message.reply(f"Channel {ctx.channel.name} is not excluded from permission updates.")
+        return
+
     # إزالة القناة من قاعدة البيانات
     cursor.execute("DELETE FROM excluded_channels WHERE channel_id = ?", (channel_id,))
     conn.commit()
     
     # تأكيد للمستخدم
     await ctx.message.reply(f"Channel {ctx.channel.name} has been included back in permission updates.")
+    
+    # تحديث الأذونات للقناة بعد إزالتها من الاستثناء
+    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    if prisoner_role:
+        await ctx.channel.set_permissions(prisoner_role, overwrite=None)  # السماح بالظهور للمستخدمين
     
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
