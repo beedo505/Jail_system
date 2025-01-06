@@ -16,32 +16,71 @@ exceptions_data = {}
 
 EXCEPTIONS_FILE = 'exceptions.json'
 
-def load_exceptions():
-    global exceptions_data
-    try:
-        if os.path.exists(EXCEPTIONS_FILE):
-            with open(EXCEPTIONS_FILE, 'r', encoding='utf-8') as f:
-                exceptions_data = json.load(f)
-                print("✅ Loaded exceptions:", exceptions_data)  # للتأكد من التحميل
-                return exceptions_data
-        else:
-            print("❌ No exceptions file found, creating new one")
-            exceptions_data = {}
-            save_exceptions(exceptions_data)
-            return exceptions_data
-    except Exception as e:
-        print(f"❌ Error loading exceptions: {e}")
-        return {}
+class ExceptionManager:
+    def __init__(self, file_path='exceptions.json'):
+        self.file_path = file_path
+        self.data = self.load()
 
-def save_exceptions(data):
-    global exceptions_data
-    try:
-        with open(EXCEPTIONS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4)
-            exceptions_data = data
-            print("✅ Saved exceptions:", exceptions_data)  # للتأكد من الحفظ
-    except Exception as e:
-        print(f"❌ Error saving exceptions: {e}")
+    def load(self):
+        try:
+            # إذا لم يكن الملف موجوداً، أنشئ ملف جديد
+            if not os.path.exists(self.file_path):
+                self.save({})
+                return {}
+            
+            # قراءة الملف
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                # إذا كان الملف فارغاً، أرجع قاموس فارغ
+                if not content:
+                    return {}
+                # حاول تحميل البيانات
+                data = json.loads(content)
+                print(f"✅ Loaded data successfully: {data}")
+                return data
+                
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON Error: {e}")
+            print("🔄 Creating new exceptions file...")
+            self.save({})
+            return {}
+        except Exception as e:
+            print(f"❌ Error loading data: {e}")
+            return {}
+
+    def save(self, data=None):
+        try:
+            if data is None:
+                data = self.data
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+            self.data = data
+            print(f"✅ Saved data successfully: {data}")
+        except Exception as e:
+            print(f"❌ Error saving data: {e}")
+
+    def add_channel(self, guild_id: str, channel_id: str):
+        if guild_id not in self.data:
+            self.data[guild_id] = []
+        if channel_id not in self.data[guild_id]:
+            self.data[guild_id].append(channel_id)
+            self.save()
+            return True
+        return False
+
+    def remove_channel(self, guild_id: str, channel_id: str):
+        if guild_id in self.data and channel_id in self.data[guild_id]:
+            self.data[guild_id].remove(channel_id)
+            if not self.data[guild_id]:
+                del self.data[guild_id]
+            self.save()
+            return True
+        return False
+
+    def get_exceptions(self, guild_id: str):
+        return self.data.get(guild_id, [])
+
+exception_manager = ExceptionManager()
         
 # تفعيل صلاحيات البوت
 intents = discord.Intents.default()
