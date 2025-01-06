@@ -214,13 +214,13 @@ async def list_exceptions(ctx):
 
 **Text Channels:**
 " + "
-".join(text_channels)
+.join(text_channels)
         if voice_channels:
-            response += "
+            response += ""
 
 **Voice Channels:**
 " + "
-".join(voice_channels)
+.join(voice_channels)
 
         await ctx.send(response)
     else:
