@@ -266,7 +266,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
 async def عفو(ctx, member: discord.Member):
     await release_member(ctx, member)
 
-# Function to release a member
+# Function to release a member from jail
 async def release_member(ctx, member):
     if member.id not in prison_data:
         await ctx.message.reply(f"{member.mention} is not in jail.")
