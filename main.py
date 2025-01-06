@@ -108,11 +108,8 @@ user_messages = defaultdict(list)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
-
-    global exceptions_data
-    exceptions_data = load_exceptions()
-    print(f"Bot is ready! Loaded exceptions: {exceptions_data}")
-    
+    print(f"✅ Bot is ready! Logged in as {bot.user.name}")
+    print(f"✅ Current exceptions: {exception_manager.data}")
     for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
