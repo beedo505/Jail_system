@@ -189,7 +189,7 @@ async def remove_exp(ctx, channel_id: str = None):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def list_exceptions(ctx):
+async def list_exp(ctx):
     guild_id = str(ctx.guild.id)
 
     if guild_id in exceptions_data and exceptions_data[guild_id]:
@@ -211,9 +211,9 @@ async def list_exceptions(ctx):
         if voice_channels:
             embed.add_field(name="Voice Channels", value="".join(voice_channels), inline=False)
 
-        await ctx.send(embed=embed)
+        await ctx.message.reply(embed=embed)
     else:
-        await ctx.send("No channels are excepted! ℹ️")
+        await ctx.message.reply("No channels are excepted! ℹ️")
 
 
 # أمر سجن: -سجن @username reason
