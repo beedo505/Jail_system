@@ -22,51 +22,33 @@ class ExceptionManager:
             self.file_path = os.path.join(os.path.dirname(__file__), 'exceptions.json')
         else:
             self.file_path = file_path
-            print(f"📂 Using file path: {self.file_path}")
-            self.data = self.load()
+        print(f"📂 Using file path: {self.file_path}")
+        self.data = self.load()
 
     def load(self):
         try:
-            # إذا لم يكن الملف موجوداً، أنشئ ملف جديد
-            if not os.path.exists(self.file_path):
-                self.save({})
-                return {}
-            
-            # قراءة الملف
-            with open(self.file_path, 'r', encoding='utf-8') as f:
-                content = f.read().strip()
-                # إذا كان الملف فارغاً، أرجع قاموس فارغ
-                if not content:
-                    return {}
-                # حاول تحميل البيانات
-                data = json.loads(content)
-                print(f"✅ Loaded data successfully: {data}")
-                return data
-                
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON Error: {e}")
-            print("🔄 Creating new exceptions file...")
-            self.save({})
+            if os.path.exists(self.file_path):
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
             return {}
         except Exception as e:
             print(f"❌ Error loading data: {e}")
             return {}
 
-def save(self):
-    try:
-        print(f":floppy_disk: Attempting to save data: {self.data}")
-        # تأكد من وجود المجلد
-        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-        # حفظ البيانات
-        with open(self.file_path, 'w', encoding='utf-8') as f:
-            json.dump(self.data, f, indent=4)
-            f.flush()  # تأكد من كتابة البيانات للملف
-            os.fsync(f.fileno())  # تأكد من حفظ البيانات على القرص
-        print(f":white_check_mark: Saved data successfully: {self.data}")
-        return True
-    except Exception as e:
-        print(f":x: Error in save(): {e}")
-        return False    
+    def save(self):
+        try:
+            print(f"💾 Attempting to save data: {self.data}")
+            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                json.dump(self.data, f, indent=4)
+                f.flush()
+                os.fsync(f.fileno())
+            print(f"✅ Saved data successfully: {self.data}")
+            return True
+        except Exception as e:
+            print(f"❌ Error in save(): {e}")
+            return False
+    
 
     def add_channel(self, guild_id: str, channel_id: str):
         if guild_id not in self.data:
@@ -85,6 +67,7 @@ def save(self):
             self.save()
             return True
         return False
+        
 
     def get_exceptions(self, guild_id: str):
         return self.data.get(guild_id, [])
