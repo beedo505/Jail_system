@@ -17,9 +17,14 @@ exceptions_data = {}
 EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
-    def __init__(self, file_path='exceptions.json'):
+    def __init__(self, file_path=None):
+    if file_path is None:
+        # احفظ الملف في نفس مجلد البوت
+        self.file_path = os.path.join(os.path.dirname(__file__), 'exceptions.json')
+    else:
         self.file_path = file_path
-        self.data = self.load()
+    print(f"📂 Using file path: {self.file_path}")
+    self.data = self.load()
 
     def load(self):
         try:
@@ -48,16 +53,21 @@ class ExceptionManager:
             print(f"❌ Error loading data: {e}")
             return {}
 
-    def save(self, data=None):
-        try:
-            if data is None:
-                data = self.data
-            with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=4)
-            self.data = data
-            print(f"✅ Saved data successfully: {data}")
-        except Exception as e:
-            print(f"❌ Error saving data: {e}")
+    def save(self):
+    try:
+        print(f"💾 Attempting to save data: {self.data}")
+        # تأكد من وجود المجلد
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+        # حفظ البيانات
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(self.data, f, indent=4)
+            f.flush()  # تأكد من كتابة البيانات للملف
+            os.fsync(f.fileno())  # تأكد من حفظ البيانات على القرص
+        print(f"✅ Saved data successfully: {self.data}")
+        return True
+    except Exception as e:
+        print(f"❌ Error in save(): {e}")
+        return False
 
     def add_channel(self, guild_id: str, channel_id: str):
         if guild_id not in self.data:
