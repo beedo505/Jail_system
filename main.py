@@ -52,9 +52,9 @@ class ExceptionManager:
             print(f"❌ Error loading data: {e}")
             return {}
 
-    def save(self):
+def save(self):
     try:
-        print(f"💾 Attempting to save data: {self.data}")
+        print(f":floppy_disk: Attempting to save data: {self.data}")
         # تأكد من وجود المجلد
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         # حفظ البيانات
@@ -62,11 +62,11 @@ class ExceptionManager:
             json.dump(self.data, f, indent=4)
             f.flush()  # تأكد من كتابة البيانات للملف
             os.fsync(f.fileno())  # تأكد من حفظ البيانات على القرص
-        print(f"✅ Saved data successfully: {self.data}")
+        print(f":white_check_mark: Saved data successfully: {self.data}")
         return True
     except Exception as e:
-        print(f"❌ Error in save(): {e}")
-        return False
+        print(f":x: Error in save(): {e}")
+        return False    
 
     def add_channel(self, guild_id: str, channel_id: str):
         if guild_id not in self.data:
