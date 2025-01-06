@@ -18,13 +18,12 @@ EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
     def __init__(self, file_path=None):
-    if file_path is None:
-        # احفظ الملف في نفس مجلد البوت
-        self.file_path = os.path.join(os.path.dirname(__file__), 'exceptions.json')
-    else:
-        self.file_path = file_path
-    print(f"📂 Using file path: {self.file_path}")
-    self.data = self.load()
+        if file_path is None:
+            self.file_path = os.path.join(os.path.dirname(__file__), 'exceptions.json')
+        else:
+            self.file_path = file_path
+            print(f"📂 Using file path: {self.file_path}")
+            self.data = self.load()
 
     def load(self):
         try:
