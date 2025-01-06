@@ -210,7 +210,7 @@ async def list_exceptions(ctx):
 
         response = "📋 **Excepted Channels:**"
         if text_channels:
-            response += "
+            response += ""
 
 **Text Channels:**
 " + "
