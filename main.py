@@ -74,7 +74,7 @@ class ExceptionManager:
 
 exception_manager = ExceptionManager()
         
-# تفعيل صلاحيات البوت
+# تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
 intents.members = True  # تفعيل الصلاحية للوصول إلى الأعضاء
 intents.messages = True  # تفعيل صلاحية قراءة الرسائل
