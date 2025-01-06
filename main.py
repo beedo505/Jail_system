@@ -214,7 +214,7 @@ async def remove_exp(ctx, channel_id: str = None):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def list_e(ctx):
+async def list_exp(ctx):
     guild_id = str(ctx.guild.id)
     exceptions = exception_manager.data.get(guild_id, [])
 
