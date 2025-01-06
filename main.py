@@ -207,11 +207,9 @@ async def list_exceptions(ctx):
         embed = discord.Embed(title="📋 Excepted Channels", color=0x2f3136)
 
         if text_channels:
-            embed.add_field(name="Text Channels", value="
-".join(text_channels), inline=False)
+            embed.add_field(name="Text Channels", value="".join(text_channels), inline=False)
         if voice_channels:
-            embed.add_field(name="Voice Channels", value="
-".join(voice_channels), inline=False)
+            embed.add_field(name="Voice Channels", value="".join(voice_channels), inline=False)
 
         await ctx.send(embed=embed)
     else:
