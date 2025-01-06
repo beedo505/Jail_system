@@ -106,7 +106,7 @@ async def on_message(message):
         if now - timestamp <= TIME_LIMIT
     ]
 
-    # إذا تجاوز المستخدم الحد المسموح به من الرسائل
+    # إذا تجاوز المستخدم الحد المسموح به من الرسائل يلقم زوط
     if len(spam_records[user_id]) > MESSAGE_LIMIT:
         try:
             await message.guild.ban(message.author, reason="Detected spamming behavior")
