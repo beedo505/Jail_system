@@ -40,7 +40,7 @@ intents.message_content = True # صلاحية الرد والتفاعل مع ا�
 # إعداد سجل الأخطاء
 logging.basicConfig(level=logging.ERROR)
 
-bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد البادئة "-"
+bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد البادئة '-'
 exceptions_data = load_exceptions()
 
 # تخزين رتب الأعضاء المسجونين
