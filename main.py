@@ -108,7 +108,6 @@ async def on_command_error(ctx, error):
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 
-
 @bot.command()
 @commands.has_permissions(administrator=true)
 async def add_exp(ctx, channel_id: str = None):
@@ -121,17 +120,17 @@ async def add_exp(ctx, channel_id: str = None):
             # Try to get channel by ID
             channel = await bot.fetch_channel(int(channel_id))
             if channel.guild.id != ctx.guild.id:
-                await ctx.send("This channel doesn't belong to this server! ⚠️")
+                await ctx.message.reply("This channel doesn't belong to this server! ⚠️")
                 return
     except (ValueError, discord.NotFound):
-        await ctx.send("Invalid channel ID! ⚠️")
+        await ctx.message.reply("Invalid channel ID! ⚠️")
         return
     except discord.Forbidden:
-        await ctx.send("I don't have access to that channel! ⚠️")
+        await ctx.message.reply("I don't have access to that channel! ⚠️")
         return
 
     if not isinstance(channel, (discord.TextChannel, discord.VoiceChannel)):
-        await ctx.send("Please provide a valid text or voice channel! ⚠️")
+        await ctx.message.reply("Please provide a valid text or voice channel! ⚠️")
         return
 
     guild_id = str(ctx.guild.id)
@@ -147,12 +146,12 @@ async def add_exp(ctx, channel_id: str = None):
             if isinstance(channel, discord.VoiceChannel):
                 await channel.set_permissions(prisoner_role, view_channel=True, connect=True)
             else:
-await channel.set_permissions(prisoner_role, view_channel=True)
+                await channel.set_permissions(prisoner_role, view_channel=True)
 
         channel_type = "voice" if isinstance(channel, discord.VoiceChannel) else "text"
-        await ctx.send(f"{channel.mention} ({channel_type} channel) has been added to exceptions! ✅")
+        await ctx.message.reply(f"{channel.mention} ({channel_type} channel) has been added to exceptions! ✅")
     else:
-        await ctx.send("This channel is already in exceptions! ⚠️")
+        await ctx.message.reply("This channel is already in exceptions! ⚠️")
 
 @bot.command()
 @commands.has_permissions(administrator=true)
@@ -166,13 +165,13 @@ async def remove_exp(ctx, channel_id: str = None):
             # Try to get channel by ID
             channel = await bot.fetch_channel(int(channel_id))
             if channel.guild.id != ctx.guild.id:
-                await ctx.send("This channel doesn't belong to this server! ⚠️")
+                await ctx.message.reply("This channel doesn't belong to this server! ⚠️")
                 return
     except (ValueError, discord.NotFound):
-        await ctx.send("Invalid channel ID! ⚠️")
+        await ctx.message.reply("Invalid channel ID! ⚠️")
         return
     except discord.Forbidden:
-        await ctx.send("I don't have access to that channel! ⚠️")
+        await ctx.message.reply("I don't have access to that channel! ⚠️")
         return
 
     guild_id = str(ctx.guild.id)
@@ -188,9 +187,9 @@ async def remove_exp(ctx, channel_id: str = None):
                 await channel.set_permissions(prisoner_role, view_channel=False)
 
         channel_type = "voice" if isinstance(channel, discord.VoiceChannel) else "text"
-        await ctx.send(f"{channel.mention} ({channel_type} channel) has been removed from exceptions! ✅")
+        await ctx.message.reply(f"{channel.mention} ({channel_type} channel) has been removed from exceptions! ✅")
     else:
-        await ctx.send("This channel is not in exceptions! ⚠️")
+        await ctx.message.reply("This channel is not in exceptions! ⚠️")
 
 @bot.command()
 @commands.has_permissions(administrator=true)
@@ -224,9 +223,9 @@ async def list_exceptions(ctx):
 " + "
 ".join(voice_channels)
 
-        await ctx.send(response)
+        await ctx.message.reply(response)
     else:
-        await ctx.send("No channels are excepted! ℹ️")
+        await ctx.message.reply("No channels are excepted! ℹ️")
 
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
