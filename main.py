@@ -249,7 +249,7 @@ async def list_exp(ctx):
     else:
         await ctx.message.reply("No channels are excepted! ℹ️")
 
-# أمر سجن: -سجن @username reason
+# امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
 async def سجن(ctx, member: discord.Member, duration: str = "8h"):
@@ -289,7 +289,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
 
-# Pardon command
+# امر العفو
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member):
