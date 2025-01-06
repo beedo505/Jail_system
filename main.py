@@ -192,7 +192,6 @@ async def remove_exp(ctx, channel_id: str = None):
         await ctx.message.reply("This channel is not in exceptions! ⚠️")
 
 @bot.command()
-@commands.has_permissions(administrator=true)
 async def list_exceptions(ctx):
     """Display list of excepted channels"""
     guild_id = str(ctx.guild.id)
@@ -223,9 +222,9 @@ async def list_exceptions(ctx):
 " + "
 ".join(voice_channels)
 
-        await ctx.message.reply(response)
+        await ctx.send(response)
     else:
-        await ctx.message.reply("No channels are excepted! ℹ️")
+        await ctx.send("No channels are excepted! ℹ️")
 
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
