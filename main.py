@@ -3,6 +3,7 @@ from discord.ext import commands
 import logging
 import asyncio
 import re
+from typing import Union
 import json
 import os
 from collections import defaultdict
@@ -188,8 +189,7 @@ async def remove_exp(ctx, channel_id: str = None):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def list_exp(ctx):
-    """Display list of excepted channels"""
+async def list_exceptions(ctx):
     guild_id = str(ctx.guild.id)
 
     if guild_id in exceptions_data and exceptions_data[guild_id]:
@@ -204,15 +204,18 @@ async def list_exp(ctx):
                 else:
                     text_channels.append(f"{channel.mention} (Text) `ID: {channel.id}`")
 
-        response = "📋 **Excepted Channels:**\n"
-        if text_channels:
-            response += "\n**Text Channels:**\n" + "\n".join(text_channels)
-        if voice_channels:
-            response += "\n**Voice Channels:**\n" + "\n".join(voice_channels)
+        embed = discord.Embed(title="📋 Excepted Channels", color=0x2f3136)
 
-        await ctx.message.reply(response)
+        if text_channels:
+            embed.add_field(name="Text Channels", value="
+".join(text_channels), inline=False)
+        if voice_channels:
+            embed.add_field(name="Voice Channels", value="
+".join(voice_channels), inline=False)
+
+        await ctx.send(embed=embed)
     else:
-        await ctx.message.reply("No channels are excepted! ℹ️")
+        await ctx.send("No channels are excepted! ℹ️")
 
 
 # أمر سجن: -سجن @username reason
