@@ -214,32 +214,40 @@ async def remove_exp(ctx, channel_id: str = None):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def list_exp(ctx):
+async def list_e(ctx):
     guild_id = str(ctx.guild.id)
-    exceptions = exception_manager.get_exceptions(guild_id)
+    exceptions = exception_manager.data.get(guild_id, [])
 
     if exceptions:
         text_channels = []
         voice_channels = []
+        
+        print(f"🔍 Found exceptions for guild {guild_id}: {exceptions}")
 
         for ch_id in exceptions:
-            channel = ctx.guild.get_channel(int(ch_id))
-            if channel:
-                if isinstance(channel, discord.VoiceChannel):
-                    voice_channels.append(f"{channel.mention} (Voice) `ID: {channel.id}`")
-                else:
-                    text_channels.append(f"{channel.mention} (Text) `ID: {channel.id}`")
+            try:
+                channel = bot.get_channel(int(ch_id))
+                if channel:
+                    if isinstance(channel, discord.VoiceChannel):
+                        voice_channels.append(f"{channel.mention} (Voice)")
+                    else:
+                        text_channels.append(f"{channel.mention} (Text)")
+            except Exception as e:
+                print(f"Error processing channel {ch_id}: {e}")
 
-        embed = discord.Embed(title="📋 Excepted Channels", color=0x2f3136)
+        if text_channels or voice_channels:
+            embed = discord.Embed(title="📋 Excepted Channels", color=0x2f3136)
+            
+            if text_channels:
+                embed.add_field(name="Text Channels", value="".join(text_channels), inline=False)
+            if voice_channels:
+                embed.add_field(name="Voice Channels", value="".join(voice_channels), inline=False)
 
-        if text_channels:
-            embed.add_field(name="Text Channels", value="".join(text_channels), inline=False)
-        if voice_channels:
-            embed.add_field(name="Voice Channels", value="".join(voice_channels), inline=False)
-
-        await ctx.message.reply(embed=embed)
+            await ctx.message.reply(embed=embed)
+        else:
+            await ctx.message.reply("❌ No valid channels found in exceptions list.")
     else:
-        await ctx.message.reply("No channels are excepted! ℹ️")
+        await ctx.message.reply("ℹ️ No channels are excepted!")
 
 # امر السجن
 @commands.has_permissions(administrator=True)
