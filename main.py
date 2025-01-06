@@ -11,25 +11,37 @@ import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 
+global exceptions_data
+exceptions_data = {}
+
 EXCEPTIONS_FILE = 'exceptions.json'
 
 def load_exceptions():
-    if os.path.exists(EXCEPTIONS_FILE):
-        try:
+    global exceptions_data
+    try:
+        if os.path.exists(EXCEPTIONS_FILE):
             with open(EXCEPTIONS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"Error loading exceptions: {e}")
-    return {}
+                exceptions_data = json.load(f)
+                print("✅ Loaded exceptions:", exceptions_data)  # للتأكد من التحميل
+                return exceptions_data
+        else:
+            print("❌ No exceptions file found, creating new one")
+            exceptions_data = {}
+            save_exceptions(exceptions_data)
+            return exceptions_data
+    except Exception as e:
+        print(f"❌ Error loading exceptions: {e}")
+        return {}
 
-# حفظ البيانات
 def save_exceptions(data):
+    global exceptions_data
     try:
         with open(EXCEPTIONS_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4)
-        print("Data saved successfully!")  # للتأكد من الحفظ
+            exceptions_data = data
+            print("✅ Saved exceptions:", exceptions_data)  # للتأكد من الحفظ
     except Exception as e:
-        print(f"Error saving exceptions: {e}")
+        print(f"❌ Error saving exceptions: {e}")
         
 # تفعيل صلاحيات البوت
 intents = discord.Intents.default()
@@ -57,6 +69,10 @@ user_messages = defaultdict(list)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
+
+    global exceptions_data
+    exceptions_data = load_exceptions()
+    print(f"Bot is ready! Loaded exceptions: {exceptions_data}")
     
     for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
@@ -67,6 +83,7 @@ async def on_ready():
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+            
 
 
 
@@ -123,7 +140,7 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def add_exp(ctx, channel_id: str = None):
-    """Add channel to exceptions list using ID or current channel"""
+    global exceptions_data
     try:
         if channel_id is None:
             # استخدام الروم الحالي
@@ -159,7 +176,7 @@ async def add_exp(ctx, channel_id: str = None):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def remove_exp(ctx, channel_id: str = None):
-    """Remove channel from exceptions list using ID or current channel"""
+    global exceptions_data
     try:
         if channel_id is None:
             channel = ctx.channel
@@ -190,6 +207,7 @@ async def remove_exp(ctx, channel_id: str = None):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def list_exp(ctx):
+    global exceptions_data
     guild_id = str(ctx.guild.id)
 
     if guild_id in exceptions_data and exceptions_data[guild_id]:
