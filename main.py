@@ -175,43 +175,6 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def add_exp(ctx, channel_id: str = None):
-    global exceptions_data
-    try:
-        if channel_id is None:
-            # استخدام الروم الحالي
-            channel = ctx.channel
-        else:
-            # محاولة العثور على الروم باستخدام الـ ID
-            channel_id = channel_id.replace('<#', '').replace('>', '')  # تنظيف المنشن إذا تم استخدامه
-            channel = bot.get_channel(int(channel_id))
-            if not channel:
-                raise ValueError("Channel not found!")
-
-        guild_id = str(ctx.guild.id)
-        channel_id = str(channel.id)
-
-        if guild_id not in exceptions_data:
-            exceptions_data[guild_id] = []
-
-        if channel_id not in exceptions_data[guild_id]:
-            exceptions_data[guild_id].append(channel_id)
-            save_exceptions(exceptions_data)
-            
-            channel_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
-            await ctx.message.reply(f"✅ {channel_type} channel {channel.mention} (`{channel_id}`) added to exceptions!")
-        else:
-            await ctx.message.reply(f"❌ Channel {channel.mention} is already excepted!")
-
-    except ValueError as e:
-        await ctx.message.reply(f"❌ Error: {str(e)}")
-    except Exception as e:
-        await ctx.message.reply(f"❌ An error occurred: {str(e)}")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def remove_exp(ctx, channel_id: str = None):
-    global exceptions_data
     try:
         if channel_id is None:
             channel = ctx.channel
@@ -224,32 +187,50 @@ async def remove_exp(ctx, channel_id: str = None):
         guild_id = str(ctx.guild.id)
         channel_id = str(channel.id)
 
-        if guild_id in exceptions_data and channel_id in exceptions_data[guild_id]:
-            exceptions_data[guild_id].remove(channel_id)
-            save_exceptions(exceptions_data)
-            
+        if exception_manager.add_channel(guild_id, channel_id):
+            channel_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
+            await ctx.message.reply(f"✅ {channel_type} channel {channel.mention} (`{channel_id}`) added to exceptions!")
+        else:
+            await ctx.message.reply(f"❌ Channel {channel.mention} is already excepted!")
+
+    except Exception as e:
+        await ctx.send(f"❌ Error: {str(e)}")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def remove_exp(ctx, channel_id: str = None):
+    try:
+        if channel_id is None:
+            channel = ctx.channel
+        else:
+            channel_id = channel_id.replace('<#', '').replace('>', '')
+            channel = bot.get_channel(int(channel_id))
+            if not channel:
+                raise ValueError("Channel not found!")
+
+        guild_id = str(ctx.guild.id)
+        channel_id = str(channel.id)
+
+        if exception_manager.remove_channel(guild_id, channel_id):
             channel_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
             await ctx.message.reply(f"✅ {channel_type} channel {channel.mention} (`{channel_id}`) removed from exceptions!")
         else:
             await ctx.message.reply(f"❌ Channel {channel.mention} is not in exceptions list!")
 
-    except ValueError as e:
-        await ctx.message.reply(f"❌ Error: {str(e)}")
     except Exception as e:
-        await ctx.message.reply(f"❌ An error occurred: {str(e)}")
-        
+        await ctx.message.reply(f"❌ Error: {str(e)}")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def list_exp(ctx):
-    global exceptions_data
     guild_id = str(ctx.guild.id)
+    exceptions = exception_manager.get_exceptions(guild_id)
 
-    if guild_id in exceptions_data and exceptions_data[guild_id]:
+    if exceptions:
         text_channels = []
         voice_channels = []
 
-        for ch_id in exceptions_data[guild_id]:
+        for ch_id in exceptions:
             channel = ctx.guild.get_channel(int(ch_id))
             if channel:
                 if isinstance(channel, discord.VoiceChannel):
@@ -267,7 +248,6 @@ async def list_exp(ctx):
         await ctx.message.reply(embed=embed)
     else:
         await ctx.message.reply("No channels are excepted! ℹ️")
-
 
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
