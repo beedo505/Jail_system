@@ -109,7 +109,7 @@ async def on_command_error(ctx, error):
 
 
 @bot.command()
-@commands.has_permissions(administrator=true)
+@commands.has_permissions(administrator=True)
 async def add_exp(ctx, channel_id: str = None):
     """Add channel to exceptions using ID or current channel"""
     try:
@@ -154,7 +154,7 @@ async def add_exp(ctx, channel_id: str = None):
         await ctx.message.reply("This channel is already in exceptions! ⚠️")
 
 @bot.command()
-@commands.has_permissions(administrator=true)
+@commands.has_permissions(administrator=True)
 async def remove_exp(ctx, channel_id: str = None):
     """Remove channel from exceptions using ID or current channel"""
     try:
@@ -192,7 +192,8 @@ async def remove_exp(ctx, channel_id: str = None):
         await ctx.message.reply("This channel is not in exceptions! ⚠️")
 
 @bot.command()
-async def list_exceptions(ctx):
+@commands.has_permissions(administrator=True)
+async def list_exp(ctx):
     """Display list of excepted channels"""
     guild_id = str(ctx.guild.id)
 
@@ -208,23 +209,16 @@ async def list_exceptions(ctx):
                 else:
                     text_channels.append(f"{channel.mention} (Text) `ID: {channel.id}`")
 
-        response = "📋 **Excepted Channels:**"
+        response = "📋 **Excepted Channels:**\n"
         if text_channels:
-            response += ""
-
-**Text Channels:**
-" + "
-.join(text_channels)
+            response += "\n**Text Channels:**\n" + "\n".join(text_channels)
         if voice_channels:
-            response += ""
+            response += "\n**Voice Channels:**\n" + "\n".join(voice_channels)
 
-**Voice Channels:**
-" + "
-.join(voice_channels)
-
-        await ctx.send(response)
+        await ctx.message.reply(response)
     else:
-        await ctx.send("No channels are excepted! ℹ️")
+        await ctx.message.reply("No channels are excepted! ℹ️")
+
 
 # أمر سجن: -سجن @username reason
 @commands.has_permissions(administrator=True)
