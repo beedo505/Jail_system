@@ -167,6 +167,12 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.message.reply("❌ | The mention is incorrect")
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.message.reply("You do not have the required permissions to use this command.")
+    elif isinstance(error, commands.CommandInvokeError):
+        await ctx.message.reply(f"An error occurred: {error.original}")
+    elif isinstance(error, commands.CommandNotFound):
+        await ctx.message.reply("This command does not exist.")
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
@@ -267,13 +273,13 @@ async def زوطلي(ctx, user: discord.User, *, reason=None):
         try:
             await member.ban(reason=reason)
             reason_text = reason if reason else "No reason provided"
-            await ctx.send(f"{user.mention} has been permanently banned. Reason: {reason_text}")
+            await ctx.message.reply(f"{user.mention} has been permanently زوط. Reason: {reason_text}")
         except discord.Forbidden:
-            await ctx.send("I don't have permission to ban this user.")
+            await ctx.message.reply("I don't have permission to ban this user.")
         except discord.HTTPException as e:
-            await ctx.send(f"An error occurred while trying to ban the user: {e}")
+            await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
     else:
-        await ctx.send(f"User with ID `{user.id}` is not in this server.")
+        await ctx.message.reply(f"User with ID `{user.id}` is not in this server.")
 
 # Unban command
 @bot.command()
@@ -291,13 +297,13 @@ async def فك(ctx, user_reference: str):
             banned_user = ban_entry.user
             if banned_user.id == user_id:
                 await ctx.guild.unban(banned_user)
-                await ctx.send(f"{banned_user.mention} has been unbanned.")
+                await ctx.message.reply(f"{banned_user.mention} has been unbanned.")
                 return
-        await ctx.send(f"User with ID `{user_id}` is not found in the ban list.")
+        await ctx.message.reply(f"User with ID `{user_id}` is not found in the ban list.")
     except ValueError:
-        await ctx.send("Invalid input. Please provide a valid user mention or ID.")
+        await ctx.message.reply("Invalid input. Please provide a valid user mention or ID.")
     except discord.HTTPException as e:
-        await ctx.send(f"An error occurred while trying to unban the user: {e}")
+        await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
 
 # امر السجن
 @commands.has_permissions(administrator=True)
@@ -368,7 +374,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     await member.edit(roles=[prisoner_role])
 
     # Store jail data
-    prison_data[member.id] = {"roles": previous_roles, "release_time": release_time, reason=reason}
+    prison_data[member.id] = {"roles": previous_roles, "release_time": release_time, "reason": reason}
     await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
     
     # Automatic release after the specified time
