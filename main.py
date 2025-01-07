@@ -337,7 +337,7 @@ async def فك(ctx, user_reference: str = None):
 
         # التكرار عبر المولد باستخدام async for
         found_user = None
-        async for ban_entry in banned_users:
+        for ban_entry in banned_users:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
                 found_user = banned_user
