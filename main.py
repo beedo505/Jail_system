@@ -304,14 +304,12 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
-        if user.startswith("<@") and user.endswith(">"):
-            user_id = int(user[2:-1].replace("!", ""))  # استخراج ID من المنشن
-        else:
-            user_id = int(user)  # استخدام ID مباشرةً
+        if user:
+            user_id = user.id  # مباشرة استخدم ID من الكائن user
 
         # محاولة الحصول على المستخدم من السيرفر
         member = ctx.guild.get_member(user_id)
-        
+
         if member:
             # إذا كان العضو موجودًا في السيرفر
             await member.ban(reason=reason)
@@ -320,9 +318,6 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
             # إذا كان العضو غير موجود في السيرفر
             await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the ban cannot be applied.")
 
-    except ValueError:
-        # إذا كان الإدخال غير صالح (غير منشن أو ID)
-        await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
     except discord.HTTPException as e:
         # إذا حدث خطأ في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
