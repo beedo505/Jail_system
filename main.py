@@ -268,7 +268,7 @@ async def list_exp(ctx):
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
 @commands.has_permissions(ban_members=True)
-async def زوطلي(ctx, user: discord.User = None, *, reason = None):
+async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 
     if not user:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
@@ -351,7 +351,7 @@ async def فك(ctx, *, user_input=None):
 
     except ValueError:
         # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
-        await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
+        await ctx.message.reply("Invalid input. Please mention a user (`@username`) or their ID.")
     except discord.HTTPException as e:
         # إذا حدث خطأ آخر في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
