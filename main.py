@@ -344,15 +344,15 @@ async def فك(ctx, user_input: str = None):
         else:
             user_id = int(user_input)  # افتراض الإدخال كـ ID
 
-        # جلب قائمة الحظر
-        bans = await guild.fetch_bans()
+        # استخدام guild.bans بدلاً من fetch_bans
+        bans = await guild.bans()
         user = discord.utils.get(bans, user__id=user_id)
 
         if user:
             await guild.unban(user.user)
             await ctx.message.reply(f"✅ Successfully unbanned {user.user.name}#{user.user.discriminator}")
         else:
-            await ctx.message.reply("❌ This user is not banned.")
+            await ctx.send("❌ This user is not banned.")
     except discord.Forbidden:
         await ctx.message.reply("❌ I don't have permission to unban users.")
     except discord.HTTPException as e:
