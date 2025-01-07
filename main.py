@@ -73,6 +73,7 @@ class ExceptionManager:
         return self.data.get(guild_id, [])
 
 exception_manager = ExceptionManager()
+data = load(self)
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
