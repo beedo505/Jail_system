@@ -186,7 +186,7 @@ async def add_exp(ctx, channel_id: str = None):
             await ctx.message.reply(f"❌ Channel {channel.mention} is already excepted!")
 
     except Exception as e:
-        await ctx.send(f"❌ Error: {str(e)}")
+        await ctx.message.send(f"❌ Error: {str(e)}")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
