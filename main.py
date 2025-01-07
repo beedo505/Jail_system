@@ -263,19 +263,19 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
     if not member:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
-            "الأمر: -سجن",
-            "الوصف: سجن شخص معين",
-            "الاستخدام: -سجن [@شخص]"
+            "•  الأمر        :  -سجن",
+            "•  الوصف       :  سجن شخص معين",
+            "•  الاستخدام    :  -سجن [@شخص]",
         ]
 
         aliases_lines = [
-            "-سجن",
-            "-حبس",
-            "-احبس",
-            "-اشخط",
-            "-عدس",
-            "-ارمي",
-            "-كوي",
+            "•  -سجن",
+            "•  -حبس",
+            "•  -احبس"
+            "•  -اشخط",
+            "•  -ارمي",
+            "•  -عدس"
+            "•  -كوي",
         ]
 
         embed.add_field(
@@ -328,29 +328,23 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
 async def عفو(ctx, member: discord.Member=None):
     await release_member(ctx, member)
 
-# Function to release a member from jail
-async def release_member(ctx, member):
-    if member.id not in prison_data:
-        await ctx.message.reply(f"{member.mention} is not in jail.")
-        return
-
     if not member:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
         usage_lines = [
-            "الأمر: -عفو",
-            "الوصف: للعفو عن شخص مسجون",
-            "الاستخدام: -عفو [@شخص]"
+            "•  الأمر        :  -عفو",
+            "•  الوصف       :  للعفو عن شخص مسجون",
+            "•  الاستخدام    :  -عفو [@شخص]",
         ]
 
         aliases_lines = [
-            "-عفو",
-            "-اعفي",
-            "-اطلع",
-            "-اخرج",
-            "-سامح",
-            "-طلع",
-            "-اخراج",
-            "-اعفاء",
+            "•  -عفو",
+            "•  -اعفي",
+            "•  -اطلع"
+            "•  -اخرج",
+            "•  -سامح",
+            "•  -طلع",
+            "•  -اخراج",
+            "•  -اعفاء",
         ]
 
         embed.add_field(
@@ -366,6 +360,12 @@ async def release_member(ctx, member):
         )
 
         await ctx.message.reply(embed=embed)
+        return
+
+# Function to release a member from jail
+async def release_member(ctx, member):
+    if member.id not in prison_data:
+        await ctx.message.reply(f"{member.mention} is not in jail.")
         return
 
     guild = ctx.guild
