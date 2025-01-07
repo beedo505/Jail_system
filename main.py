@@ -332,36 +332,33 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @bot.command()
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, user_reference: str = None):
-    if user_reference is None:
-        await ctx.reply("Please mention a user or provide their user ID to unban.")
+    if user_input is None:
+        await ctx.message.reply("❌ Please provide a user mention or ID to unban.")
         return
 
+    guild = ctx.guild
     try:
-        # Check if the input is a mention or ID
-        if user_reference.startswith("<@") and user_reference.endswith(">"):
-            user_id = int(user_reference[2:-1].replace("!", ""))  # Extract ID from mention
+        # التحقق إذا كان الإدخال عبارة عن منشن
+        if user_input.startswith('<@') and user_input.endswith('>'):
+            user_id = int(user_input.strip('<@!>'))  # استخراج الـ ID من المنشن
         else:
-            user_id = int(user_reference)  # Treat as ID directly
+            user_id = int(user_input)  # افتراض الإدخال كـ ID
 
-        # Use a list comprehension to fetch banned users
-        banned_users = await ctx.guild.fetch_bans()
-        found_user = discord.utils.find(lambda ban: ban.user.id == user_id, banned_users)
+        # جلب قائمة الحظر
+        bans = await guild.fetch_bans()
+        user = discord.utils.get(bans, user__id=user_id)
 
-        if found_user:
-            await ctx.guild.unban(found_user.user)  # Unban the user
-            await ctx.reply(f"{found_user.user.mention} has been successfully unbanned.")
+        if user:
+            await guild.unban(user.user)
+            await ctx.message.reply(f"✅ Successfully unbanned {user.user.name}#{user.user.discriminator}")
         else:
-            await ctx.reply(f"No user found in the ban list with ID `{user_id}`.")
-
-    except ValueError:
-        # If the input is invalid
-        await ctx.reply("Invalid input. Please provide a valid user mention or user ID.")
+            await ctx.message.reply("❌ This user is not banned.")
+    except discord.Forbidden:
+        await ctx.message.reply("❌ I don't have permission to unban users.")
     except discord.HTTPException as e:
-        # If there's an error with Discord's API
-        await ctx.reply(f"An error occurred while unbanning: {e}")
-    except Exception as e:
-        # Catch all other unexpected errors
-        await ctx.reply(f"An unexpected error occurred: {e}")
+        await ctx.message.reply(f"❌ An error occurred while trying to unban: {e}")
+    except ValueError:
+        await ctx.message.reply("❌ Please provide a valid user ID or mention.")
         
 # امر السجن
 @commands.has_permissions(administrator=True)
