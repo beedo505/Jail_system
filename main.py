@@ -252,7 +252,7 @@ async def list_exp(ctx):
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'اعفي'])
-async def سجن(ctx, member: discord.Member, duration: str = "8h"):
+async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
@@ -311,7 +311,7 @@ async def سجن(ctx, member: discord.Member, duration: str = "8h"):
 # امر العفو
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
 @commands.has_permissions(administrator=True)
-async def عفو(ctx, member: discord.Member):
+async def عفو(ctx, member: discord.Member=None):
     await release_member(ctx, member)
 
 # Function to release a member from jail
