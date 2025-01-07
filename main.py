@@ -269,13 +269,13 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
         ]
 
         aliases_lines = [
-            "•  -سجن",
-            "•  -حبس",
-            "•  -احبس"
-            "•  -اشخط",
-            "•  -ارمي",
-            "•  -عدس"
-            "•  -كوي",
+            "•  -سجن" \n,
+            "•  -حبس" \n,
+            "•  -احبس" \n,
+            "•  -اشخط" \n,
+            "•  -ارمي" \n,
+            "•  -عدس" \n,
+            "•  -كوي" \n,
         ]
 
         embed.add_field(
