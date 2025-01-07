@@ -74,6 +74,10 @@ class ExceptionManager:
         return self.data.get(guild_id, [])
 
 exception_manager = ExceptionManager()
+data_manager = ExceptionManager("exceptions.json")
+data_manager.load()
+data_manager.data["example_channel"] = {"permissions"}
+data_manager.save()
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
