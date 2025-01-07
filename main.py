@@ -304,10 +304,10 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
-        if user_reference.startswith("<@") and user_reference.endswith(">"):
-            user_id = int(user_reference[2:-1].replace("!", ""))  # استخراج ID من المنشن
+        if user.startswith("<@") and user.endswith(">"):
+            user_id = int(user[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
-            user_id = int(user_reference)  # استخدام ID مباشرةً
+            user_id = int(user)  # استخدام ID مباشرةً
 
         # محاولة الحصول على المستخدم من السيرفر
         member = ctx.guild.get_member(user_id)
