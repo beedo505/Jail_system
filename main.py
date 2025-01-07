@@ -269,7 +269,7 @@ async def list_exp(ctx):
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User, *, reason=None):
     member = ctx.guild.get_member(user.id)
-    if not user:
+    if not member:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -زوطلي \n",
