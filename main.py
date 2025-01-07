@@ -302,22 +302,28 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
         return
 
     try:
-        # حظر المستخدم
-        await ctx.guild.ban(user, reason=reason)
-
-        reason_text = reason if reason else "No reason provided"
-        await ctx.message.reply(f"{user.mention} has زوط. Reason: {reason_text}")
-
-        # في حال كان العضو غير موجود في السيرفر (أي أنه ليس في قائمة الأعضاء بعد الحظر)
-        banned_member = ctx.guild.get_member(user.id)
-        if banned_member:
-            await ctx.message.reply(f"Found the user in the server: {banned_member.name}")
+        # تحقق من أن المستخدم قد أدخل منشن أو ID
+        if user_reference.startswith("<@") and user_reference.endswith(">"):
+            user_id = int(user_reference[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
-            await ctx.message.reply(f"{user.mention} has have been زوط.")
+            user_id = int(user_reference)  # استخدام ID مباشرةً
 
-    except discord.Forbidden:
-        await ctx.message.reply("I don't have permission to ban this user.")
+        # محاولة الحصول على المستخدم من السيرفر
+        member = ctx.guild.get_member(user_id)
+        
+        if member:
+            # إذا كان العضو موجودًا في السيرفر
+            await member.ban(reason=reason)
+            await ctx.message.reply(f"{member.mention} has been banned. Reason: {reason}")
+        else:
+            # إذا كان العضو غير موجود في السيرفر
+            await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the ban cannot be applied.")
+
+    except ValueError:
+        # إذا كان الإدخال غير صالح (غير منشن أو ID)
+        await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
     except discord.HTTPException as e:
+        # إذا حدث خطأ في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
 
 
