@@ -326,7 +326,6 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member=None):
-    await release_member(ctx, member)
 
     if not member:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
@@ -337,14 +336,14 @@ async def عفو(ctx, member: discord.Member=None):
         ]
 
         aliases_lines = [
-            "•  -عفو",
-            "•  -اعفي",
-            "•  -اطلع"
-            "•  -اخرج",
-            "•  -سامح",
-            "•  -طلع",
-            "•  -اخراج",
-            "•  -اعفاء",
+            "•  -عفو \n",
+            "•  -اعفي \n",
+            "•  -اطلع \n",
+            "•  -اخرج \n",
+            "•  -سامح \n",
+            "•  -طلع \n",
+            "•  -اخراج \n",
+            "•  -اعفاء \n",
         ]
 
         embed.add_field(
@@ -361,6 +360,8 @@ async def عفو(ctx, member: discord.Member=None):
 
         await ctx.message.reply(embed=embed)
         return
+
+    await release_member(ctx, member)
 
 # Function to release a member from jail
 async def release_member(ctx, member):
