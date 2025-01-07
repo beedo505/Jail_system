@@ -339,10 +339,10 @@ async def فك(ctx, *, user_input = None):
             user_id = int(user_input)  # استخدام ID مباشرةً
 
         # محاولة إلغاء الحظر باستخدام ID
-        user = await ctx.guild.fetch_ban(user_id)
+        ban_entry = await ctx.guild.fetch_ban(user_id)
         
-        # إذا تم العثور على الحظر
-        await ctx.guild.unban(user.user)  # إلغاء الحظر باستخدام كائن user
+        # إلغاء الحظر باستخدام كائن user من BanEntry
+        await ctx.guild.unban(ban_entry.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
         await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
     
     except discord.NotFound:
