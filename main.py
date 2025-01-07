@@ -324,9 +324,9 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 
 
 # Unban command
-@bot.command()
+@bot.command(aliases=['unban', 'un'])
 @commands.has_permissions(ban_members=True)
-async def فك(ctx, *, user_input = None):
+async def فك(ctx, *, user_input=None):
     if not user_input:
         await ctx.message.reply("Please mention the user or provide their ID to unban. Example: `!unban @username` or `!unban 1234567890`.")
         return
@@ -338,22 +338,24 @@ async def فك(ctx, *, user_input = None):
         else:
             user_id = int(user_input)  # استخدام ID مباشرةً
 
-        # محاولة الحصول على المستخدم من السيرفر
-        member = ctx.guild.get_member(user_id)
+        # محاولة الحصول على المستخدم المتبند
+        # نستخدم fetch_bans للتأكد أن العضو محظور
+        bans = await ctx.guild.bans()
+        member = discord.utils.get(bans, user__id=user_id)
         
         if member:
-            # إذا كان العضو موجودًا في السيرفر
-            await ctx.guild.unban(member)  # إلغاء الحظر باستخدام كائن Member
+            # إذا كان العضو محظورًا
+            await ctx.guild.unban(member.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
             await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
         else:
-            # إذا كان العضو غير موجود في السيرفر
-            await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the unban cannot be applied.")
-
+            # إذا لم يكن العضو متبندًا
+            await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
+    
     except ValueError:
         # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
         await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
     except discord.HTTPException as e:
-        # إذا حدث خطأ في واجهة Discord API
+        # إذا حدث خطأ آخر في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
 # امر السجن
