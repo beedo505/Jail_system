@@ -331,7 +331,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 # Unban command
 @bot.command()
 @commands.has_permissions(ban_members=True)
-async def فك(ctx, user_reference: str = None):
+async def فك(ctx, user_input: str = None):
     if user_input is None:
         await ctx.message.reply("❌ Please provide a user mention or ID to unban.")
         return
