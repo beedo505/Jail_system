@@ -40,6 +40,7 @@ class ExceptionManager:
         try:
             print(f"💾 Attempting to save data: {self.data}")
             os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            
             with open(self.file_path, 'w', encoding='utf-8') as f:
                 json.dump(self.data, f, indent=4)
                 f.flush()
@@ -74,7 +75,7 @@ class ExceptionManager:
         return self.data.get(guild_id, [])
 
 exception_manager = ExceptionManager()
-data_manager = ExceptionManager("exceptions.json")
+data_manager = ExceptionManager("/app/data/exceptions.json")
 data_manager.load()
 data_manager.data["example_channel"] = {"permissions"}
 data_manager.save()
