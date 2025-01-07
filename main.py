@@ -265,10 +265,41 @@ async def list_exp(ctx):
 
 
 # Ban command
-@bot.command()
+@bot.command(aliases = ['افتح', 'اشخط', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي')
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User, *, reason=None):
     member = ctx.guild.get_member(user.id)
+    if not member:
+        embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
+        usage_lines = [
+            "•  الأمر        :  -زوطلي \n",
+            "•  الاستخدام    :  -زوطلي [@شخص]",
+        ]
+
+        aliases_lines = [
+            "•  -افتح \n",
+            "•  -اشخط \n",
+            "•  -اغرق \n",
+            "•  -برا \n",
+            "•  -افتحك \n",
+            "•  -اشخطك \n",
+            "•  -انهي \n",
+        ]
+
+        embed.add_field(
+            name="📌 معلومات الأمر",
+            value=f"{''.join(usage_lines)}",
+            inline=False
+        )
+
+        embed.add_field(
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
+        await ctx.message.reply(embed=embed)
+        return
     if member:
         try:
             await member.ban(reason=reason)
@@ -284,14 +315,20 @@ async def زوطلي(ctx, user: discord.User, *, reason=None):
 # Unban command
 @bot.command()
 @commands.has_permissions(ban_members=True)
-async def فك(ctx, user_reference: str):
+async def فك(ctx, user_reference: str = None):
     try:
+        # Check if the command was sent without a user reference
+        if not user_reference:
+            await ctx.message.reply("You need to mention a user or provide their user ID to unban them.")
+            return
+
         # Check if the input is a mention or ID
         if user_reference.startswith("<@") and user_reference.endswith(">"):
             user_id = int(user_reference[2:-1].replace("!", ""))  # Extract ID from mention
         else:
             user_id = int(user_reference)  # Treat as a direct ID
 
+        # Fetch the ban list and find the user
         banned_users = await ctx.guild.bans()
         for ban_entry in banned_users:
             banned_user = ban_entry.user
@@ -299,12 +336,16 @@ async def فك(ctx, user_reference: str):
                 await ctx.guild.unban(banned_user)
                 await ctx.message.reply(f"{banned_user.mention} has been unbanned.")
                 return
+
+        # If the user is not in the ban list
         await ctx.message.reply(f"User with ID `{user_id}` is not found in the ban list.")
     except ValueError:
-        await ctx.message.reply("Invalid input. Please provide a valid user mention or ID.")
+        # Invalid input (not a mention or valid ID)
+        await ctx.message.reply("Invalid input. Please mention a user (`@username`) or (`user ID`).")
     except discord.HTTPException as e:
+        # Discord API error
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
-
+        
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
