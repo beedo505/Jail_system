@@ -265,7 +265,7 @@ async def list_exp(ctx):
 
 
 # Ban command
-@bot.command(aliases = ['افتح', 'اشخط', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
+@bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User, *, reason=None):
     member = ctx.guild.get_member(user.id)
@@ -278,7 +278,6 @@ async def زوطلي(ctx, user: discord.User, *, reason=None):
 
         aliases_lines = [
             "•  -افتح \n",
-            "•  -اشخط \n",
             "•  -اغرق \n",
             "•  -برا \n",
             "•  -افتحك \n",
