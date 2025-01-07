@@ -325,6 +325,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @bot.command()
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, user_reference: str = None):
+    async def فك(ctx, user_reference: str):
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user_reference.startswith("<@") and user_reference.endswith(">"):
@@ -332,12 +333,11 @@ async def فك(ctx, user_reference: str = None):
         else:
             user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # جلب قائمة الباندات وتحويلها إلى قائمة فعلية
+        # جلب قائمة الباندات بشكل صحيح باستخدام async for
         banned_users = await ctx.guild.bans()
-        banned_users_list = list(banned_users)  # تحويل المولد إلى قائمة
 
-        # البحث عن المستخدم في قائمة الباندات
-        for ban_entry in banned_users_list:
+        # التكرار عبر المولد باستخدام async for
+        async for ban_entry in banned_users:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
                 await ctx.guild.unban(banned_user)  # إلغاء الحظر
