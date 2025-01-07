@@ -325,7 +325,6 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @bot.command()
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, user_reference: str = None):
-    async def فك(ctx, user_reference: str):
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user_reference.startswith("<@") and user_reference.endswith(">"):
