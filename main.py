@@ -1,5 +1,3 @@
-pip install -U discord.py
-pip freeze > requirements.txt
 import discord
 from discord.ext import commands
 import logging
