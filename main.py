@@ -328,7 +328,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, *, user_input=None):
     if not user_input:
-        await ctx.message.reply("Please mention the user or provide their ID to unban. Example: `!unban @username` or `!unban 1234567890`.")
+        await ctx.message.reply("Please mention the user or their ID to unban.")
         return
     
     try:
@@ -338,17 +338,16 @@ async def فك(ctx, *, user_input=None):
         else:
             user_id = int(user_input)  # استخدام ID مباشرةً
 
-        # محاولة الحصول على قائمة الباندات
-        bans = await ctx.guild.bans()
-        member = discord.utils.get(bans, user__id=user_id)
+        # محاولة الحصول على قائمة الباندات باستخدام async for
+        async for ban_entry in ctx.guild.bans():
+            if ban_entry.user.id == user_id:
+                # إذا كان العضو محظورًا
+                await ctx.guild.unban(ban_entry.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
+                await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
+                return
 
-        if member:
-            # إذا كان العضو محظورًا
-            await ctx.guild.unban(member.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
-            await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
-        else:
-            # إذا لم يكن العضو متبندًا
-            await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
+        # إذا لم يكن العضو متبندًا
+        await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
 
     except ValueError:
         # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
