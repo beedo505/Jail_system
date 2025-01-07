@@ -251,13 +251,32 @@ async def list_exp(ctx):
 
 # امر السجن
 @commands.has_permissions(administrator=True)
-@bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس'])
+@bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'اعفي'])
 async def سجن(ctx, member: discord.Member, duration: str = "8h"):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+        return
+
+    if not member:
+        embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
+        embed.add_field(
+            name="الاستخدام",
+            value="-سجن [@شخص]",
+            inline=False)
+        embed.add_field(
+            name="الاختصارات",
+            value=
+            "-احبس"
+            "-اشخط"
+            "-ارمي"
+            "-عدس"
+            "-كوي"
+            "-اعفي",
+            inline=False)
+        await ctx.message.reply(embed=embed)
         return
 
     # Calculate jail time
@@ -299,6 +318,24 @@ async def عفو(ctx, member: discord.Member):
 async def release_member(ctx, member):
     if member.id not in prison_data:
         await ctx.message.reply(f"{member.mention} is not in jail.")
+        return
+
+    if not member:
+        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
+        embed.add_field(
+            name="الاستخدام",
+            value="-عفو [@شخص]",
+            inline=False)
+        embed.add_field(
+            name="الاختصارات",
+            value="-اطلع"
+            "-اخرج"
+            "-سامح"
+            "-مسامحة"
+            "-اخراج"
+            "-اعفاء",
+            inline=False)
+        await ctx.message.reply(embed=embed)
         return
 
     guild = ctx.guild
