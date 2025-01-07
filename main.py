@@ -257,16 +257,62 @@ async def list_exp(ctx):
     else:
         await ctx.message.reply("ℹ️ No channels are excepted!")
 
+
+# Ban command
+@bot.command()
+@commands.has_permissions(ban_members=True)
+async def زوطلي(ctx, user: discord.User, *, reason=None):
+    member = ctx.guild.get_member(user.id)
+    if member:
+        try:
+            await member.ban(reason=reason)
+            reason_text = reason if reason else "No reason provided"
+            await ctx.send(f"{user.mention} has been permanently banned. Reason: {reason_text}")
+        except discord.Forbidden:
+            await ctx.send("I don't have permission to ban this user.")
+        except discord.HTTPException as e:
+            await ctx.send(f"An error occurred while trying to ban the user: {e}")
+    else:
+        await ctx.send(f"User with ID `{user.id}` is not in this server.")
+
+# Unban command
+@bot.command()
+@commands.has_permissions(ban_members=True)
+async def فك(ctx, user_reference: str):
+    try:
+        # Check if the input is a mention or ID
+        if user_reference.startswith("<@") and user_reference.endswith(">"):
+            user_id = int(user_reference[2:-1].replace("!", ""))  # Extract ID from mention
+        else:
+            user_id = int(user_reference)  # Treat as a direct ID
+
+        banned_users = await ctx.guild.bans()
+        for ban_entry in banned_users:
+            banned_user = ban_entry.user
+            if banned_user.id == user_id:
+                await ctx.guild.unban(banned_user)
+                await ctx.send(f"{banned_user.mention} has been unbanned.")
+                return
+        await ctx.send(f"User with ID `{user_id}` is not found in the ban list.")
+    except ValueError:
+        await ctx.send("Invalid input. Please provide a valid user mention or ID.")
+    except discord.HTTPException as e:
+        await ctx.send(f"An error occurred while trying to unban the user: {e}")
+
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
-async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
+async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
         return
+
+    if duration is None or not any(unit in duration for unit in ["m", "h", "d"]):
+        reason = duration if duration else reason  # Treat `duration` as reason if it's not a valid duration
+        duration = "8h"  # Set default duration
 
     if not member:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
@@ -322,9 +368,8 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
     await member.edit(roles=[prisoner_role])
 
     # Store jail data
-    prison_data[member.id] = {"roles": previous_roles, "release_time": release_time}
-
-    await ctx.message.reply(f"{member.mention} has been jailed for {duration}.")
+    prison_data[member.id] = {"roles": previous_roles, "release_time": release_time, reason=reason}
+    await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
     
     # Automatic release after the specified time
     await asyncio.sleep(delta.total_seconds())
