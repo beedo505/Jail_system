@@ -11,6 +11,7 @@ import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 
+DATA_FILE = "exceptions.json"
 global exceptions_data
 exceptions_data = {}
 
