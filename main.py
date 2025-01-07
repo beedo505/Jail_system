@@ -343,12 +343,11 @@ async def فك(ctx, user_reference: str = None):
         else:
             user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # تحويل bans إلى قائمة بدلاً من استخدام async for
-        banned_users = await ctx.guild.bans()
-        banned_users_list = list(banned_users)  # تحويل المولد إلى قائمة
-
+        # استخدام fetch_bans بدلاً من bans
+        banned_users = await ctx.guild.fetch_bans()
+        
         found_user = None
-        for ban_entry in banned_users_list:
+        for ban_entry in banned_users:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
                 found_user = banned_user
