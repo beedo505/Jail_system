@@ -303,7 +303,7 @@ async def زوطلي(ctx, user: discord.User, *, reason=None):
         try:
             await member.ban(reason=reason)
             reason_text = reason if reason else "No reason provided"
-            await ctx.message.reply(f"{user.mention} has been permanently زوط. Reason: {reason_text}")
+            await ctx.message.reply(f"{user.mention} has been زوط. Reason: {reason_text}")
         except discord.Forbidden:
             await ctx.message.reply("I don't have permission to ban this user.")
         except discord.HTTPException as e:
