@@ -10,6 +10,7 @@ from collections import defaultdict
 import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
+print(discord.__version__)
 
 DATA_FILE = "exceptions.json"
 global exceptions_data
@@ -342,11 +343,12 @@ async def فك(ctx, user_reference: str = None):
         else:
             user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # استخدام async for لتكرار عبر قائمة الباندات
+        # التكرار عبر الباندات باستخدام async for
         banned_users = await ctx.guild.bans()
 
         found_user = None
-        async for ban_entry in banned_users:
+        # جرب التكرار بشكل يدوي عبر المولد
+        for ban_entry in banned_users:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
                 found_user = banned_user
