@@ -251,7 +251,7 @@ async def list_exp(ctx):
 
 # امر السجن
 @commands.has_permissions(administrator=True)
-@bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'اعفي'])
+@bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
 async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
@@ -262,20 +262,34 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
 
     if not member:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
+        usage_lines = [
+            "الأمر: -سجن",
+            "الوصف: سجن شخص معين",
+            "الاستخدام: -سجن [@شخص]"
+        ]
+
+        aliases_lines = [
+            "-سجن",
+            "-حبس",
+            "-احبس",
+            "-اشخط",
+            "-عدس",
+            "-ارمي",
+            "-كوي",
+        ]
+
         embed.add_field(
-            name="الاستخدام",
-            value="-سجن [@شخص]",
-            inline=False)
+            name="📌 معلومات الأمر",
+            value=f"{''.join(usage_lines)}",
+            inline=False
+        )
+
         embed.add_field(
-            name="الاختصارات",
-            value=
-            "-احبس"
-            "-اشخط"
-            "-ارمي"
-            "-عدس"
-            "-كوي"
-            "-اعفي",
-            inline=False)
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
         await ctx.message.reply(embed=embed)
         return
 
@@ -309,7 +323,7 @@ async def سجن(ctx, member: discord.Member=None, duration: str = "8h"):
     await release_member(ctx, member)
 
 # امر العفو
-@bot.command(aliases = ['اعفاء' , 'اخراج', 'مسامحة' , 'سامح' , 'اخرج' , 'اطلع'])
+@bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member=None):
     await release_member(ctx, member)
@@ -322,19 +336,35 @@ async def release_member(ctx, member):
 
     if not member:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
-        embed.add_field(
-            name="الاستخدام",
-            value="-عفو [@شخص]",
-            inline=False)
-        embed.add_field(
-            name="الاختصارات",
-            value="-اطلع"
-            "-اخرج"
-            "-سامح"
-            "-مسامحة"
-            "-اخراج"
+        usage_lines = [
+            "الأمر: -عفو",
+            "الوصف: للعفو عن شخص مسجون",
+            "الاستخدام: -عفو [@شخص]"
+        ]
+
+        aliases_lines = [
+            "-عفو",
+            "-اعفي",
+            "-اطلع",
+            "-اخرج",
+            "-سامح",
+            "-طلع",
+            "-اخراج",
             "-اعفاء",
-            inline=False)
+        ]
+
+        embed.add_field(
+            name="📌 معلومات الأمر",
+            value=f"{''.join(usage_lines)}",
+            inline=False
+        )
+
+        embed.add_field(
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
         await ctx.message.reply(embed=embed)
         return
 
