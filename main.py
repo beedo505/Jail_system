@@ -326,33 +326,32 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, user_reference: str = None):
     try:
-        # Check if the command was sent without a user reference
-        if not user_reference:
-            await ctx.message.reply("You need to mention a user or provide their user ID to unban them.")
-            return
-
-        # Check if the input is a mention or ID
+        # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user_reference.startswith("<@") and user_reference.endswith(">"):
-            user_id = int(user_reference[2:-1].replace("!", ""))  # Extract ID from mention
+            user_id = int(user_reference[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
-            user_id = int(user_reference)  # Treat as a direct ID
+            user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # Fetch the ban list and find the user
+        # جلب قائمة الباندات وتحويلها إلى قائمة فعلية
         banned_users = await ctx.guild.bans()
-        for ban_entry in banned_users:
+        banned_users_list = list(banned_users)  # تحويل المولد إلى قائمة
+
+        # البحث عن المستخدم في قائمة الباندات
+        for ban_entry in banned_users_list:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
-                await ctx.guild.unban(banned_user)
+                await ctx.guild.unban(banned_user)  # إلغاء الحظر
                 await ctx.message.reply(f"{banned_user.mention} has been unbanned.")
                 return
-
-        # If the user is not in the ban list
+        
+        # إذا لم يتم العثور على المستخدم في الباندات
         await ctx.message.reply(f"User with ID `{user_id}` is not found in the ban list.")
+        
     except ValueError:
-        # Invalid input (not a mention or valid ID)
-        await ctx.message.reply("Invalid input. Please mention a user (`@username`) or (`user ID`).")
+        # إذا كان الإدخال غير صالح (غير منشن أو ID)
+        await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
     except discord.HTTPException as e:
-        # Discord API error
+        # إذا حدث خطأ في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
 # امر السجن
