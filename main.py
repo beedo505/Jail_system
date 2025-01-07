@@ -95,7 +95,7 @@ bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد الباد
 prison_data = {}
 
 MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتبارها سبام
-TIME_LIMIT = 10  # الوقت (بالثواني) الذي يتم فيه احتساب عدد الرسائل
+TIME_LIMIT = 10  # الوقت (بالثواني) الذي يتم فيه احتساب عدد الرسائg
 spam_records = defaultdict(list)  # لتتبع الرسائل لكل مستخدم
 
 user_messages = defaultdict(list)
