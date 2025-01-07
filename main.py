@@ -338,20 +338,22 @@ async def فك(ctx, user_reference: str = None):
         else:
             user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # تحويل المولد غير المتزامن إلى قائمة باستخدام list()
+        # جلب قائمة الباندات
         banned_users = await ctx.guild.bans()
-        banned_users_list = list(banned_users)  # تحويل المولد إلى قائمة
 
-        # البحث عن المستخدم في الباندات
-        for ban_entry in banned_users_list:
+        # التكرار عبر الباندات باستخدام async for
+        found_user = None
+        async for ban_entry in banned_users:
             banned_user = ban_entry.user
             if banned_user.id == user_id:
-                await ctx.guild.unban(banned_user)  # إلغاء الحظر
-                await ctx.message.reply(f"{banned_user.mention} has been unbanned.")
-                return
+                found_user = banned_user
+                break
 
-        # إذا لم يتم العثور على المستخدم في الباندات
-        await ctx.message.reply(f"User with ID `{user_id}` is not found in the ban list.")
+        if found_user:
+            await ctx.guild.unban(found_user)  # إلغاء الحظر
+            await ctx.message.reply(f"{found_user.mention} has been unbanned.")
+        else:
+            await ctx.message.reply(f"User with ID `{user_id}` is not found in the ban list.")
         
     except ValueError:
         # إذا كان الإدخال غير صالح (غير منشن أو ID)
