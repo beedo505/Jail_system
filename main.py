@@ -328,7 +328,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, *, user_input = None):
     if not user_input:
-        await ctx.message.reply("Please mention the user or provide their ID to unban.")
+        await ctx.message.reply("Please mention the user or provide their ID to unban. Example: `!unban @username` or `!unban 1234567890`.")
         return
     
     try:
@@ -342,7 +342,7 @@ async def فك(ctx, *, user_input = None):
         user = await ctx.guild.fetch_ban(user_id)
         
         # إذا تم العثور على الحظر
-        await ctx.guild.unban(user.user)  # إلغاء الحظر
+        await ctx.guild.unban(user.user)  # إلغاء الحظر باستخدام كائن user
         await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
     
     except discord.NotFound:
