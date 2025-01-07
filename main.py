@@ -338,22 +338,23 @@ async def فك(ctx, *, user_input = None):
         else:
             user_id = int(user_input)  # استخدام ID مباشرةً
 
-        # محاولة إلغاء الحظر باستخدام ID
-        ban_entry = await ctx.guild.fetch_ban(user_id)
+        # محاولة الحصول على المستخدم من السيرفر
+        member = ctx.guild.get_member(user_id)
         
-        # إلغاء الحظر باستخدام كائن user من BanEntry
-        await ctx.guild.unban(ban_entry.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
-        await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
-    
-    except discord.NotFound:
-        # إذا كان المستخدم غير محظور
-        await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
-    except discord.HTTPException as e:
-        # إذا حدث خطأ آخر في واجهة Discord API
-        await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
+        if member:
+            # إذا كان العضو موجودًا في السيرفر
+            await ctx.guild.unban(member)  # إلغاء الحظر باستخدام كائن Member
+            await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
+        else:
+            # إذا كان العضو غير موجود في السيرفر
+            await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the unban cannot be applied.")
+
     except ValueError:
         # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
         await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
+    except discord.HTTPException as e:
+        # إذا حدث خطأ في واجهة Discord API
+        await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
 # امر السجن
 @commands.has_permissions(administrator=True)
