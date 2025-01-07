@@ -338,11 +338,10 @@ async def فك(ctx, *, user_input=None):
         else:
             user_id = int(user_input)  # استخدام ID مباشرةً
 
-        # محاولة الحصول على المستخدم المتبند
-        # نستخدم fetch_bans للتأكد أن العضو محظور
+        # محاولة الحصول على قائمة الباندات
         bans = await ctx.guild.bans()
         member = discord.utils.get(bans, user__id=user_id)
-        
+
         if member:
             # إذا كان العضو محظورًا
             await ctx.guild.unban(member.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
@@ -350,7 +349,7 @@ async def فك(ctx, *, user_input=None):
         else:
             # إذا لم يكن العضو متبندًا
             await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
-    
+
     except ValueError:
         # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
         await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
