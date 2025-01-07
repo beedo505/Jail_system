@@ -269,6 +269,19 @@ async def list_exp(ctx):
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User, *, reason=None):
     member = ctx.guild.get_member(user.id)
+    
+    if member:
+        try:
+            await member.ban(reason=reason)
+            reason_text = reason if reason else "No reason provided"
+            await ctx.message.reply(f"{user.mention} has been زوط. Reason: {reason_text}")
+        except discord.Forbidden:
+            await ctx.message.reply("I don't have permission to ban this user.")
+        except discord.HTTPException as e:
+            await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
+    else:
+        await ctx.message.reply(f"User with ID `{user.id}` is not in this server.")
+
     if not member:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
         usage_lines = [
@@ -299,17 +312,6 @@ async def زوطلي(ctx, user: discord.User, *, reason=None):
 
         await ctx.message.reply(embed=embed)
         return
-    if member:
-        try:
-            await member.ban(reason=reason)
-            reason_text = reason if reason else "No reason provided"
-            await ctx.message.reply(f"{user.mention} has been زوط. Reason: {reason_text}")
-        except discord.Forbidden:
-            await ctx.message.reply("I don't have permission to ban this user.")
-        except discord.HTTPException as e:
-            await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
-    else:
-        await ctx.message.reply(f"User with ID `{user.id}` is not in this server.")
 
 # Unban command
 @bot.command()
