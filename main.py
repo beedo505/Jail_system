@@ -267,7 +267,7 @@ async def list_exp(ctx):
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
 @commands.has_permissions(ban_members=True)
-async def زوطلي(ctx, user: discord.User, *, reason=None):
+async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 
     if not user:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
