@@ -326,35 +326,34 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 # Unban command
 @bot.command()
 @commands.has_permissions(ban_members=True)
-async def فك(ctx, user_input: str = None):
-    if user_input is None:
-        await ctx.send("❌ Please provide a user mention or ID to unban.")
+async def فك(ctx, *, user_input = None):
+    if not user_input:
+        await ctx.message.reply("Please mention the user or provide their ID to unban.")
         return
-
-    guild = ctx.guild
+    
     try:
-        # تحقق من إذا كان الإدخال منشن أو ID
-        if user_input.startswith('<@') and user_input.endswith('>'):
-            user_id = int(user_input.strip('<@!>'))  # استخراج ID من المنشن
+        # تحقق إذا كان المدخل هو منشن أو ID
+        if user_input.startswith("<@") and user_input.endswith(">"):
+            user_id = int(user_input[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
-            user_id = int(user_input)  # افتراض أن الإدخال هو ID
+            user_id = int(user_input)  # استخدام ID مباشرةً
 
-        # استخدام bans بشكل صحيح
-        bans = await guild.bans()  # أو استخدم fetch_bans مع async for
-        for entry in bans:
-            if entry.user.id == user_id:
-                await guild.unban(entry.user)
-                await ctx.send(f"✅ Successfully unbanned {entry.user.name}#{entry.user.discriminator}")
-                return
-
-        await ctx.send("❌ This user is not banned.")
+        # محاولة إلغاء الحظر باستخدام ID
+        user = await ctx.guild.fetch_ban(user_id)
         
-    except discord.Forbidden:
-        await ctx.send("❌ I don't have permission to unban users.")
+        # إذا تم العثور على الحظر
+        await ctx.guild.unban(user.user)  # إلغاء الحظر
+        await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
+    
+    except discord.NotFound:
+        # إذا كان المستخدم غير محظور
+        await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
     except discord.HTTPException as e:
-        await ctx.send(f"❌ An error occurred while trying to unban: {e}")
+        # إذا حدث خطأ آخر في واجهة Discord API
+        await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
     except ValueError:
-        await ctx.send("❌ Please provide a valid user ID or mention.")
+        # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
+        await ctx.message.reply("Invalid input. Please mention a user (e.g., `@username`) or provide their user ID.")
         
 # امر السجن
 @commands.has_permissions(administrator=True)
