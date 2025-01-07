@@ -333,6 +333,10 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = None):
 async def فك(ctx, user_reference: str = None):
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
+        if user_reference is None:
+            await ctx.message.reply("Please mention a user or provide their user ID.")
+            return
+
         if user_reference.startswith("<@") and user_reference.endswith(">"):
             user_id = int(user_reference[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
