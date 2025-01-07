@@ -342,10 +342,9 @@ async def فك(ctx, user_reference: str = None):
         else:
             user_id = int(user_reference)  # استخدام ID مباشرةً
 
-        # جلب قائمة الباندات
+        # استخدام async for لتكرار عبر قائمة الباندات
         banned_users = await ctx.guild.bans()
 
-        # التكرار عبر الباندات باستخدام async for
         found_user = None
         async for ban_entry in banned_users:
             banned_user = ban_entry.user
