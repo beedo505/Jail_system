@@ -159,8 +159,8 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.message.reply("❌ | The mention is incorrect")
-    else:
-        await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
+    """else:
+        await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
 
 
