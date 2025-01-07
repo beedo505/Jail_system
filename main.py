@@ -344,7 +344,7 @@ async def فك(ctx, user_input: str = None):
         else:
             user_id = int(user_input)  # افتراض أن الإدخال هو ID
 
-        # بدلاً من استخدام await guild.fetch_bans() مباشرة، استخدم async for
+        # استخدام bans بشكل صحيح
         bans = await guild.bans()  # أو استخدم fetch_bans مع async for
         for entry in bans:
             if entry.user.id == user_id:
