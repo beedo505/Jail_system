@@ -166,6 +166,7 @@ async def on_message(message):
 
 @bot.event
 async def on_command_error(ctx, error):
+    print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
         await ctx.message.reply("❌ | The mention is incorrect")
         return
