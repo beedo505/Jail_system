@@ -168,28 +168,19 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        # تحقق من نوع الخطأ وحاول التعامل مع المنشن
-        if isinstance(error, commands.MemberNotFound):
-            await ctx.message.reply("❌ | The mentioned member is not in the server")
-        else:
-            await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member")
+        await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
         return
-
+    elif isinstance(error, commands.MemberNotFound):
+        await ctx.message.reply("❌ | The mentioned member is not in the server.")
+        return
     elif isinstance(error, commands.MissingPermissions):
-        await ctx.message.reply("❌ | You do not have the required permissions to use this command")
+        await ctx.message.reply("❌ | You do not have the required permissions to use this command.")
         return
-
     elif isinstance(error, commands.CommandInvokeError):
         await ctx.message.reply(f"❌ | An error occurred: {error.original}")
         return
-
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.message.reply("❌ | This command does not exist")
-        return
-
-    # إذا كان الخطأ بسبب عدم وجود العضو أو المنشن
-    elif isinstance(error, discord.NotFound):
-        await ctx.message.reply("❌ | The member mentioned is not found.")
+        await ctx.message.reply("❌ | This command does not exist.")
         return
         
     """else:
@@ -440,12 +431,15 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    if isinstance(member, discord.Member):
-        if not member in ctx.guild.members:
-            await ctx.message.reply("This member is not in the server")
+    if not isinstance(member, discord.Member):
+        try:
+            member = await commands.MemberConverter().convert(ctx, str(member))
+        except commands.MemberNotFound:
+            await ctx.message.reply("❌ | The mentioned member is not in the server.")
             return
-    else:
-        await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
+
+    if member not in ctx.guild.members:
+        await ctx.message.reply("This member is not in the server")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
