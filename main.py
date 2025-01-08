@@ -168,27 +168,28 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        await ctx.message.reply("❌ | The mention is incorrect")
+        # تحقق من نوع الخطأ وحاول التعامل مع المنشن
+        if isinstance(error, commands.MemberNotFound):
+            await ctx.message.reply("❌ | The mentioned member is not in the server")
+        else:
+            await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member")
         return
 
-    # التعامل مع الأخطاء المتعلقة بعدم وجود العضو في السيرفر
-    elif isinstance(error, commands.MemberNotFound):
-        await ctx.message.reply("❌ | The mentioned member is not in the server")
-        return
-
-    # إذا كانت المشكلة بسبب عدم وجود صلاحيات كافية
     elif isinstance(error, commands.MissingPermissions):
         await ctx.message.reply("❌ | You do not have the required permissions to use this command")
         return
 
-    # إذا كانت هناك مشكلة أثناء تنفيذ الأمر
     elif isinstance(error, commands.CommandInvokeError):
         await ctx.message.reply(f"❌ | An error occurred: {error.original}")
         return
 
-    # إذا كانت المشكلة بسبب أمر غير موجود
     elif isinstance(error, commands.CommandNotFound):
         await ctx.message.reply("❌ | This command does not exist")
+        return
+
+    # إذا كان الخطأ بسبب عدم وجود العضو أو المنشن
+    elif isinstance(error, discord.NotFound):
+        await ctx.message.reply("❌ | The member mentioned is not found.")
         return
         
     """else:
