@@ -270,6 +270,10 @@ async def list_exp(ctx):
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 
+    if user == ctx.author:
+        await ctx.message.reply("You cannot ban yourself")
+        return
+
     if not user:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
         usage_lines = [
@@ -330,6 +334,11 @@ async def فك(ctx, *, user_input=None):
     if not user_input:
         await ctx.message.reply("Please mention the user or their ID to unban.")
         return
+
+    if user_input == ctx.author:
+        await ctx.message.reply("You cannot ban yourself.")
+        return
+
     
     try:
         # تحقق إذا كان المدخل هو منشن أو ID
@@ -362,6 +371,10 @@ async def فك(ctx, *, user_input=None):
 async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+
+    if member == ctx.author:
+        await ctx.message.reply("You cannot jail yourself")
+        return
 
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
@@ -436,6 +449,10 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member=None):
+
+    if member == ctx.author:
+        await ctx.message.reply("You cannot pardon yourself")
+        return
 
     if not member:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
