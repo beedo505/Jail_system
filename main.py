@@ -168,10 +168,12 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        if isinstance(error, commands.MemberNotFound):
-            await ctx.message.reply("❌ | The mentioned member is not in the server")
-        else:
-            await ctx.message.reply("❌ | The mention is incorrect")
+        await ctx.message.reply("❌ | The mention is incorrect")
+        return
+
+    # التعامل مع الأخطاء المتعلقة بعدم وجود العضو في السيرفر
+    elif isinstance(error, commands.MemberNotFound):
+        await ctx.message.reply("❌ | The mentioned member is not in the server")
         return
 
     # إذا كانت المشكلة بسبب عدم وجود صلاحيات كافية
