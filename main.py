@@ -168,7 +168,6 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        # محاولة التحقق من إذا كان العضو الذي تم منشنه موجودًا في السيرفر
         if isinstance(error, commands.MemberNotFound):
             await ctx.message.reply("❌ | The mentioned member is not in the server")
         else:
@@ -178,11 +177,6 @@ async def on_command_error(ctx, error):
     # إذا كانت المشكلة بسبب عدم وجود صلاحيات كافية
     elif isinstance(error, commands.MissingPermissions):
         await ctx.message.reply("❌ | You do not have the required permissions to use this command")
-        return
-
-    # إذا كانت المشكلة بسبب عدم وجود العضو في السيرفر
-    elif isinstance(error, commands.MemberNotFound):
-        await ctx.message.reply("❌ | The mentioned member is not in the server")
         return
 
     # إذا كانت هناك مشكلة أثناء تنفيذ الأمر
