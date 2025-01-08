@@ -388,7 +388,7 @@ async def فك(ctx, *, user_input=None):
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
-async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
+async def سجن(ctx, member: discord.Member, duration: str = None, *, reason: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
