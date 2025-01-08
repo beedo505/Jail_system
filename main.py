@@ -380,9 +380,9 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    if member.top_role >= ctx.guild.me.top_role:
-        await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
-        return
+    # if member.top_role >= ctx.guild.me.top_role:
+    #     await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
+    #     return
 
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
@@ -496,9 +496,9 @@ async def عفو(ctx, member: discord.Member=None):
         await ctx.message.reply("You cannot pardon yourself")
         return
 
-    if member.top_role >= ctx.guild.me.top_role:
-        await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
-        return
+    # if member.top_role >= ctx.guild.me.top_role:
+    #     await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
+    #     return
 
     await release_member(ctx, member)
 
