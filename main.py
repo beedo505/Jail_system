@@ -270,15 +270,7 @@ async def list_exp(ctx):
 @commands.has_permissions(ban_members=True)
 async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 
-    if user == ctx.author:
-        await ctx.message.reply("You cannot ban yourself")
-        return
-
-    # if ctx.guild.me.top_role <= user.top_role:
-    #     await ctx.message.reply("I cannot ban this member because their role is equal to or higher than mine.")
-    #     return
-
-    if not user:
+    if user is None:
         embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -زوطلي \n",
@@ -310,6 +302,14 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         await ctx.message.reply(embed=embed)
         return
 
+    if user == ctx.author:
+        await ctx.message.reply("You cannot ban yourself")
+        return
+
+    if ctx.guild.me.top_role <= user.top_role:
+        await ctx.message.reply("I cannot ban this member because their role is equal to or higher than mine.")
+        return
+
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user:
@@ -335,15 +335,14 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 @bot.command(aliases=['unban', 'un'])
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, *, user_input=None):
-    if not user_input:
+    if user_input is None:
         await ctx.message.reply("Please mention the user or their ID to unban.")
         return
 
     if user_input == ctx.author:
-        await ctx.message.reply("You cannot unban yourself.")
+        await ctx.message.reply("You cannot unban yourself")
         return
 
-    
     try:
         # تحقق إذا كان المدخل هو منشن أو ID
         if user_input.startswith("<@") and user_input.endswith(">"):
@@ -376,14 +375,6 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
-    if member == ctx.author:
-        await ctx.message.reply("You cannot jail yourself")
-        return
-
-    # if member.top_role >= ctx.guild.me.top_role:
-    #     await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
-    #     return
-
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
         return
@@ -392,7 +383,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         reason = duration if duration else reason  # Treat `duration` as reason if it's not a valid duration
         duration = "8h"  # Set default duration
 
-    if not member:
+    if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -سجن \n",
@@ -423,6 +414,14 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         )
 
         await ctx.message.reply(embed=embed)
+        return
+
+    if member == ctx.author:
+        await ctx.message.reply("You cannot jail yourself")
+        return
+
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     # Calculate jail time
@@ -458,7 +457,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member=None):
 
-    if not member:
+    if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -عفو \n",
@@ -496,9 +495,9 @@ async def عفو(ctx, member: discord.Member=None):
         await ctx.message.reply("You cannot pardon yourself")
         return
 
-    # if member.top_role >= ctx.guild.me.top_role:
-    #     await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
-    #     return
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("I cannot pardon this member because their role is equal to or higher than mine.")
+        return
 
     await release_member(ctx, member)
 
