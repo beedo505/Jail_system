@@ -327,9 +327,9 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         # محاولة الحصول على المستخدم من السيرفر
         member = ctx.guild.get_member(user_id)
 
-        if member.top_role >= ctx.guild.me.top_role:
-            await ctx.message.reply("❌ | I cannot ban this member because their role is equal to or higher than mine.")
-            return
+        # if member.top_role >= ctx.guild.me.top_role:
+        #     await ctx.message.reply("❌ | I cannot ban this member because their role is equal to or higher than mine.")
+        #     return
 
         if member:
             await member.ban(reason=reason)
