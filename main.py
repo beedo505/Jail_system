@@ -169,7 +169,7 @@ async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
         # هنا نقوم بفحص ما إذا كان الخطأ بسبب منشن غير صحيح (اسم أو ID)
-        if isinstance(error.original, discord.errors.InvalidArgument):
+        if isinstance(error, discord.errors.InvalidArgument):
             await ctx.message.reply("❌ | The mention is incorrect")
         else:
             await ctx.message.reply("❌ | There was an issue with the arguments")
