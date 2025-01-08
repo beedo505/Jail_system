@@ -340,7 +340,7 @@ async def فك(ctx, *, user_input=None):
         return
 
     if user_input == ctx.author:
-        await ctx.message.reply("You cannot ban yourself.")
+        await ctx.message.reply("You cannot unban yourself.")
         return
 
     
@@ -378,6 +378,10 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 
     if member == ctx.author:
         await ctx.message.reply("You cannot jail yourself")
+        return
+
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     if not prisoner_role:
@@ -456,6 +460,10 @@ async def عفو(ctx, member: discord.Member=None):
 
     if member == ctx.author:
         await ctx.message.reply("You cannot pardon yourself")
+        return
+
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
         return
 
     if not member:
