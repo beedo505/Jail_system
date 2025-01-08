@@ -458,14 +458,6 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 @commands.has_permissions(administrator=True)
 async def عفو(ctx, member: discord.Member=None):
 
-    if member == ctx.author:
-        await ctx.message.reply("You cannot pardon yourself")
-        return
-
-    if member.top_role >= ctx.guild.me.top_role:
-        await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
-        return
-
     if not member:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
         usage_lines = [
@@ -498,6 +490,14 @@ async def عفو(ctx, member: discord.Member=None):
         )
 
         await ctx.message.reply(embed=embed)
+        return
+
+    if member == ctx.author:
+        await ctx.message.reply("You cannot pardon yourself")
+        return
+
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.send("I cannot pardon this member because their role is equal to or higher than mine.")
         return
 
     await release_member(ctx, member)
