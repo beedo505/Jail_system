@@ -168,7 +168,12 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        await ctx.message.reply("❌ | The mention is incorrect")
+        member = ctx.guild.get_member(int(str(error).split()[-1].strip('<>@!')))
+        
+        if member is None:
+            await ctx.message.reply("❌ | The mentioned member is not in the server")
+        else:
+            await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member")
         return
 
     elif isinstance(error, commands.MissingPermissions):
@@ -176,7 +181,6 @@ async def on_command_error(ctx, error):
         return
 
     elif isinstance(error, commands.MemberNotFound):
-        # إذا كان الخطأ بسبب عدم العثور على العضو
         await ctx.message.reply("❌ | The mentioned member is not in the server")
         return
 
