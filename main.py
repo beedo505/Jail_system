@@ -170,7 +170,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         if member is None:
             await ctx.message.reply("❌ | The mentioned member is not in the server.")
-        else:
+        elif:
             await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
         else:
             await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
