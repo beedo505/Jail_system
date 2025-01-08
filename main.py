@@ -397,8 +397,10 @@ async def سجن(ctx, member: discord.Member, duration: str = None, *, reason: s
         return
 
     if duration is None or not any(unit in duration for unit in ["m", "h", "d"]):
-        reason = duration if duration else reason  # Treat `duration` as reason if it's not a valid duration
-        duration = "8h"  # Set default duration
+        if reason and not duration:
+            duration = "8h"  # Set default duration
+        else:
+            duration = "8h"  # Default duration if no duration and reason is missing
 
     if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
