@@ -167,21 +167,35 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
+    
     if isinstance(error, commands.BadArgument):
-        await ctx.message.reply("❌ | The mention is incorrect")
+        # هنا نقوم بفحص ما إذا كان الخطأ بسبب منشن غير صحيح (اسم أو ID)
+        if isinstance(error.original, discord.errors.InvalidArgument):
+            await ctx.message.reply("❌ | The mention is incorrect")
+        else:
+            await ctx.message.reply("❌ | There was an issue with the arguments")
         return
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.message.reply("You do not have the required permissions to use this command")
+
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.message.reply("❌ | You do not have the required permissions to use this command")
         return
+
     elif isinstance(error, commands.MemberNotFound):
-        await ctx.message.reply("❌ | The mentioned member is not in the server")
+        # نفحص إذا كان العضو غير موجود بسبب الاسم أو ID غير صحيح
+        if isinstance(error.original, discord.NotFound):
+            await ctx.message.reply("❌ | The mentioned member is not in the server")
+        else:
+            await ctx.message.reply("❌ | The mention is incorrect")
         return
+
     elif isinstance(error, commands.CommandInvokeError):
         await ctx.message.reply(f"❌ | An error occurred: {error.original}")
         return
+
     elif isinstance(error, commands.CommandNotFound):
         await ctx.message.reply("❌ | This command does not exist")
         return
+        
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
