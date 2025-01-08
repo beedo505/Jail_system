@@ -380,7 +380,7 @@ async def فك(ctx, *, user_input=None):
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
-async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
+async def سجن(ctx, member: str = None, duration: str = None, *, reason: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
@@ -427,23 +427,28 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply(embed=embed)
         return
 
-    if member == ctx.author:
+    member_id = None
+    target_member = None
+
+    if member.isdigit():  # إذا كان ID
+        member_id = int(member)
+    elif member.startswith('<@') and member.endswith('>'):  # إذا كان منشن
+        member_id = int(member.strip('<@!>'))
+
+    if member_id:
+        target_member = guild.get_member(member_id)
+
+    if target_member is None:  # إذا لم يتم العثور على العضو
+        await ctx.message.reply("❌ | The mentioned member is not in the server or the mention is incorrect")
+        return
+
+    if target_member == ctx.author:
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    if isinstance(member, discord.Member) is False:
-        member_id = None
-        if member.isdigit():  # إذا كان ID
-            member_id = int(member)
-        elif member.startswith('<@') and member.endswith('>'):  # إذا كان منشن
-            member_id = int(member.strip('<@!>'))
-        
-        if member_id:
-            member = guild.get_member(member_id)
-        
-        if member is None:  # العضو غير موجود في السيرفر
-            await ctx.message.reply("❌ | The mentioned member is not in the server")
-            return
+    if target_member.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
+        return
 
     if member.top_role >= ctx.guild.me.top_role:
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
