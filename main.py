@@ -420,8 +420,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    member = guild.get_member(member.id)  # التأكد من أن العضو موجود في السيرفر
-    if member is None:
+    if not guild.get_member(member.id):
         await ctx.message.reply("This member is not in the server")
         return
 
@@ -500,8 +499,7 @@ async def عفو(ctx, member: discord.Member=None):
         await ctx.message.reply("You cannot pardon yourself")
         return
 
-    member = guild.get_member(member.id)  # التأكد من أن العضو موجود في السيرفر
-    if member is None:
+    if not guild.get_member(member.id):
         await ctx.message.reply("This member is not in the server")
         return
 
