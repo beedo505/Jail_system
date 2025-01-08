@@ -168,19 +168,19 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
+        await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member")
         return
     elif isinstance(error, commands.MemberNotFound):
-        await ctx.message.reply("❌ | The mentioned member is not in the server.")
+        await ctx.message.reply("❌ | The mentioned member is not in the server")
         return
     elif isinstance(error, commands.MissingPermissions):
-        await ctx.message.reply("❌ | You do not have the required permissions to use this command.")
+        await ctx.message.reply("❌ | You do not have the required permissions to use this command")
         return
     elif isinstance(error, commands.CommandInvokeError):
         await ctx.message.reply(f"❌ | An error occurred: {error.original}")
         return
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.message.reply("❌ | This command does not exist.")
+        await ctx.message.reply("❌ | This command does not exist")
         return
         
     """else:
@@ -380,7 +380,7 @@ async def فك(ctx, *, user_input=None):
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases = ['كوي' , 'عدس' , 'ارمي' , 'اشخط' , 'احبس' , 'حبس'])
-async def سجن(ctx, member: str = None, duration: str = None, *, reason: str = None):
+async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
@@ -427,27 +427,16 @@ async def سجن(ctx, member: str = None, duration: str = None, *, reason: str =
         await ctx.message.reply(embed=embed)
         return
 
-    member_id = None
-    target_member = None
-
-    if member.isdigit():  # إذا كان ID
-        member_id = int(member)
-    elif member.startswith('<@') and member.endswith('>'):  # إذا كان منشن
-        member_id = int(member.strip('<@!>'))
-
-    if member_id:
-        target_member = guild.get_member(member_id)
-
-    if target_member is None:  # إذا لم يتم العثور على العضو
-        await ctx.message.reply("❌ | The mentioned member is not in the server or the mention is incorrect")
+    if member == ctx.author:
+        await ctx.message.reply("You cannot jail yourself.")
         return
 
-    if target_member == ctx.author:
-        await ctx.message.reply("You cannot jail yourself")
+    if member not in ctx.guild.members:
+        await ctx.message.reply("This member is not in the server.")
         return
 
-    if target_member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine")
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     # Calculate jail time
@@ -481,7 +470,7 @@ async def سجن(ctx, member: str = None, duration: str = None, *, reason: str =
 # امر العفو
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
-async def عفو(ctx, member: str = None):
+async def عفو(ctx, member: discord.Member = None):
 
     if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
@@ -517,27 +506,16 @@ async def عفو(ctx, member: str = None):
         await ctx.message.reply(embed=embed)
         return
 
-    member_id = None
-    target_member = None
-
-    if member.isdigit():  # إذا كان ID
-        member_id = int(member)
-    elif member.startswith('<@') and member.endswith('>'):  # إذا كان منشن
-        member_id = int(member.strip('<@!>'))
-
-    if member_id:
-        target_member = guild.get_member(member_id)
-
-    if target_member is None:  # إذا لم يتم العثور على العضو
-        await ctx.message.reply("❌ | The mentioned member is not in the server or the mention is incorrect")
+    if member == ctx.author:
+        await ctx.message.reply("You cannot jail yourself.")
         return
 
-    if target_member == ctx.author:
-        await ctx.message.reply("You cannot pardon yourself")
+    if member not in ctx.guild.members:
+        await ctx.message.reply("This member is not in the server.")
         return
 
-    if target_member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot pardon this member because their role is equal to or higher than mine.")
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     await release_member(ctx, member)
