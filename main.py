@@ -167,7 +167,6 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
-    
     if isinstance(error, commands.BadArgument):
         # هنا نقوم بفحص ما إذا كان الخطأ بسبب منشن غير صحيح (اسم أو ID)
         if isinstance(error.original, discord.errors.InvalidArgument):
