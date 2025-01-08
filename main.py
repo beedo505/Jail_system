@@ -169,11 +169,13 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.message.reply("❌ | The mention is incorrect")
     if isinstance(error, commands.MissingPermissions):
-        await ctx.message.reply("You do not have the required permissions to use this command.")
+        await ctx.message.reply("You do not have the required permissions to use this command")
+    elif isinstance(error, commands.MemberNotFound):
+        await ctx.message.reply("❌ | The mentioned member is not in the server")
     elif isinstance(error, commands.CommandInvokeError):
-        await ctx.message.reply(f"An error occurred: {error.original}")
+        await ctx.message.reply(f"❌ | An error occurred: {error.original}")
     elif isinstance(error, commands.CommandNotFound):
-        await ctx.message.reply("This command does not exist.")
+        await ctx.message.reply("❌ | This command does not exist")
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
