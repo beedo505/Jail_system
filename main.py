@@ -170,9 +170,9 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         # محاولة التحقق من إذا كان العضو الذي تم منشنه موجودًا في السيرفر
         if isinstance(error, commands.MemberNotFound):
-            await ctx.message.reply("❌ | The mentioned member is not in the server.")
+            await ctx.message.reply("❌ | The mentioned member is not in the server")
         else:
-            await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
+            await ctx.message.reply("❌ | The mention is incorrect")
         return
 
     # إذا كانت المشكلة بسبب عدم وجود صلاحيات كافية
