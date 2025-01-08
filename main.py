@@ -168,16 +168,10 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
     if isinstance(error, commands.BadArgument):
-        # استخدام regex لاستخراج المعرّف من النص
-        match = re.search(r'<@!?(\d+)>', str(error))
-        if match:
-            member_id = int(match.group(1))
-            member = ctx.guild.get_member(member_id)
-            
-            if member is None:
-                await ctx.message.reply("❌ | The mentioned member is not in the server.")
-            else:
-                await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
+        if member is None:
+            await ctx.message.reply("❌ | The mentioned member is not in the server.")
+        else:
+            await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
         else:
             await ctx.message.reply("❌ | The mention is incorrect. Please mention a valid member.")
         return
