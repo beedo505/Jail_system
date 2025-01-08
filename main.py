@@ -315,6 +315,10 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         await ctx.message.reply("You cannot ban yourself")
         return
 
+    if user.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("❌ | I cannot jail this member because their role is equal to or higher than mine.")
+        return
+
     try:
         # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user:
@@ -330,10 +334,6 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         else:
             # إذا كان العضو غير موجود في السيرفر
             await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the ban cannot be applied.")
-
-    if member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("❌ | I cannot jail this member because their role is equal to or higher than mine.")
-        return
 
     except discord.HTTPException as e:
         # إذا حدث خطأ في واجهة Discord API
