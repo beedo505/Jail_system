@@ -421,7 +421,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         return
 
     if member.top_role >= ctx.guild.me.top_role:
-        await ctx.send("I cannot jail this member because their role is equal to or higher than mine.")
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     # Calculate jail time
