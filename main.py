@@ -444,8 +444,8 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    if not guild.get_member(member.id):
-        await ctx.message.reply("This member is not in the server")
+    if member not in ctx.guild.members:
+        await ctx.message.reply("This member is not in the server.")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
@@ -523,8 +523,8 @@ async def عفو(ctx, member: discord.Member=None):
         await ctx.message.reply("You cannot pardon yourself")
         return
 
-    if not guild.get_member(member.id):
-        await ctx.message.reply("This member is not in the server")
+    if member not in ctx.guild.members:
+        await ctx.message.reply("This member is not in the server.")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
