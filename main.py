@@ -274,8 +274,8 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         await ctx.message.reply("You cannot ban yourself")
         return
 
-    if user.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot ban this member because their role is equal to or higher than mine")
+    if ctx.guild.me.top_role <= user.top_role:
+        await ctx.message.reply("I cannot ban this member because their role is equal to or higher than mine.")
         return
 
     if not user:
