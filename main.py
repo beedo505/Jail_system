@@ -447,11 +447,7 @@ async def سجن(ctx, member: str = None, duration: str = None, *, reason: str =
         return
 
     if target_member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
-        return
-
-    if member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine")
         return
 
     # Calculate jail time
@@ -485,7 +481,7 @@ async def سجن(ctx, member: str = None, duration: str = None, *, reason: str =
 # امر العفو
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
-async def عفو(ctx, member: discord.Member=None):
+async def عفو(ctx, member: str = None):
 
     if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
@@ -521,15 +517,26 @@ async def عفو(ctx, member: discord.Member=None):
         await ctx.message.reply(embed=embed)
         return
 
-    if member == ctx.author:
+    member_id = None
+    target_member = None
+
+    if member.isdigit():  # إذا كان ID
+        member_id = int(member)
+    elif member.startswith('<@') and member.endswith('>'):  # إذا كان منشن
+        member_id = int(member.strip('<@!>'))
+
+    if member_id:
+        target_member = guild.get_member(member_id)
+
+    if target_member is None:  # إذا لم يتم العثور على العضو
+        await ctx.message.reply("❌ | The mentioned member is not in the server or the mention is incorrect")
+        return
+
+    if target_member == ctx.author:
         await ctx.message.reply("You cannot pardon yourself")
         return
 
-    if member not in ctx.guild.members:
-        await ctx.message.reply("This member is not in the server")
-        return
-
-    if member.top_role >= ctx.guild.me.top_role:
+    if target_member.top_role >= ctx.guild.me.top_role:
         await ctx.message.reply("I cannot pardon this member because their role is equal to or higher than mine.")
         return
 
