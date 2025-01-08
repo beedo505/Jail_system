@@ -439,8 +439,13 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("You cannot jail yourself")
         return
 
-    if member not in ctx.guild.members:
-        await ctx.message.reply("This member is not in the server.")
+    try:
+        member = await commands.MemberConverter().convert(ctx, str(member))
+    except commands.BadArgument:
+        await ctx.message.reply("❌ | The mention is incorrect")
+        return
+    except commands.MemberNotFound:
+        await ctx.message.reply("❌ | The mentioned member is not in the server")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
