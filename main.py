@@ -113,7 +113,7 @@ prison_data = {}
 
 SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
-TIMEOUT_DURATION = 30  # None تعني تايم أوت دائم
+TIMEOUT_DURATION_MINUTES = 30  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
 
