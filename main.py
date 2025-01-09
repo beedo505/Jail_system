@@ -15,14 +15,17 @@ print(discord.__version__)
 
 try:
     # MongoDB connection setup
-    MONGO_URI = "mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0"
-    client = MongoClient(MONGO_URI)
-    db = client['Prison_bot']  # Replace with your database name
-    collection = db['jailed_users']  # Replace with your collection name
+    client = pymongo.MongoClient("mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0")
+    db = client["Prison_bot"]
+    collection = db["jailed_users"]
 
     # تحقق من الاتصال
     client.server_info()  # محاولة الحصول على معلومات عن السيرفر
     print("Successfully connected to MongoDB!")
+except pymongo.errors.ConnectionError as ce:
+    print(f"Connection Error: {ce}")
+except pymongo.errors.ConfigurationError as cfg:
+    print(f"Configuration Error: {cfg}")
 except Exception as e:
     print(f"Failed to connect to MongoDB: {e}")
     
