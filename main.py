@@ -113,7 +113,7 @@ prison_data = {}
 
 SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
-TIMEOUT_DURATION = None  # None تعني تايم أوت دائم
+TIMEOUT_DURATION = 30  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
 
@@ -163,17 +163,27 @@ async def on_message(message):
     # Check for spam
     if len(user_messages[user_id]) > SPAM_THRESHOLD:
         try:
-            # Apply timeout (using `until` instead of `duration`)
-            timeout_until = message.created_at + timedelta(seconds=TIMEOUT_DURATION)
+            # تأكد من أن TIMEOUT_DURATION_MINUTES محددة
+            if TIMEOUT_DURATION_MINUTES is None:
+                raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
+
+            # تحويل الدقائق إلى ثواني
+            timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
+
+            # Apply timeout (استخدم `until` بدلاً من `duration`)
+            timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
             await message.author.timeout(until=timeout_until, reason="Spam detected")
             await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
             # Clear the user's message log after punishment
             user_messages[user_id] = []
         except discord.Forbidden:
             await message.channel.send("❌ I don't have permission to timeout this user")
+        except ValueError as ve:
+            print(f"Error: {ve}")
+            await message.channel.send(f"❌ Error: {ve}")
         except Exception as e:
             print(f"Error: {e}")
-            return e  # Optional: Return error for further handling
+            await message.channel.send("❌ An unexpected error occurred")
 
     # *** التحقق من الأوامر ***
     if message.content.startswith("-"):
