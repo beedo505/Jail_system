@@ -21,10 +21,10 @@ try:
     collection = db["jailed_users"]
 
     # تحقق من الاتصال
-    client.server_info()  # محاولة الحصول على معلومات عن السيرفر
+    client.server_info()
     print("Successfully connected to MongoDB!")
-except pymongo.errors.ConnectionError as ce:
-    print(f"Connection Error: {ce}")
+except pymongo.errors.ConnectionFailure as ce:
+    print(f"Connection Failure: {ce}")
 except pymongo.errors.ConfigurationError as cfg:
     print(f"Configuration Error: {cfg}")
 except Exception as e:
