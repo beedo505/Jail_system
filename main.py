@@ -95,11 +95,12 @@ bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد الباد
 # تخزين رتب الأعضاء المسجونين
 prison_data = {}
 
-MESSAGE_LIMIT = 5  # عدد الرسائل قبل اعتبارها سبام
-TIME_LIMIT = 10  # الوقت (بالثواني) الذي يتم فيه احتساب عدد الرسائg
-spam_records = defaultdict(list)  # لتتبع الرسائل لكل مستخدم
+SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
+SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
+TIMEOUT_DURATION = None  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
+
 
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
@@ -129,31 +130,30 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # *** نظام التبنيد ***
+    # Log user messages
     user_id = message.author.id
-    now = asyncio.get_event_loop().time()
+    current_time = message.created_at.timestamp()
+    user_messages[user_id].append(current_time)
 
-    # إضافة وقت الرسالة إلى سجل المستخدم
-    spam_records[user_id].append(now)
-
-    # تنظيف الرسائل القديمة التي تجاوزت الوقت المحدد
-    spam_records[user_id] = [
-        timestamp for timestamp in spam_records[user_id]
-        if now - timestamp <= TIME_LIMIT
+    # Remove messages outside the time frame
+    user_messages[user_id] = [
+        msg_time for msg_time in user_messages[user_id] 
+        if current_time - msg_time <= SPAM_TIME_FRAME
     ]
 
-    # إذا تجاوز المستخدم الحد المسموح به من الرسائل يلقم زوط
-    if len(spam_records[user_id]) > MESSAGE_LIMIT:
+    # Check for spam
+    if len(user_messages[user_id]) > SPAM_THRESHOLD:
         try:
-            await message.guild.ban(message.author, reason="Detected spamming behavior")
-            await message.channel.send(f"{message.author.mention} has been زوط for spamming.")
-            print(f"User {message.author.name} banned for spamming.")
+            # Apply timeout
+            await message.author.timeout(duration=TIMEOUT_DURATION, reason="Spam detected")
+            await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
+            # Clear the user's message log after punishment
+            user_messages[user_id] = []
         except discord.Forbidden:
-            print("لا أملك الصلاحيات لحظر المستخدم.")
-            await message.channel.send("I do not have the permissions to ban this user.")
+            await message.channel.send("❌ I don't have permission to timeout this user")
         except Exception as e:
-            print(f"Error banning user: {e}")
-        return  # إنهاء معالجة الرسالة بعد التبنيد
+            print(f"Error: {e}")
+            return e  # Optional: Return error for further handling
 
     # *** التحقق من الأوامر ***
     if message.content.startswith("-"):
