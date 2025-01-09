@@ -16,7 +16,7 @@ print(discord.__version__)
 
 try:
     # MongoDB connection setup
-    client = pymongo.MongoClient("mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0", ssl=True)
+    client = pymongo.MongoClient("mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0", ssl=False)
     db = client["Prison_bot"]
     collection = db["jailed_users"]
 
