@@ -13,13 +13,19 @@ from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
-# MongoDB connection setup
-MONGO_URI = "mongodb+srv://banmark100:<db_password>@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0"
-client = MongoClient(MONGO_URI)
+try:
+    # MongoDB connection setup
+    MONGO_URI = "mongodb+srv://banmark100:<db_password>@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(MONGO_URI)
+    db = client['Prison_bot']  # Replace with your database name
+    collection = db['jailed_users']  # Replace with your collection name
 
-# Access the database and collection
-db = client['Prison_bot']  # Replace with your database name
-collection = db['jailed_users']  # Replace with your collection name
+    # تحقق من الاتصال
+    client.server_info()  # محاولة الحصول على معلومات عن السيرفر
+    print("Successfully connected to MongoDB!")
+except Exception as e:
+    print(f"Failed to connect to MongoDB: {e}")
+    
 
 DATA_FILE = "exceptions.json"
 global exceptions_data
