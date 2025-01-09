@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from pymongo import MongoClient
 import logging
 import asyncio
 import re
@@ -11,6 +12,14 @@ import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
+
+# MongoDB connection setup
+MONGO_URI = "mongodb+srv://banmark100:<db_password>@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(MONGO_URI)
+
+# Access the database and collection
+db = client['Prison_bot']  # Replace with your database name
+collection = db['jailed_users']  # Replace with your collection name
 
 DATA_FILE = "exceptions.json"
 global exceptions_data
@@ -458,15 +467,20 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     delta = timedelta(**{time_units[unit]: time_value})
     release_time = datetime.utcnow() + delta
 
-    # Save the member's current roles
-    previous_roles = [role for role in member.roles if role != guild.default_role]
+    # Save member's roles and jail them
+    previous_roles = [role.id for role in member.roles if role != guild.default_role]
     await member.edit(roles=[prisoner_role])
 
-    # Store jail data
-    prison_data[member.id] = {"roles": previous_roles, "release_time": release_time, "reason": reason}
+    # Save roles to MongoDB
+    collection.update_one(
+        {"user_id": member.id, "guild_id": ctx.guild.id},
+        {"$set": {"roles": previous_roles, "release_time": release_time, "reason": reason}},
+        upsert=True
+    )
+
     await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
-    
-    # Automatic release after the specified time
+
+    # Automatic release
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
 
@@ -525,20 +539,30 @@ async def عفو(ctx, member: discord.Member = None):
 
 # Function to release a member from jail
 async def release_member(ctx, member):
-    if member.id not in prison_data:
+    guild = ctx.guild
+    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+    
+    # Fetch member data from MongoDB
+    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
+    if not data:
         await ctx.message.reply(f"{member.mention} is not in jail.")
         return
 
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-    if prisoner_role in member.roles:
+    # Remove the "Prisoner" role if they have it
+    if prisoner_role and prisoner_role in member.roles:
         await member.remove_roles(prisoner_role)
 
-    previous_roles = prison_data[member.id]["roles"]
-    await member.edit(roles=previous_roles)
-    del prison_data[member.id]
+    # Restore the member's previous roles
+    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
+    if previous_roles:
+        await member.edit(roles=previous_roles)
+    else:
+        await member.edit(roles=[guild.default_role])  # Assign default role if no previous roles exist
 
-    await ctx.message.reply(f"{member.mention} has been released from jail.")
+    # Remove the member's jail data from the database
+    collection.delete_one({"user_id": member.id, "guild_id": guild.id})
+
+    await ctx.message.reply(f"{member.mention} has been pardoned")
 
 
 bot.run(os.environ['B'])
