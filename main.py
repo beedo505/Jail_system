@@ -149,6 +149,9 @@ async def on_message(message):
     # Log user messages
     user_id = message.author.id
     current_time = message.created_at.timestamp()
+    if user_id not in user_messages:
+        user_messages[user_id] = []
+
     user_messages[user_id].append(current_time)
 
     # Remove messages outside the time frame
@@ -160,8 +163,9 @@ async def on_message(message):
     # Check for spam
     if len(user_messages[user_id]) > SPAM_THRESHOLD:
         try:
-            # Apply timeout
-            await message.author.timeout(duration=TIMEOUT_DURATION, reason="Spam detected")
+            # Apply timeout (using `until` instead of `duration`)
+            timeout_until = message.created_at + timedelta(seconds=TIMEOUT_DURATION)
+            await message.author.timeout(until=timeout_until, reason="Spam detected")
             await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
             # Clear the user's message log after punishment
             user_messages[user_id] = []
