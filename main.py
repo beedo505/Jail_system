@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 import pymongo
 import logging
 import asyncio
@@ -14,21 +15,17 @@ from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
-try:
-    # MongoDB connection setup
-    client = pymongo.MongoClient("mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0", tls=True)
-    db = client["Prison_bot"]
-    collection = db["jailed_users"]
+uri = "mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
-    # تحقق من الاتصال
-    client.server_info()
-    print("Successfully connected to MongoDB!")
-except pymongo.errors.ConnectionFailure as ce:
-    print(f"Connection Failure: {ce}")
-except pymongo.errors.ConfigurationError as cfg:
-    print(f"Configuration Error: {cfg}")
+client = MongoClient(uri, server_api=ServerApi('1'))
+    # db = client["Prison_bot"]
+    # collection = db["jailed_users"]
+
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
 except Exception as e:
-    print(f"Failed to connect to MongoDB: {e}")
+    print(e)
     
 
 DATA_FILE = "exceptions.json"
