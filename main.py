@@ -506,6 +506,12 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply(embed=embed)
         return
 
+    if isinstance(member, str):
+        member = guild.get_member(int(member))
+        if not member:
+            await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
+            return
+
     if member == ctx.author:
         await ctx.message.reply("You cannot jail yourself.")
         return
@@ -614,6 +620,20 @@ async def عفو(ctx, member: discord.Member = None):
         )
 
         await ctx.message.reply(embed=embed)
+        return
+
+    if isinstance(member, str):
+        member = guild.get_member(int(member))
+        if not member:
+            await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
+            return
+
+    if member == ctx.author:
+        await ctx.message.reply("You cannot jail yourself.")
+        return
+
+    if member.top_role >= ctx.guild.me.top_role:
+        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
     # Fetch member's data from the database
