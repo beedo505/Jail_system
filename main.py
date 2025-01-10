@@ -111,7 +111,7 @@ async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
     for guild in bot.guilds:
         guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
-        exception_manager = ExceptionManager()
+        exception_manager = ExceptionManager(db)
         exceptions = exception_manager.get_exceptions(guild_id)
     if not exceptions:
         print("No exceptions found. Adding default data.")
