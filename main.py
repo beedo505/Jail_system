@@ -512,9 +512,13 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     else:
         # If it's an ID
         try:
-            member = guild.get_member(int(member)) or await bot.fetch_user(int(member))
+            # First try to get the member from guild using ID
+            member = guild.get_member(int(member))
+            # If member not found in the guild, try to fetch it from Discord
             if not member:
-                raise ValueError
+                member = await bot.fetch_user(int(member))
+            if not member:
+                raise ValueError("Member not found.")
         except (ValueError, discord.NotFound):
             await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
             return
@@ -528,41 +532,34 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         return
 
     # Parse duration
-    time_units = {"m": "minutes", "h": "hours", "d": "days"}
-    unit = duration[-1]
-    if unit not in time_units:
-        await ctx.message.reply("Please specify a valid duration unit (m for minutes, h for hours, d for days).")
+    if not duration or duration[-1] not in ["m", "h", "d"]:
+        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d).")
         return
 
+    time_units = {"m": "minutes", "h": "hours", "d": "days"}
     try:
         time_value = int(duration[:-1])
     except ValueError:
-        await ctx.message.reply("Invalid jail duration. Example: 1h, 30m.")
+        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, or d.")
         return
 
-    delta = timedelta(**{time_units[unit]: time_value})
+    delta = timedelta(**{time_units[duration[-1]]: time_value})
     release_time = datetime.utcnow() + delta
 
-    # Save current roles and assign "Prisoner" role
+    # Save member's roles and jail them
     previous_roles = [role.id for role in member.roles if role != guild.default_role]
     await member.edit(roles=[prisoner_role])
 
-    # Save jail data to database
+    # Save roles to MongoDB
     collection.update_one(
-        {"user_id": member.id, "guild_id": guild.id},
-        {
-            "$set": {
-                "roles": previous_roles,
-                "release_time": release_time,
-                "reason": reason
-            }
-        },
+        {"user_id": member.id, "guild_id": ctx.guild.id},
+        {"$set": {"roles": previous_roles, "release_time": release_time, "reason": reason}},
         upsert=True
     )
 
-    await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
+    await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason or 'No reason provided.'}")
 
-    # Automatic release after duration
+    # Automatic release
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
 
