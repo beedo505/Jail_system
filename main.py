@@ -119,10 +119,9 @@ user_messages = defaultdict(list)
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
     print(f'Bot is connected to the following servers:')
-    guild_id = str(ctx.guild.id)
-    exception_manager = ExceptionManager()
-    exceptions = exception_manager.get_exceptions(guild_id)
-
+    for guild in bot.guilds:
+        guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
+        exception_manager = ExceptionManager()
     if not exceptions:
         print("No exceptions found. Adding default data.")
         # إضافة بيانات افتراضية أو تعيين القيم الافتراضية هنا
