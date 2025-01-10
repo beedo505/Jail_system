@@ -226,11 +226,16 @@ async def add_exp(ctx, *, channel=None):
 
     # If a channel is mentioned in the command
     if channel:
-        # Check if it's an ID or a mention
+        # Check if it's an ID (not mention)
         if channel.isdigit():  # ID provided
-            channel_to_exclude = ctx.guild.get_channel(int(channel))
-        else:  # Mention provided
-            channel_to_exclude = ctx.message.mentions[0] if ctx.message.mentions else None
+            channel_to_add = ctx.guild.get_channel(int(channel))
+        else:
+            # Attempt to get the first mentioned channel
+            if ctx.message.channel_mentions:
+                channel_to_add = ctx.message.channel_mentions[0]
+            else:
+                await ctx.message.reply("You cannot mention a channel directly. Please provide a channel ID or mention a channel.")
+                return
 
         # If the channel is not valid (neither text nor voice)
         if not channel_to_exclude:
@@ -271,11 +276,16 @@ async def remove_exception(ctx, *, channel=None):
 
     # If a channel is mentioned in the command
     if channel:
-        # Check if it's an ID or a mention
+        # Check if it's an ID (not mention)
         if channel.isdigit():  # ID provided
             channel_to_remove = ctx.guild.get_channel(int(channel))
-        else:  # Mention provided
-            channel_to_remove = ctx.message.mentions[0] if ctx.message.mentions else None
+        else:
+            # Attempt to get the first mentioned channel
+            if ctx.message.channel_mentions:
+                channel_to_remove = ctx.message.channel_mentions[0]
+            else:
+                await ctx.message.reply("You cannot mention a channel directly. Please provide a channel ID or mention a channel.")
+                return
 
         # If the channel is not valid (neither text nor voice)
         if not channel_to_remove:
