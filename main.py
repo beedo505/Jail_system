@@ -334,7 +334,7 @@ async def list(ctx):
     guild_id = str(ctx.guild.id)  # Get the guild ID as a string
 
     # Fetch exception channels from the database
-    exception_manager = ExceptionManager()
+    exception_manager = ExceptionManager(db)
     exceptions = exception_manager.get_exceptions(guild_id)  # Fetch from DB
     
     # Add a debug message to check the retrieved data
