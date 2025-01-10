@@ -38,6 +38,7 @@ except Exception as e:
 class ExceptionManager:
     def __init__(self, db):
         self.db = db
+        self.collection = self.db["servers"]  # قم بتغيير "servers" إلى اسم المجموعة التي تستخدمها
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
@@ -46,7 +47,6 @@ class ExceptionManager:
             return server_data.get("exception_channels", [])
         else:
             return []
-
 
     def add_exception(self, guild_id, channel_id):
         # Add a channel to the exception list
