@@ -475,7 +475,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
         return
 
-    if member is None or duration is None:
+    if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -سجن \n",
