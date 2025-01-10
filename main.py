@@ -336,27 +336,28 @@ async def rem(ctx, *, channel=None):
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
-    guild_id = str(ctx.guild.id)
+    guild_id = ctx.guild.id  # No need to cast to str, we can use the ID directly
+
+    # Fetch exception channels from database
     exception_manager = ExceptionManager()
-    exceptions = exception_manager.get_exceptions(guild_id)
-
-    # التحقق من البيانات المسترجعة
-    print(f"Exceptions for guild {guild_id}: {exceptions}")
-
+    exceptions = exception_manager.get_exceptions(str(guild_id))  # Ensure guild_id is string for DB
+    
     if exceptions:
         exception_channels = []
         for channel_id in exceptions:
-            channel = ctx.guild.get_channel(int(channel_id))  # التأكد من تحويل ID القناة بشكل صحيح
-            if channel:  # التأكد من وجود القناة
-                exception_channels.append(channel.name)
-            else:
-                print(f"Channel with ID {channel_id} not found in this guild.")  # طباعة إذا كانت القناة غير موجودة
+            channel = ctx.guild.get_channel(int(channel_id))  # Get the channel using ID
+            if channel:  # Check if the channel exists
+                exception_channels.append(f"**{channel.name}** ({'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'})")
+
+        # If there are exception channels
         if exception_channels:
-            await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
+            embed = discord.Embed(title="Exception Channels", color=0x2f3136)
+            embed.add_field(name="📝 Exception Channels List", value="\n".join(exception_channels), inline=False)
+            await ctx.message.reply(embed=embed)
         else:
             await ctx.message.reply("No valid exception channels found.")
     else:
-        await ctx.message.reply("No exception channels found.")
+        await ctx.message.reply("No exception channels found in this server.")
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
