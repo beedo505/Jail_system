@@ -122,6 +122,7 @@ async def on_ready():
     for guild in bot.guilds:
         guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
         exception_manager = ExceptionManager()
+        exceptions = exception_manager.get_exceptions(guild_id)
     if not exceptions:
         print("No exceptions found. Adding default data.")
         # إضافة بيانات افتراضية أو تعيين القيم الافتراضية هنا
