@@ -15,7 +15,7 @@ from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
-uri = "mongodb+srv://banmark100:K7dPNiKt-dtYrVg@cluster0.zriaf.mongodb.net/Prison_bot?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb+srv://banmark100:N7CPbKeIqniC9qUk@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, server_api=ServerApi('1'))
     # db = client["Prison_bot"]
