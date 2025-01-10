@@ -230,12 +230,8 @@ async def add_exp(ctx, *, channel=None):
         if channel.isdigit():  # ID provided
             channel_to_add = ctx.guild.get_channel(int(channel))
         else:
-            # Attempt to get the first mentioned channel
-            if ctx.message.channel_mentions:
-                channel_to_add = ctx.message.channel_mentions[0]
-            else:
-                await ctx.message.reply("You cannot mention a channel directly. Please provide a channel ID or mention a channel.")
-                return
+            # Attempt to get the channel by its name (searching by name)
+            channel_to_add = discord.utils.get(ctx.guild.channels, name=channel.strip())
 
         # If the channel is not valid (neither text nor voice)
         if not channel_to_exclude:
@@ -280,12 +276,8 @@ async def remove_exception(ctx, *, channel=None):
         if channel.isdigit():  # ID provided
             channel_to_remove = ctx.guild.get_channel(int(channel))
         else:
-            # Attempt to get the first mentioned channel
-            if ctx.message.channel_mentions:
-                channel_to_remove = ctx.message.channel_mentions[0]
-            else:
-                await ctx.message.reply("You cannot mention a channel directly. Please provide a channel ID or mention a channel.")
-                return
+            # Attempt to get the channel by its name (searching by name)
+            channel_to_remove = discord.utils.get(ctx.guild.channels, name=channel.strip())
 
         # If the channel is not valid (neither text nor voice)
         if not channel_to_remove:
