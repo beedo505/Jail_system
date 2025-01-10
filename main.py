@@ -333,14 +333,18 @@ async def list(ctx):
     guild_id = str(ctx.guild.id)
     exception_manager = ExceptionManager()
     exceptions = exception_manager.get_exceptions(guild_id)
-    
+
+    # التحقق من البيانات المسترجعة
+    print(f"Exceptions for guild {guild_id}: {exceptions}")
+
     if exceptions:
         exception_channels = []
         for channel_id in exceptions:
-            channel = ctx.guild.get_channel(int(channel_id))
+            channel = ctx.guild.get_channel(int(channel_id))  # التأكد من تحويل ID القناة بشكل صحيح
             if channel:  # التأكد من وجود القناة
                 exception_channels.append(channel.name)
-        
+            else:
+                print(f"Channel with ID {channel_id} not found in this guild.")  # طباعة إذا كانت القناة غير موجودة
         if exception_channels:
             await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
         else:
