@@ -27,6 +27,8 @@ client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison_bot"]
 collection = db["jailed_users"]
 exceptions_collection = db['exceptions']
+exception_manager = ExceptionManager(db)
+
 
 try:
     client.admin.command('ping')
@@ -36,9 +38,8 @@ except Exception as e:
 
 
 class ExceptionManager:
-    def __init__(self):
-        self.collection = exceptions_collection  # الاتصال بـ MongoDB
-        self.data = self.load()  # تحميل البيانات عند التهيئة
+    def __init__(self, db):
+        self.db = db
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
@@ -80,8 +81,6 @@ class ExceptionManager:
         except Exception as e:
             print(f"❌ Error loading data: {e}")
             return []  # إعادة قائمة فارغة في حالة حدوث خطأ
-
-exception_manager = ExceptionManager()
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
