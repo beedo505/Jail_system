@@ -172,7 +172,7 @@ async def on_message(message):
 
             # Apply timeout (استخدم `until` بدلاً من `duration`)
             timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
-            await message.author.timeout(until=timeout_until, reason="Spam detected")
+            await message.author.timeout(timeout_until, reason="Spam detected")
             await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
             # Clear the user's message log after punishment
             user_messages[user_id] = []
