@@ -341,7 +341,7 @@ if exceptions:
         channel = ctx.guild.get_channel(int(channel_id))
         if channel:  # التأكد من وجود القناة
             exception_channels.append(channel.name)
-    
+            
     if exception_channels:
         await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
     else:
