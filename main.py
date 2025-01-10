@@ -302,7 +302,15 @@ async def remove_exception(ctx, *, channel=None):
                 {"guild_id": guild_id}, 
                 {"$set": {"exception_channels": exception_channels}}
             )
-            await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions.")
+
+            # Update 'Prisoner' role permissions
+            prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+
+            if prisoner_role:
+                await channel_to_remove.set_permissions(prisoner_role, view_channel=None)  # Hide channel for 'Prisoner' role
+                await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions and permissions updated.")
+            else:
+                await ctx.message.reply("No 'Prisoner' role found in this server.")
         else:
             await ctx.message.reply(f"{channel_to_remove.name} was not in the exceptions.")
     else:
