@@ -331,15 +331,20 @@ async def rem(ctx, *, channel=None):
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
     guild_id = str(ctx.guild.id)
-    
-    # استرجاع القنوات المستثناة من قاعدة البيانات
+    exception_manager = ExceptionManager()
     exceptions = exception_manager.get_exceptions(guild_id)
 
     if exceptions:
-        # عرض القنوات المستثناة
-        exception_channels = [ctx.guild.get_channel(int(channel_id)) for channel_id in exceptions]
-        exception_channel_names = [channel.name for channel in exception_channels if channel]
-        await ctx.message.reply(f"Exception Channels: {', '.join(exception_channel_names)}" if exception_channel_names else "No valid exception channels found.")
+        exception_channels = []
+        for channel_id in exceptions:
+            channel = ctx.guild.get_channel(int(channel_id))  # Ensure the ID is converted to int
+            if channel:  # Check if the channel exists
+                exception_channels.append(channel.name)
+        
+        if exception_channels:
+            await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
+        else:
+            await ctx.message.reply("No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found.")
 
