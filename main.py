@@ -531,8 +531,12 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
+    # If no duration is provided, set the default to 8 hours
+    if duration is None:
+        duration = "8h"
+
     # Parse duration
-    if not duration or duration[-1] not in ["m", "h", "d"]:
+    if duration[-1] not in ["m", "h", "d"]:
         await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d).")
         return
 
