@@ -226,13 +226,13 @@ async def add_exp(ctx, *, channel=None):
 
     # If a channel is mentioned in the command
     if channel:
-        # Check if it's an ID (not mention)
-        if channel.isdigit():  # ID provided
+        # التحقق إذا كانت القناة هي ID (ليست منشن)
+        if channel.isdigit():  # تم تقديم ID
             channel_to_add = ctx.guild.get_channel(int(channel))
         else:
-            # Attempt to get the channel by its name (searching by name)
-            channel_to_add = discord.utils.get(ctx.guild.channels, name=channel.strip())
-
+            # محاولة الحصول على القناة بالـ منشن
+            channel_to_add = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
+            
         # If the channel is not valid (neither text nor voice)
         if not channel_to_exclude:
             await ctx.message.reply("Invalid channel ID or mention!")
@@ -276,9 +276,9 @@ async def remove_exception(ctx, *, channel=None):
         if channel.isdigit():  # ID provided
             channel_to_remove = ctx.guild.get_channel(int(channel))
         else:
-            # Attempt to get the channel by its name (searching by name)
-            channel_to_remove = discord.utils.get(ctx.guild.channels, name=channel.strip())
-
+            # Attempt to get the mentioned channel (mention provided)
+            channel_to_remove = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
+            
         # If the channel is not valid (neither text nor voice)
         if not channel_to_remove:
             await ctx.message.reply("Invalid channel ID or mention!")
