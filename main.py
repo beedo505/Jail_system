@@ -33,13 +33,7 @@ try:
     print("You successfully connected to MongoDB!")
 except Exception as e:
     print(e)
-    
 
-DATA_FILE = "exceptions.json"
-global exceptions_data
-exceptions_data = {}
-
-EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
     def __init__(self):
@@ -48,9 +42,7 @@ class ExceptionManager:
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
-        # البحث في مجموعة servers أو المكان الصحيح
         server_data = self.db.servers.find_one({"guild_id": guild_id})
-        
         if server_data:
             return server_data.get("exception_channels", [])
         else:
