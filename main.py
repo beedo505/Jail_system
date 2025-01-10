@@ -79,9 +79,6 @@ class ExceptionManager:
         
 
 exception_manager = ExceptionManager()
-data_manager = ExceptionManager("/app/data/exceptions.json")
-data_manager.load()
-data_manager = ExceptionManager()
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
