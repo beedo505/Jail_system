@@ -122,6 +122,7 @@ async def on_ready():
     for guild in bot.guilds:
         print(f'{guild.name} (ID: {guild.id})')
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
+    
     if exception_manager.data:
         print(f"Data Loaded: {exception_manager.data}")
     else:
