@@ -26,6 +26,7 @@ uri = "mongodb+srv://banmark100:N7CPbKeIqniC9qUk@cluster0.zriaf.mongodb.net/?ret
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison_bot"]
 collection = db["jailed_users"]
+exceptions_collection = db['exceptions']
 
 try:
     client.admin.command('ping')
@@ -41,61 +42,41 @@ exceptions_data = {}
 EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
-    def __init__(self, file_path=None):
-        if file_path is None:
-            self.file_path = os.path.join(os.path.dirname(__file__), 'exceptions.json')
-        else:
-            self.file_path = file_path
-        print(f"📂 Using file path: {self.file_path}")
-        self.data = self.load()
+    def __init__(self):
+        self.collection = exceptions_collection
 
-    def load(self):
-        try:
-            if os.path.exists(self.file_path):
-                with open(self.file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            return {}
-        except Exception as e:
-            print(f"❌ Error loading data: {e}")
-            return {}
-
-    def save(self):
-        try:
-            print(f"💾 Attempting to save data: {self.data}")
-            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-            
-            with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump(self.data, f, indent=4)
-                f.flush()
-                os.fsync(f.fileno())
-            print(f"✅ Saved data successfully: {self.data}")
-            return True
-        except Exception as e:
-            print(f"❌ Error in save(): {e}")
-            return False
-    
-
+    # إضافة قناة للاستثناءات
     def add_channel(self, guild_id: str, channel_id: str):
-        if guild_id not in self.data:
-            self.data[guild_id] = []
-        if channel_id not in self.data[guild_id]:
-            self.data[guild_id].append(channel_id)
-            self.save()
-            return True
-        return False
+        # تحقق من وجود السيرفر في القاعدة
+        guild_data = self.collection.find_one({"guild_id": guild_id})
+        if not guild_data:
+            # إضافة السيرفر مع القناة المستثناة
+            self.collection.insert_one({"guild_id": guild_id, "exception_channels": [channel_id]})
+        else:
+            # إضافة القناة للسيرفر
+            if channel_id not in guild_data['exception_channels']:
+                self.collection.update_one(
+                    {"guild_id": guild_id},
+                    {"$push": {"exception_channels": channel_id}}
+                )
+        return True
 
+    # حذف قناة من الاستثناءات
     def remove_channel(self, guild_id: str, channel_id: str):
-        if guild_id in self.data and channel_id in self.data[guild_id]:
-            self.data[guild_id].remove(channel_id)
-            if not self.data[guild_id]:
-                del self.data[guild_id]
-            self.save()
+        guild_data = self.collection.find_one({"guild_id": guild_id})
+        if guild_data and channel_id in guild_data['exception_channels']:
+            self.collection.update_one(
+                {"guild_id": guild_id},
+                {"$pull": {"exception_channels": channel_id}}
+            )
             return True
         return False
-        
 
+    # استرجاع جميع القنوات المستثناة
     def get_exceptions(self, guild_id: str):
-        return self.data.get(guild_id, [])
+        guild_data = self.collection.find_one({"guild_id": guild_id})
+        return guild_data['exception_channels'] if guild_data else []
+        
 
 exception_manager = ExceptionManager()
 data_manager = ExceptionManager("/app/data/exceptions.json")
@@ -226,89 +207,128 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def add_exp(ctx, channel_id: str = None):
-    try:
-        if channel_id is None:
-            channel = ctx.channel
+async def add_exp(ctx, *, channel=None):
+    guild_id = ctx.guild.id
+    channel_to_exclude = None
+
+    # If a channel is mentioned in the command
+    if channel:
+        # Check if it's an ID or a mention
+        if channel.isdigit():  # ID provided
+            channel_to_exclude = ctx.guild.get_channel(int(channel))
+        else:  # Mention provided
+            channel_to_exclude = ctx.message.mentions[0] if ctx.message.mentions else None
+
+        # If the channel is not valid (neither text nor voice)
+        if not channel_to_exclude:
+            await ctx.message.reply("Invalid channel ID or mention!")
+            return
+        elif isinstance(channel_to_exclude, discord.TextChannel) or isinstance(channel_to_exclude, discord.VoiceChannel):
+            # Valid text or voice channel
+            pass
         else:
-            channel_id = channel_id.replace('<#', '').replace('>', '')
-            channel = bot.get_channel(int(channel_id))
-            if not channel:
-                raise ValueError("Channel not found!")
+            await ctx.message.reply("The channel provided is neither a text nor a voice channel!")
+            return
+    else:
+        # No channel provided, exclude the channel where the command was sent (text or voice)
+        channel_to_exclude = ctx.channel
 
-        guild_id = str(ctx.guild.id)
-        channel_id = str(channel.id)
+    # Save the excluded channel to the database
+    server_data = db.servers.find_one({"guild_id": guild_id})
+    
+    if server_data is None:
+        db.servers.insert_one({"guild_id": guild_id, "exception_channels": [channel_to_exclude.id]})
+    else:
+        exception_channels = server_data["exception_channels"]
+        if channel_to_exclude.id not in exception_channels:
+            exception_channels.append(channel_to_exclude.id)
+            db.servers.update_one(
+                {"guild_id": guild_id}, 
+                {"$set": {"exception_channels": exception_channels}}
+            )
 
-        if exception_manager.add_channel(guild_id, channel_id):
-            channel_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
-            await ctx.message.reply(f"✅ {channel_type} channel {channel.mention} (`{channel_id}`) added to exceptions!")
-        else:
-            await ctx.message.reply(f"❌ Channel {channel.mention} is already excepted!")
-
-    except Exception as e:
-        await ctx.message.send(f"❌ Error: {str(e)}")
+    await ctx.message.reply(f"Channel {channel_to_exclude.name} has been added to the exceptions.")
+    await update_permissions(ctx)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def remove_exp(ctx, channel_id: str = None):
-    try:
-        if channel_id is None:
-            channel = ctx.channel
+async def remove_exception(ctx, *, channel=None):
+    guild_id = ctx.guild.id
+    channel_to_remove = None
+
+    # If a channel is mentioned in the command
+    if channel:
+        # Check if it's an ID or a mention
+        if channel.isdigit():  # ID provided
+            channel_to_remove = ctx.guild.get_channel(int(channel))
+        else:  # Mention provided
+            channel_to_remove = ctx.message.mentions[0] if ctx.message.mentions else None
+
+        # If the channel is not valid (neither text nor voice)
+        if not channel_to_remove:
+            await ctx.message.reply("Invalid channel ID or mention!")
+            return
+        elif isinstance(channel_to_remove, discord.TextChannel) or isinstance(channel_to_remove, discord.VoiceChannel):
+            # Valid text or voice channel
+            pass
         else:
-            channel_id = channel_id.replace('<#', '').replace('>', '')
-            channel = bot.get_channel(int(channel_id))
-            if not channel:
-                raise ValueError("Channel not found!")
+            await ctx.message.reply("The channel provided is neither a text nor a voice channel!")
+            return
+    else:
+        # No channel provided, remove the channel where the command was sent (text or voice)
+        channel_to_remove = ctx.channel
 
-        guild_id = str(ctx.guild.id)
-        channel_id = str(channel.id)
-
-        if exception_manager.remove_channel(guild_id, channel_id):
-            channel_type = "Voice" if isinstance(channel, discord.VoiceChannel) else "Text"
-            await ctx.message.reply(f"✅ {channel_type} channel {channel.mention} (`{channel_id}`) removed from exceptions!")
+    # Remove the channel from the database
+    server_data = db.servers.find_one({"guild_id": guild_id})
+    
+    if server_data:
+        exception_channels = server_data["exception_channels"]
+        if channel_to_remove.id in exception_channels:
+            exception_channels.remove(channel_to_remove.id)
+            db.servers.update_one(
+                {"guild_id": guild_id}, 
+                {"$set": {"exception_channels": exception_channels}}
+            )
+            await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions.")
         else:
-            await ctx.message.reply(f"❌ Channel {channel.mention} is not in exceptions list!")
-
-    except Exception as e:
-        await ctx.message.reply(f"❌ Error: {str(e)}")
+            await ctx.message.reply(f"{channel_to_remove.name} was not in the exceptions.")
+    else:
+        await ctx.message.reply("No exception channels found in this server.")
+        
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def list_exp(ctx):
+async def show_exp(ctx):
     guild_id = str(ctx.guild.id)
-    exceptions = exception_manager.data.get(guild_id, [])
+
+    # استرجاع القنوات المستثناة
+    exception_manager = ExceptionManager()
+    exceptions = exception_manager.get_exceptions(guild_id)
 
     if exceptions:
-        text_channels = []
-        voice_channels = []
-        
-        print(f"🔍 Found exceptions for guild {guild_id}: {exceptions}")
-
-        for ch_id in exceptions:
-            try:
-                channel = bot.get_channel(int(ch_id))
-                if channel:
-                    if isinstance(channel, discord.VoiceChannel):
-                        voice_channels.append(f"{channel.mention} (Voice)")
-                    else:
-                        text_channels.append(f"{channel.mention} (Text)")
-            except Exception as e:
-                print(f"Error processing channel {ch_id}: {e}")
-
-        if text_channels or voice_channels:
-            embed = discord.Embed(title="📋 Excepted Channels", color=0x2f3136)
-            
-            if text_channels:
-                embed.add_field(name="Text Channels", value="".join(text_channels), inline=False)
-            if voice_channels:
-                embed.add_field(name="Voice Channels", value="".join(voice_channels), inline=False)
-
-            await ctx.message.reply(embed=embed)
-        else:
-            await ctx.message.reply("❌ No valid channels found in exceptions list.")
+        # عرض القنوات المستثناة
+        exception_channels = [ctx.guild.get_channel(int(channel_id)).name for channel_id in exceptions]
+        await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
     else:
-        await ctx.message.reply("ℹ️ No channels are excepted!")
+        await ctx.message.reply("No exception channels found.")
 
+
+async def update_permissions(ctx):
+    guild_id = ctx.guild.id
+    role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    server_data = db.servers.find_one({"guild_id": guild_id})
+
+    if server_data:
+        exception_channels = server_data["exception_channels"]
+        for channel in ctx.guild.channels:
+            if isinstance(channel, discord.TextChannel) or isinstance(channel, discord.VoiceChannel):
+                if channel.id in exception_channels:
+                    await channel.set_permissions(role, read_messages=True, connect=True if isinstance(channel, discord.VoiceChannel) else None)
+                else:
+                    await channel.set_permissions(role, read_messages=False, connect=False if isinstance(channel, discord.VoiceChannel) else None)
+        await ctx.message.reply("Role permissions updated.")
+    else:
+        await ctx.message.reply("No exception channels found in this server.")
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
