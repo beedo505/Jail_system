@@ -432,7 +432,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, *, user_input=None):
     if user_input is None:
-        await ctx.message.reply("Please mention the user or their ID to unban.")
+        await ctx.message.reply("Please mention the user or their ID to unban")
         return
 
     if user_input == ctx.author:
