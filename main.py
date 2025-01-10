@@ -566,8 +566,6 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         upsert=True
     )
 
-    await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
-
     # Automatic release
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
@@ -575,7 +573,9 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 # امر العفو
 @bot.command(aliases = ['اعفاء' , 'اخراج', 'طلع' , 'سامح' , 'اخرج' , 'اطلع' , 'اعفي'])
 @commands.has_permissions(administrator=True)
-async def عفو(ctx, member: discord.Member = None):
+async def عفو(ctx, member = None):
+    guild = ctx.guild
+    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
@@ -611,6 +611,7 @@ async def عفو(ctx, member: discord.Member = None):
         await ctx.message.reply(embed=embed)
         return
 
+    
     if member == ctx.author:
         await ctx.message.reply("You cannot jail yourself.")
         return
@@ -622,18 +623,6 @@ async def عفو(ctx, member: discord.Member = None):
     if member.top_role >= ctx.guild.me.top_role:
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
-
-    await release_member(ctx, member)
-
-    # Remove the member's jail data from MongoDB
-    collection.delete_one({"user_id": member.id, "guild_id": ctx.guild.id})
-
-    await ctx.message.reply(f"{member.mention} has been pardoned")
-
-# Function to release a member from jail
-async def release_member(ctx, member):
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
     
     # Fetch member data from MongoDB
     data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
