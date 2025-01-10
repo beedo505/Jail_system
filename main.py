@@ -118,7 +118,6 @@ user_messages = defaultdict(list)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
-    print(f'Bot is connected to the following servers:')
     for guild in bot.guilds:
         guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
         exception_manager = ExceptionManager()
@@ -130,6 +129,7 @@ async def on_ready():
 
     print(f"Exceptions for guild {guild_id}: {exceptions}")
 
+    print(f'Bot is connected to the following servers:')
     for guild in bot.guilds:
         print(f'{guild.name} (ID: {guild.id})')
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
