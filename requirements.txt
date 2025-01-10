@@ -3,3 +3,4 @@ python-dotenv
 Flask
 pymongo>=3.11
 requests
+dnspython
