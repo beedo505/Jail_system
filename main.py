@@ -338,7 +338,6 @@ exceptions = exception_manager.get_exceptions(guild_id)
 if exceptions:
     exception_channels = []
     for channel_id in exceptions:
-        # تحويل معرّف القناة إلى int و التحقق إذا كانت موجودة في السيرفر
         channel = ctx.guild.get_channel(int(channel_id))
         if channel:  # التأكد من وجود القناة
             exception_channels.append(channel.name)
