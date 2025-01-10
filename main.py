@@ -110,7 +110,10 @@ async def on_ready():
     for guild in bot.guilds:
         print(f'{guild.name} (ID: {guild.id})')
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
-    print(f"✅ Current exceptions: {exception_manager.data}")
+    if exception_manager.data:
+        print(f"Data Loaded: {exception_manager.data}")
+    else:
+        print("No data found.")
     for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
