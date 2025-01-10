@@ -48,11 +48,14 @@ class ExceptionManager:
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
-        # Fetch exception channels from the database for a given guild
-        server_data = self.collection.find_one({"guild_id": guild_id})
-        if server_data and "exception_channels" in server_data:
-            return server_data["exception_channels"]
-        return []
+        # البحث في مجموعة servers أو المكان الصحيح
+        server_data = self.db.servers.find_one({"guild_id": guild_id})
+        
+        if server_data:
+            return server_data.get("exception_channels", [])
+        else:
+            return []
+
 
     def add_exception(self, guild_id, channel_id):
         # Add a channel to the exception list
