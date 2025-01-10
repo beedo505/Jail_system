@@ -369,7 +369,6 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         usage_lines = [
             "•  الأمر        :  -زوطلي \n",
             "•  الوظيفة        :  باند للعضو \n",
-            "•  الاستخدام    :  -زوطلي [@شخص]",
         ]
 
         aliases_lines = [
@@ -480,14 +479,30 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -سجن \n",
-            "•  الوصف       :  سجن شخص معين \n",
-            "•  الاستخدام    :  -سجن [@شخص] [مدة] [سبب]",
+            "•  الوظيفة        :  سجن العضو \n"
         ]
+
+        aliases_lines = [
+            "•  -حبس \n",
+            "•  -احبس \n",
+            "•  -اشخط \n",
+            "•  -ارمي \n",
+            "•  -عدس \n",
+            "•  -كوي \n",
+        ]
+
         embed.add_field(
             name="📌 معلومات الأمر",
             value=f"{''.join(usage_lines)}",
             inline=False
         )
+
+        embed.add_field(
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
         await ctx.message.reply(embed=embed)
         return
 
@@ -570,17 +585,34 @@ async def عفو(ctx, member: discord.Member = None):
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if member is None:
-        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
+        embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -عفو \n",
-            "•  الوصف       :  للعفو عن شخص مسجون \n",
-            "•  الاستخدام    :  -عفو [@شخص]",
+            "•  الوظيفة        :  العفو عن العضو المسجون \n"
         ]
+
+        aliases_lines = [
+            "•  -اعفي \n",
+            "•  -اعفاء \n",
+            "•  -اخرج \n",
+            "•  -سامح \n",
+            "•  -طلع \n",
+            "•  -اخراج \n",
+            "•  -اطلع \n",
+        ]
+
         embed.add_field(
             name="📌 معلومات الأمر",
             value=f"{''.join(usage_lines)}",
             inline=False
         )
+
+        embed.add_field(
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
         await ctx.message.reply(embed=embed)
         return
 
