@@ -42,7 +42,6 @@ exceptions_data = {}
 EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
-    class ExceptionManager:
     def __init__(self):
         self.collection = exceptions_collection  # الاتصال بـ MongoDB
         self.data = self.load()  # تحميل البيانات عند التهيئة
