@@ -531,12 +531,11 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
-    if duration is None:
-        duration = '8h'
-        return
-
     if duration is None and reason is not None:
+        duration = "8h"  # Default to 8 hours if no duration and a reason is provided
+    elif duration is None and reason is None:
         duration = "8h"
+        return
 
     # Parse duration
     if duration[-1] not in ["m", "h", "d"]:
@@ -566,9 +565,9 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 
     await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason or 'No reason provided.'}")
 
-    # Automatic release
-    await asyncio.sleep(delta.total_seconds())
-    await release_member(ctx, member)
+    if duration:
+        await asyncio.sleep(delta.total_seconds())
+        await release_member(ctx, member)
 
 async def release_member(ctx, member: discord.Member):
     guild = ctx.guild
