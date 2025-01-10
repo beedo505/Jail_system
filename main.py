@@ -336,20 +336,22 @@ async def rem(ctx, *, channel=None):
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
-    guild_id = ctx.guild.id  # No need to cast to str, we can use the ID directly
+    guild_id = str(ctx.guild.id)  # Get the guild ID as a string
 
-    # Fetch exception channels from database
+    # Fetch exception channels from the database
     exception_manager = ExceptionManager()
-    exceptions = exception_manager.get_exceptions(str(guild_id))  # Ensure guild_id is string for DB
+    exceptions = exception_manager.get_exceptions(guild_id)  # Fetch from DB
     
     if exceptions:
         exception_channels = []
         for channel_id in exceptions:
-            channel = ctx.guild.get_channel(int(channel_id))  # Get the channel using ID
-            if channel:  # Check if the channel exists
-                exception_channels.append(f"**{channel.name}** ({'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'})")
+            # Use the guild ID to retrieve the channel directly from the guild object
+            channel = ctx.guild.get_channel(int(channel_id))  # Convert channel ID to integer
+            if channel:  # Ensure the channel exists
+                channel_type = 'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'
+                exception_channels.append(f"**{channel.name}** ({channel_type})")
 
-        # If there are exception channels
+        # If there are exception channels, create an embed to list them
         if exception_channels:
             embed = discord.Embed(title="Exception Channels", color=0x2f3136)
             embed.add_field(name="📝 Exception Channels List", value="\n".join(exception_channels), inline=False)
@@ -358,6 +360,7 @@ async def list(ctx):
             await ctx.message.reply("No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
+
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
