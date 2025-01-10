@@ -5,6 +5,7 @@ from pymongo.server_api import ServerApi
 import pymongo
 import logging
 import asyncio
+import dns.resolver
 import re
 import requests
 from typing import Union
