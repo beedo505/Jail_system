@@ -27,8 +27,6 @@ client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison_bot"]
 collection = db["jailed_users"]
 exceptions_collection = db['exceptions']
-exception_manager = ExceptionManager(db)
-
 
 try:
     client.admin.command('ping')
@@ -81,6 +79,9 @@ class ExceptionManager:
         except Exception as e:
             print(f"❌ Error loading data: {e}")
             return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+
+
+exception_manager = ExceptionManager(db)
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
