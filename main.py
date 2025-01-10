@@ -467,7 +467,7 @@ async def فك(ctx, *, user_input=None):
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
-async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = None):
+async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
@@ -556,11 +556,11 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     # Save roles to MongoDB
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
-        {"$set": {"roles": previous_roles, "release_time": release_time, "reason": reason}},
+        {"$set": {"roles": previous_roles, "release_time": release_time}},
         upsert=True
     )
 
-    await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason or 'No reason provided.'}")
+    await ctx.message.reply(f"{member.mention} has been jailed for {duration}.")
 
     if duration:
         await asyncio.sleep(delta.total_seconds())
