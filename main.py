@@ -161,7 +161,7 @@ async def on_message(message):
     ]
 
     # Check for spam
-    if len(user_messages[user_id]) > SPAM_THRESHOLD:
+    if len(user_messages[user_id]) >= SPAM_THRESHOLD:
         try:
             # تأكد من أن TIMEOUT_DURATION_MINUTES محددة
             if TIMEOUT_DURATION_MINUTES is None:
