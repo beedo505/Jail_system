@@ -325,41 +325,24 @@ async def rem(ctx, *, channel=None):
             await ctx.message.reply(f"{channel_to_remove.name} is not in the exceptions.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
-        
 
-@bot.command()
+
 @commands.has_permissions(administrator=True)
+@bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
     guild_id = str(ctx.guild.id)
-
-    # استرجاع القنوات المستثناة
-    exception_manager = ExceptionManager()
+    
+    # استرجاع القنوات المستثناة من قاعدة البيانات
     exceptions = exception_manager.get_exceptions(guild_id)
 
     if exceptions:
         # عرض القنوات المستثناة
-        exception_channels = [ctx.guild.get_channel(int(channel_id)).name for channel_id in exceptions]
-        await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
+        exception_channels = [ctx.guild.get_channel(int(channel_id)) for channel_id in exceptions]
+        exception_channel_names = [channel.name for channel in exception_channels if channel]
+        await ctx.message.reply(f"Exception Channels: {', '.join(exception_channel_names)}" if exception_channel_names else "No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found.")
 
-
-async def update_permissions(ctx):
-    guild_id = ctx.guild.id
-    role = discord.utils.get(ctx.guild.roles, name="Prisoner")
-    server_data = db.servers.find_one({"guild_id": guild_id})
-
-    if server_data:
-        exception_channels = server_data["exception_channels"]
-        for channel in ctx.guild.channels:
-            if isinstance(channel, discord.TextChannel) or isinstance(channel, discord.VoiceChannel):
-                if channel.id in exception_channels:
-                    await channel.set_permissions(role, read_messages=True, connect=True if isinstance(channel, discord.VoiceChannel) else None)
-                else:
-                    await channel.set_permissions(role, read_messages=False, connect=False if isinstance(channel, discord.VoiceChannel) else None)
-        await ctx.message.reply("Role permissions updated.")
-    else:
-        await ctx.message.reply("No exception channels found in this server.")
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
@@ -550,6 +533,18 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     await member.edit(roles=[prisoner_role])
 
     # Save roles to MongoDB
+    result = collection.update_one(
+        {"user_id": member.id, "guild_id": ctx.guild.id},
+        {"$set": {"roles": previous_roles, "release_time": release_time, "reason": reason}},
+        upsert=True
+    )
+
+    if result.modified_count > 0:
+        await ctx.message.reply(f"{member.mention} has been jailed for {duration}. Reason: {reason}")
+    else:
+        await ctx.message.reply(f"Failed to save jail data for {member.mention}.")
+
+    # Save roles to MongoDB
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
         {"$set": {"roles": previous_roles, "release_time": release_time, "reason": reason}},
@@ -614,6 +609,11 @@ async def عفو(ctx, member: discord.Member = None):
         return
 
     await release_member(ctx, member)
+
+    # Remove the member's jail data from MongoDB
+    collection.delete_one({"user_id": member.id, "guild_id": ctx.guild.id})
+
+    await ctx.message.reply(f"{member.mention} has been pardoned")
 
 # Function to release a member from jail
 async def release_member(ctx, member):
