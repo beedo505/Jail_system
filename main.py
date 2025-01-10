@@ -342,6 +342,9 @@ async def list(ctx):
     exception_manager = ExceptionManager()
     exceptions = exception_manager.get_exceptions(guild_id)  # Fetch from DB
     
+    # Add a debug message to check the retrieved data
+    print(f"Fetched exceptions for guild {guild_id}: {exceptions}")  # Debugging line
+    
     if exceptions:
         exception_channels = []
         for channel_id in exceptions:
@@ -350,7 +353,7 @@ async def list(ctx):
             if channel:  # Ensure the channel exists
                 channel_type = 'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'
                 exception_channels.append(f"**{channel.name}** ({channel_type})")
-
+        
         # If there are exception channels, create an embed to list them
         if exception_channels:
             embed = discord.Embed(title="Exception Channels", color=0x2f3136)
@@ -360,7 +363,6 @@ async def list(ctx):
             await ctx.message.reply("No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
-
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
