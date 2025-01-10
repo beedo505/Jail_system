@@ -6,6 +6,7 @@ import pymongo
 import logging
 import asyncio
 import re
+import requests
 from typing import Union
 import json
 import os
@@ -14,6 +15,11 @@ import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
+
+def get_current_ip():
+    response = requests.get('https://api.ipify.org')
+    return response.text
+print(get_current_ip())
 
 uri = "mongodb+srv://banmark100:N7CPbKeIqniC9qUk@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
