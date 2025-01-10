@@ -331,24 +331,22 @@ async def rem(ctx, *, channel=None):
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
     guild_id = str(ctx.guild.id)
-exception_manager = ExceptionManager()
+    exception_manager = ExceptionManager()
+    exceptions = exception_manager.get_exceptions(guild_id)
 
-exceptions = exception_manager.get_exceptions(guild_id)
+    if exceptions:
+        exception_channels = []
+        for channel_id in exceptions:
+            channel = ctx.guild.get_channel(int(channel_id))
+            if channel:  # التأكد من وجود القناة
+                exception_channels.append(channel.name)
 
-if exceptions:
-    exception_channels = []
-    for channel_id in exceptions:
-        channel = ctx.guild.get_channel(int(channel_id))
-        if channel:  # التأكد من وجود القناة
-            exception_channels.append(channel.name)
-            
-    if exception_channels:
-        await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
+        if exception_channels:
+            await ctx.message.reply(f"Exception Channels: {', '.join(exception_channels)}")
+        else:
+            await ctx.message.reply("No valid exception channels found.")
     else:
-        await ctx.message.reply("No valid exception channels found.")
-else:
-    await ctx.message.reply("No exception channels found.")
-
+        await ctx.message.reply("No exception channels found.")
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
