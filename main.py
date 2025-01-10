@@ -506,13 +506,10 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply(embed=embed)
         return
 
-    if not member:
-        await ctx.message.reply("Please mention a user or provide their ID.")
-        return
-
     if isinstance(member, discord.Member):
         member = member
     else:
+        # If the member is an ID string
         try:
             member = guild.get_member(int(member)) or await bot.fetch_user(int(member))
             if not member:
