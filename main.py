@@ -75,16 +75,16 @@ class ExceptionManager:
                 {"$set": {"exception_channels": exceptions}}
             )
 
-    # def load(self):
-    #     try:
-    #         guild_data = self.collection.find_one({"guild_id": "guild_id_example"})  # استخدم guild_id المناسب
-    #         if guild_data:
-    #             return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
-    #         else:
-    #             return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
-    #     except Exception as e:
-    #         print(f"❌ Error loading data: {e}")
-    #         return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+    def load(self):
+        try:
+            guild_data = self.collection.find_one({"guild_id": "guild_id_example"})  # استخدم guild_id المناسب
+            if guild_data:
+                return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
+            else:
+                return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
+        except Exception as e:
+            print(f"❌ Error loading data: {e}")
+            return []  # إعادة قائمة فارغة في حالة حدوث خطأ
 
 exception_manager = ExceptionManager()
         
