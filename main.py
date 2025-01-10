@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+from pymongo import MongoClient
 import pymongo
 import logging
 import asyncio
@@ -25,12 +24,12 @@ print(get_current_ip())
 uri = "mongodb+srv://banmark100:N7CPbKeIqniC9qUk@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
-    # db = client["Prison_bot"]
+    db = client.test_database
     # collection = db["jailed_users"]
 
 try:
     client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
+    print("You successfully connected to MongoDB!")
 except Exception as e:
     print(e)
     
