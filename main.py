@@ -42,8 +42,21 @@ exceptions_data = {}
 EXCEPTIONS_FILE = 'exceptions.json'
 
 class ExceptionManager:
+    class ExceptionManager:
     def __init__(self):
-        self.collection = exceptions_collection
+        self.collection = exceptions_collection  # الاتصال بـ MongoDB
+        self.data = self.load()  # تحميل البيانات عند التهيئة
+
+    def load(self):
+        try:
+            guild_data = self.collection.find_one({"guild_id": "guild_id_example"})  # استخدم guild_id المناسب
+            if guild_data:
+                return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
+            else:
+                return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
+        except Exception as e:
+            print(f"❌ Error loading data: {e}")
+            return []  # إعادة قائمة فارغة في حالة حدوث خطأ
 
     # إضافة قناة للاستثناءات
     def add_channel(self, guild_id: str, channel_id: str):
