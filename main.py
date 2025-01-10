@@ -58,7 +58,7 @@ class ExceptionManager:
             return []  # إعادة قائمة فارغة في حالة حدوث خطأ
 
     # إضافة قناة للاستثناءات
-    def add_channel(self, guild_id: str, channel_id: str):
+    def add_exception(self, guild_id: str, channel_id: str):
         # تحقق من وجود السيرفر في القاعدة
         guild_data = self.collection.find_one({"guild_id": guild_id})
         if not guild_data:
