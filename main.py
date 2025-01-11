@@ -598,7 +598,7 @@ async def عفو(ctx, member: discord.Member = None):
     prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
     if member is None:
-        embed = discord.Embed(title="📝 أمر البان", color=0x2f3136)
+        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -عفو \n",
             "•  الوظيفة        :  العفو عن العضو المسجون \n"
