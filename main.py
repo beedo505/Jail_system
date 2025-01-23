@@ -1,4 +1,4 @@
-import discord
+"""import discord
 from discord.ext import commands
 from pymongo import MongoClient
 import pymongo
@@ -14,7 +14,7 @@ from collections import defaultdict
 import time
 from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
-print(discord.__version__)
+print(discord.__version__)"""
 
 def get_current_ip():
     response = requests.get('https://api.ipify.org')
