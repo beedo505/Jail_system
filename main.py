@@ -114,34 +114,58 @@ async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
 
     for guild in bot.guilds:
-        # Retrieve all jailed members for the guild
-        jailed_members = await jailed_members_collection.find({"guild_id": guild.id}).to_list(length=None)
-        for jailed_data in jailed_members:
-            member = guild.get_member(jailed_data["member_id"])
-            if member:
+        try:
+            # Retrieve all jailed members for the guild
+            jailed_members = await jailed_members_collection.find({"guild_id": guild.id}).to_list(length=None)
+
+            if not jailed_members:
+                print(f"No jailed members found for guild {guild.name} ({guild.id}).")
+                continue
+
+            for jailed_data in jailed_members:
+                # Validate data structure
+                if "member_id" not in jailed_data or "release_time" not in jailed_data:
+                    print(f"Invalid data in jailed_members: {jailed_data}")
+                    continue
+
+                member = guild.get_member(jailed_data["member_id"])
+                if not member:
+                    print(f"Member with ID {jailed_data['member_id']} not found in guild {guild.name}.")
+                    continue
+
+                # Calculate remaining time
                 remaining_time = jailed_data["release_time"] - asyncio.get_event_loop().time()
                 if remaining_time > 0:
-                    # Schedule release in the background
+                    # Schedule the release
                     asyncio.create_task(schedule_release(guild, member, remaining_time))
                 else:
-                    # Release immediately if time has already elapsed
+                    # Release immediately
                     await pardon_member(guild, member)
+
+        except Exception as e:
+            print(f"Error processing jailed members for guild {guild.name} ({guild.id}): {e}")
 
 
 async def schedule_release(guild, member, remaining_time):
-    """جدولة عملية الإفراج عن العضو."""
+    """Schedule the release of a jailed member."""
     try:
         await asyncio.sleep(remaining_time)
         await pardon_member(guild, member)
     except Exception as e:
-        print(f"خطأ أثناء الإفراج عن العضو {member.id} في السيرفر {guild.id}: {e}")
+        print(f"Error during release scheduling for member {member.id} in guild {guild.name}: {e}")
+
 
 async def pardon_member(guild, member):
-    """عملية الإفراج عن العضو."""
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-    if prisoner_role in member.roles:
-        await member.remove_roles(prisoner_role)
-        print(f"تم الإفراج عن العضو {member.name} في السيرفر {guild.name}")
+    """Release a jailed member by removing the 'Prisoner' role."""
+    try:
+        prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+        if prisoner_role and prisoner_role in member.roles:
+            await member.remove_roles(prisoner_role)
+            print(f"Released member {member.name} in guild {guild.name}.")
+        else:
+            print(f"Member {member.name} does not have the 'Prisoner' role in guild {guild.name}.")
+    except Exception as e:
+        print(f"Error releasing member {member.id} in guild {guild.name}: {e}")
 
     for guild in bot.guilds:
         guild_id = str(guild.id)  # تحويل ID إلى نص للتعامل مع قاعدة البيانات
