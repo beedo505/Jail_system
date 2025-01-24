@@ -120,12 +120,27 @@ async def on_ready():
             if member:
                 remaining_time = jailed_data["release_time"] - asyncio.get_event_loop().time()
                 if remaining_time > 0:
-                    # Schedule release if time is remaining
-                    await asyncio.sleep(remaining_time)
-                    await pardon_member(guild, member)
+                    # Schedule release in the background
+                    asyncio.create_task(schedule_release(guild, member, remaining_time))
                 else:
                     # Release immediately if time has already elapsed
                     await pardon_member(guild, member)
+
+
+async def schedule_release(guild, member, remaining_time):
+    """جدولة عملية الإفراج عن العضو."""
+    try:
+        await asyncio.sleep(remaining_time)
+        await pardon_member(guild, member)
+    except Exception as e:
+        print(f"خطأ أثناء الإفراج عن العضو {member.id} في السيرفر {guild.id}: {e}")
+
+async def pardon_member(guild, member):
+    """عملية الإفراج عن العضو."""
+    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+    if prisoner_role in member.roles:
+        await member.remove_roles(prisoner_role)
+        print(f"تم الإفراج عن العضو {member.name} في السيرفر {guild.name}")
 
     for guild in bot.guilds:
         guild_id = str(guild.id)  # تحويل ID إلى نص للتعامل مع قاعدة البيانات
