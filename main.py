@@ -117,7 +117,9 @@ async def on_ready():
         try:
             # Retrieve all jailed members for the guild and convert to list
             cursor = jailed_members_collection.find({"guild_id": guild.id})
+            print(jailed_members)
             jailed_members = await cursor.to_list(length=None)
+            print(cursor)
 
             if not jailed_members:
                 print(f"No jailed members found for guild {guild.name} ({guild.id}).")
