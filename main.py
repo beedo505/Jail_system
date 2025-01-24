@@ -26,6 +26,8 @@ uri = "mongodb+srv://Bedo:X1JeK6PJ8rg9BU8w@cluster0.zriaf.mongodb.net/?retryWrit
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["King_bedo"]
 collection = db["Prison"]
+prison_roles_collection = db['prison_roles']  # Stores jail role data per guild
+jailed_members_collection = db['jailed_members']  # Stores jailed members data
 exceptions_collection = db['exceptions']
 
 try:
@@ -111,6 +113,21 @@ async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
 
     for guild in bot.guilds:
+        # Retrieve all jailed members for the guild
+        jailed_members = await jailed_members_collection.find({"guild_id": guild.id}).to_list(length=None)
+        for jailed_data in jailed_members:
+            member = guild.get_member(jailed_data["member_id"])
+            if member:
+                remaining_time = jailed_data["release_time"] - asyncio.get_event_loop().time()
+                if remaining_time > 0:
+                    # Schedule release if time is remaining
+                    await asyncio.sleep(remaining_time)
+                    await pardon_member(guild, member)
+                else:
+                    # Release immediately if time has already elapsed
+                    await pardon_member(guild, member)
+
+    for guild in bot.guilds:
         guild_id = str(guild.id)  # تحويل ID إلى نص للتعامل مع قاعدة البيانات
         exception_manager = ExceptionManager(db)  # تأكد من تمرير قاعدة البيانات بشكل صحيح
         exceptions = exception_manager.get_exceptions(guild_id)
@@ -120,16 +137,6 @@ async def on_ready():
             exception_manager.add_exception(guild_id, "some_channel_id")  # إضافة استثناء افتراضي
 
         print(f"Exceptions for guild {guild.name} (ID: {guild_id}): {exceptions}")
-
-        # التأكد من وجود دور "Prisoner"
-        prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-        if not prisoner_role:
-            prisoner_role = await guild.create_role(
-                name="Prisoner",
-                permissions=discord.Permissions.none(),
-                color=discord.Color.dark_gray()
-            )
-            print(f"Created 'Prisoner' role in {guild.name}.")
 
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     print(f"Bot is connected to the following servers:")
@@ -459,16 +466,48 @@ async def فك(ctx, *, user_input=None):
     except discord.HTTPException as e:
         # إذا حدث خطأ آخر في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
-        
+
+
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def set(ctx, role: discord.Role):
+    guild_id = ctx.guild.id
+
+    # Save jail role to the database
+    prison_data = {
+        "guild_id": guild_id,
+        "role_id": role.id,
+    }
+    await prison_roles_collection.update_one(
+        {"guild_id": guild_id},
+        {"$set": prison_data},
+        upsert=True
+    )
+    
+    # Restrict all channels for the jail role
+    for channel in ctx.guild.channels:
+        await channel.set_permissions(role, view_channel=False)
+    
+    await ctx.send(f"The jail role has been set to: {role.name}. All channels have been restricted for this role.")
+
+
 # امر السجن
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
 async def سجن(ctx, member: discord.Member = None, duration: str = None):
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+    guild_id = ctx.guild.id
 
-    if not prisoner_role:
-        await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+    # Retrieve the jail role from the database
+    prison_role = await prison_roles_collection.find_one({"guild_id": guild_id})
+    if not prison_role:
+        await ctx.message.reply("The jail role has not been set!")
+        return
+
+    # Get the jail role
+    role = ctx.guild.get_role(prison_role["role_id"])
+    if not role:
+        await ctx.message.reply("The jail role is missing!")
         return
 
     if member is None:
@@ -527,71 +566,51 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
-    if duration is None:
-        duration = "8h"  # Default to 8 hours if no duration and a reason is provided
+    # Calculate jail duration
+    if not duration:  # Default duration if not provided
+        duration = "5h"
 
-    # Parse duration
-    if duration[-1] not in ["m", "h", "d"]:
-        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d).")
-        return
-
-    time_units = {"m": "minutes", "h": "hours", "d": "days"}
     try:
-        time_value = int(duration[:-1])
+        if duration.endswith("m"):
+            jail_time = int(duration[:-1]) * 60  # Minutes
+        elif duration.endswith("h"):
+            jail_time = int(duration[:-1]) * 3600  # Hours
+        elif duration.endswith("d"):
+            jail_time = int(duration[:-1]) * 86400  # Days
+        else:
+            await ctx.message.reply("Invalid duration! Use m for minutes, h for hours, or d for days. Example: 5m, 2h, `1d`")
+            return
     except ValueError:
-        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, or d.")
+        await ctx.message.reply("Invalid duration! Use m for minutes, h for hours, or d for days. Example: 5m, 2h, `1d`")
         return
 
-    delta = timedelta(**{time_units[duration[-1]]: time_value})
-    release_time = datetime.utcnow() + delta
+    # Store member's current roles and assign jail role
+    original_roles = [r.id for r in member.roles if r != ctx.guild.default_role]
+    await member.edit(roles=[role])
 
-    # Save member's roles and jail them
-    previous_roles = [role.id for role in member.roles if role != guild.default_role]
-    await member.edit(roles=[prisoner_role])
-
-    # Save roles to MongoDB
-    collection.update_one(
-        {"user_id": member.id, "guild_id": ctx.guild.id},
-        {"$set": {"roles": previous_roles, "release_time": release_time}},
+    # Save jailed member data to the database
+    jailed_data = {
+        "guild_id": guild_id,
+        "member_id": member.id,
+        "roles": original_roles,
+        "release_time": asyncio.get_event_loop().time() + jail_time,  # Release time
+    }
+    await jailed_members_collection.update_one(
+        {"guild_id": guild_id, "member_id": member.id},
+        {"$set": jailed_data},
         upsert=True
     )
 
     await ctx.message.reply(f"{member.mention} has been jailed for {duration}.")
 
-    if duration:
-        await asyncio.sleep(delta.total_seconds())
-        await release_member(ctx, member)
-
-async def release_member(ctx, member: discord.Member):
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-
-    # Fetch member's data from the database
-    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
-    if not data:
-        return
-
-    # Remove the "Prisoner" role
-    if prisoner_role and prisoner_role in member.roles:
-        await member.remove_roles(prisoner_role)
-
-    # Restore the member's previous roles
-    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
-    if previous_roles:
-        await member.edit(roles=previous_roles)
-    else:
-        await member.edit(roles=[guild.default_role])  # Assign default role if no previous roles exist
-
-    # Remove jail data from the database
-    collection.delete_one({"user_id": member.id, "guild_id": guild.id})
-
-    await ctx.send(f"{member.mention} has been released from jail.")
+    # Schedule release
+    await asyncio.sleep(jail_time)
+    await pardon_member(ctx.guild, member)
 
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
 async def عفو(ctx, member: discord.Member = None):
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+    guild_id = ctx.guild.id
 
     if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
@@ -639,27 +658,42 @@ async def عفو(ctx, member: discord.Member = None):
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
-    # Fetch member's data from the database
-    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
-    if not data:
-        await ctx.message.reply(f"{member.mention} is not in jail.")
+    # Retrieve jailed member data
+    jailed_data = await jailed_members_collection.find_one({"guild_id": guild_id, "member_id": member.id})
+    if not jailed_data:
+        await ctx.message.reply(f"{member.mention} is not jailed!")
         return
 
-    # Remove the "Prisoner" role
-    if prisoner_role and prisoner_role in member.roles:
-        await member.remove_roles(prisoner_role)
+    # Restore the member's original roles
+    original_roles = [ctx.guild.get_role(role_id) for role_id in jailed_data["roles"]]
+    original_roles = [role for role in original_roles if role]  # Remove deleted roles
+    await member.edit(roles=original_roles)
 
-    # Restore the member's previous roles
-    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
-    if previous_roles:
-        await member.edit(roles=previous_roles)
-    else:
-        await member.edit(roles=[guild.default_role])  # Assign default role if no previous roles exist
+    # Remove jailed member data from the database
+    await jailed_members_collection.delete_one({"guild_id": guild_id, "member_id": member.id})
 
-    # Remove jail data from the database
-    collection.delete_one({"user_id": member.id, "guild_id": guild.id})
+    await ctx.message.reply(f"{member.mention} has been pardoned and their roles have been restored.")
 
-    await ctx.message.reply(f"{member.mention} has been pardoned.")
 
+async def pardon_member(guild, member):
+    guild_id = guild.id
+
+    # Retrieve jailed member data
+    jailed_data = await jailed_members_collection.find_one({"guild_id": guild_id, "member_id": member.id})
+    if not jailed_data:
+        return  # Member is not jailed
+
+    # Restore the member's original roles
+    original_roles = [guild.get_role(role_id) for role_id in jailed_data["roles"]]
+    original_roles = [role for role in original_roles if role]  # Remove deleted roles
+    await member.edit(roles=original_roles)
+
+    # Remove jailed member data from the database
+    await jailed_members_collection.delete_one({"guild_id": guild_id, "member_id": member.id})
+
+    # Notify about release (optional)
+    channel = discord.utils.get(guild.text_channels, name="general")  # Change to your desired channel
+    if channel:
+        await channel.send(f"{member.mention} has been automatically pardoned after serving their jail time.")
 
 bot.run(os.environ['B'])
