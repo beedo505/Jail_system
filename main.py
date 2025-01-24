@@ -21,11 +21,11 @@ def get_current_ip():
     return response.text
 print(get_current_ip())
 
-uri = "mongodb+srv://banmark100:N7CPbKeIqniC9qUk@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb+srv://Bedo:X1JeK6PJ8rg9BU8w@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
-db = client["Prison_bot"]
-collection = db["jailed_users"]
+db = client["King_bedo"]
+collection = db["Prison"]
 exceptions_collection = db['exceptions']
 
 try:
