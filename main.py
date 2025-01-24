@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 import time
 from datetime import timedelta, datetime
-TOKEN = os.getenv('B_N')
+TOKEN = os.getenv("B_N")
 print(discord.__version__)
 
 def get_current_ip():
