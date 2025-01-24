@@ -115,8 +115,9 @@ async def on_ready():
 
     for guild in bot.guilds:
         try:
-            # Retrieve all jailed members for the guild
-            jailed_members = await jailed_members_collection.find({"guild_id": guild.id}).to_list(length=None)
+            # Retrieve all jailed members for the guild and convert to list
+            cursor = jailed_members_collection.find({"guild_id": guild.id})
+            jailed_members = await cursor.to_list(length=None)
 
             if not jailed_members:
                 print(f"No jailed members found for guild {guild.name} ({guild.id}).")
@@ -136,10 +137,8 @@ async def on_ready():
                 # Calculate remaining time
                 remaining_time = jailed_data["release_time"] - asyncio.get_event_loop().time()
                 if remaining_time > 0:
-                    # Schedule the release
                     asyncio.create_task(schedule_release(guild, member, remaining_time))
                 else:
-                    # Release immediately
                     await pardon_member(guild, member)
 
         except Exception as e:
