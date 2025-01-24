@@ -666,4 +666,4 @@ async def عفو(ctx, member: discord.Member = None):
     await ctx.message.reply(f"{member.mention} has been pardoned.")
 
 
-bot.run(os.environ['B'])
+bot.run(B)
