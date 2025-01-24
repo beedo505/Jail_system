@@ -113,8 +113,8 @@ async def on_ready():
         guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
         exception_manager = ExceptionManager(db)
         exceptions = exception_manager.get_exceptions(guild_id)
-    if not exceptions:
-        print("No exceptions found. Adding default data.")
+    # if not exceptions:
+    #     print("No exceptions found. Adding default data.")
         # إضافة بيانات افتراضية أو تعيين القيم الافتراضية هنا
         exception_manager.add_exception(guild_id, "some_channel_id")  # مثال لإضافة استثناء افتراضي
 
