@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 import time
 from datetime import timedelta, datetime
-TOKEN = os.getenv("B_N")
+TOKEN = os.getenv('B')
 print(discord.__version__)
 
 def get_current_ip():
@@ -666,4 +666,4 @@ async def عفو(ctx, member: discord.Member = None):
     await ctx.message.reply(f"{member.mention} has been pardoned.")
 
 
-bot.run(TOKEN)
+bot.run(os.environ['B'])
