@@ -226,66 +226,40 @@ async def on_command_error(ctx, error):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def add(ctx, channel: discord.TextChannel = None, voice_channel: discord.VoiceChannel = None):
-    # التأكد من أن القناة التي سيتم استثناؤها هي إما قناة نصية أو صوتية
     if not channel and not voice_channel:
-        await ctx.send("Please provide a valid channel.")
+        await ctx.message_reply("Please provide a valid channel.")
         return
 
-    # الحصول على قناة النص أو الصوت
     channel_to_add = channel or voice_channel
-
-    # التأكد من أن المستخدم لديه "Prisoner" role
-    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
-    if prisoner_role not in ctx.author.roles:
-        await ctx.send("You must have the 'Prisoner' role to use this command.")
-        return
-    
-    # إضافة القناة لقائمة الاستثناءات في قاعدة البيانات
     guild_id = ctx.guild.id
     exception_manager = ExceptionManager(db)
     exception_manager.add_exception(guild_id, str(channel_to_add.id))
 
-    # تحديث صلاحيات الرتبة "Prisoner" لتكون قادرة على رؤية القناة
+    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     await channel_to_add.set_permissions(prisoner_role, read_messages=True, send_messages=True)
 
-    await ctx.send(f"Channel {channel_to_add.name} has been added to exceptions and is now visible to the 'Prisoner' role.")
+    await ctx.message_reply(f"Channel {channel_to_add.name} has been added to exceptions and is now visible to the 'Prisoner' role.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def rem(ctx, channel: discord.TextChannel = None, voice_channel: discord.VoiceChannel = None):
-    # التأكد من أن القناة التي سيتم حذف الاستثناء منها هي إما قناة نصية أو صوتية
+async def remove_exception(ctx, channel: discord.TextChannel = None, voice_channel: discord.VoiceChannel = None):
     if not channel and not voice_channel:
-        await ctx.send("Please provide a valid channel.")
+        await ctx.message_reply("Please provide a valid channel.")
         return
 
-    # الحصول على قناة النص أو الصوت
     channel_to_remove = channel or voice_channel
-
-    # التأكد من أن المستخدم لديه "Prisoner" role
-    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
-    if prisoner_role not in ctx.author.roles:
-        await ctx.send("You must have the 'Prisoner' role to use this command.")
-        return
-    
-    # إزالة القناة من الاستثناء في قاعدة البيانات
     guild_id = ctx.guild.id
     exception_manager = ExceptionManager(db)
     exception_manager.remove_exception(guild_id, str(channel_to_remove.id))
 
-    # تحديث صلاحيات الرتبة "Prisoner" لإخفاء القناة مرة أخرى
+    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     await channel_to_remove.set_permissions(prisoner_role, read_messages=False, send_messages=False)
 
-    await ctx.send(f"Channel {channel_to_remove.name} has been removed from exceptions and is now hidden from the 'Prisoner' role.")
+    await ctx.message_reply(f"Channel {channel_to_remove.name} has been removed from exceptions and is now hidden from the 'Prisoner' role.")
 
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
-    # التأكد من أن المستخدم لديه "Prisoner" role
-    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
-    if prisoner_role not in ctx.author.roles:
-        await ctx.send("You must have the 'Prisoner' role to use this command.")
-        return
-
     guild_id = ctx.guild.id
     exception_manager = ExceptionManager(db)
     exceptions = exception_manager.get_exceptions(guild_id)
@@ -300,9 +274,9 @@ async def list(ctx):
 
         embed = discord.Embed(title="Exception Channels", color=0x2f3136)
         embed.add_field(name="📝 Exception Channels List", value="\n".join(exception_channels), inline=False)
-        await ctx.send(embed=embed)
+        await ctx.message_reply(embed=embed)
     else:
-        await ctx.send("No exception channels found.")
+        await ctx.message_reply("No exception channels found.")
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
