@@ -116,22 +116,20 @@ async def on_ready():
         guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
         exception_manager = ExceptionManager(db)
         exceptions = exception_manager.get_exceptions(guild_id)
-    if not exceptions:
-        print("No exceptions found. Adding default data.")
-        # إضافة بيانات افتراضية أو تعيين القيم الافتراضية هنا
-        exception_manager.add_exception(guild_id, "some_channel_id")  # مثال لإضافة استثناء افتراضي
-
-    print(f"Exceptions for guild {guild_id}: {exceptions}")
+        if not exceptions:
+            print(f"No exceptions found for {guild.name}. Not adding any default data.")  # Just print a message
+        else:
+            print(f"Exceptions for guild {guild_id}: {exceptions}")  # If exceptions exist, show them
 
     print(f'Bot is connected to the following servers:')
     for guild in bot.guilds:
         print(f'{guild.name} (ID: {guild.id})')
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     
-    # if exception_manager.data:
-    #     print(f"Data Loaded: {exception_manager.data}")
-    # else:
-    #     print("No data found.")
+    if exception_manager.data:
+        print(f"Data Loaded: {exception_manager.data}")
+    else:
+        print("No data found.")
     
     for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
