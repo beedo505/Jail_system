@@ -127,7 +127,7 @@ async def on_ready():
 
         if not exceptions:  # إذا لم يتم العثور على استثناءات
             print(f"No exceptions found for guild {guild.name}. Adding default data.")
-            exception_manager.add_exception(guild_id, "some_channel_id")  # إضافة استثناء افتراضي
+            exception_manager.get_exception(guild_id, "some_channel_id")  # إضافة استثناء افتراضي
 
         print(f"Exceptions for guild {guild.name} (ID: {guild_id}): {exceptions}")
 
