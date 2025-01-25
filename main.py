@@ -259,68 +259,118 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def add_exception(ctx, channel: discord.TextChannel):
-    guild_id = str(ctx.guild.id)
-    channel_to_add = channel  # استخدام القناة التي قدمها المستخدم
+async def add(ctx, *, channel=None):
+    guild_id = ctx.guild.id
+    channel_to_add = None
 
-    # التحقق إذا كانت القناة نصية أو صوتية
-    if isinstance(channel_to_add, (discord.TextChannel, discord.VoiceChannel)):
-        # استرجاع بيانات السيرفر من قاعدة البيانات
-        exception_manager = ExceptionManager(db)
-        exceptions = exception_manager.get_exceptions(guild_id)
-
-        # إذا لم تكن القناة ضمن الاستثناءات
-        if channel_to_add.id not in exceptions:
-            exceptions.append(channel_to_add.id)
-
-            # تحديث البيانات في قاعدة البيانات
-            exception_manager.add_exception(guild_id, channel_to_add.id)
-            await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions.")
+    # إذا كانت القناة المذكورة في الأمر (باستخدام الاسم أو الـ ID)
+    if channel:
+        # التحقق إذا كانت القناة هي ID (ليست منشن)
+        if channel.isdigit():  # تم تقديم ID
+            channel_to_add = ctx.guild.get_channel(int(channel))
         else:
-            await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
+            # محاولة الحصول على القناة بالـ منشن
+            channel_to_add = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
+
+        # إذا كانت القناة غير صحيحة (لا نص ولا قناة صوتية)
+        if not channel_to_add:
+            await ctx.message.reply("Invalid channel ID or mention!")
+            return
+        elif isinstance(channel_to_add, discord.TextChannel) or isinstance(channel_to_add, discord.VoiceChannel):
+            # قناة صحيحة نصية أو صوتية
+            pass
+        else:
+            await ctx.message.reply("The channel provided is neither a text nor a voice channel!")
+            return
     else:
-        await ctx.message.reply("Please provide a valid text or voice channel.")
+        # إذا لم يتم تقديم قناة، سيتم استخدام القناة التي تم إرسال الأمر فيها
+        channel_to_add = ctx.channel
+
+    # إضافة القناة إلى الاستثناء في قاعدة البيانات
+    exception_manager = ExceptionManager(db)
+    exceptions = exception_manager.get_exceptions(str(guild_id))
+    
+    if channel_to_add.id not in exceptions:
+        exception_manager.add_exception(str(guild_id), channel_to_add.id)
+        
+        # تحديث صلاحيات الرتبة "Prisoner"
+        prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+        if prisoner_role:
+            await channel_to_add.set_permissions(prisoner_role, read_messages=True)  # إعطاء صلاحيات القراءة للرتبة
+            await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions and permissions granted.")
+        else:
+            await ctx.message.reply("No 'Prisoner' role found in this server.")
+    else:
+        await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def remove_exception(ctx, channel: discord.TextChannel):
-    guild_id = str(ctx.guild.id)
-    channel_to_remove = channel  # القناة التي سيتم حذفها من الاستثناءات
+async def remove(ctx, *, channel=None):
+    guild_id = ctx.guild.id
+    channel_to_remove = None
 
-    # استرجاع بيانات السيرفر من قاعدة البيانات
-    exception_manager = ExceptionManager(db)
-    exceptions = exception_manager.get_exceptions(guild_id)
+    # إذا كانت القناة المذكورة في الأمر (باستخدام الاسم أو الـ ID)
+    if channel:
+        # التحقق إذا كانت القناة هي ID (ليست منشن)
+        if channel.isdigit():  # تم تقديم ID
+            channel_to_remove = ctx.guild.get_channel(int(channel))
+        else:
+            # محاولة الحصول على القناة بالـ منشن
+            channel_to_remove = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
 
-    # إذا كانت القناة ضمن الاستثناءات
-    if channel_to_remove.id in exceptions:
-        exceptions.remove(channel_to_remove.id)
-
-        # تحديث البيانات في قاعدة البيانات
-        exception_manager.remove_exception(guild_id, channel_to_remove.id)
-        await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions.")
+        # إذا كانت القناة غير صحيحة (لا نص ولا قناة صوتية)
+        if not channel_to_remove:
+            await ctx.message.reply("Invalid channel ID or mention!")
+            return
+        elif isinstance(channel_to_remove, discord.TextChannel) or isinstance(channel_to_remove, discord.VoiceChannel):
+            # قناة صحيحة نصية أو صوتية
+            pass
+        else:
+            await ctx.message.reply("The channel provided is neither a text nor a voice channel!")
+            return
     else:
-        await ctx.message.reply(f"{channel_to_remove.name} is not in the exception list.")
+        # إذا لم يتم تقديم قناة، سيتم استخدام القناة التي تم إرسال الأمر فيها
+        channel_to_remove = ctx.channel
+
+    # إزالة القناة من الاستثناء في قاعدة البيانات
+    exception_manager = ExceptionManager(db)
+    exceptions = exception_manager.get_exceptions(str(guild_id))
+    
+    if channel_to_remove.id in exceptions:
+        exception_manager.remove_exception(str(guild_id), channel_to_remove.id)
+        
+        # تحديث صلاحيات الرتبة "Prisoner"
+        prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+        if prisoner_role:
+            await channel_to_remove.set_permissions(prisoner_role, read_messages=False)  # إزالة صلاحيات القراءة للرتبة
+            await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions and permissions revoked.")
+        else:
+            await ctx.message.reply("No 'Prisoner' role found in this server.")
+    else:
+        await ctx.message.reply(f"{channel_to_remove.name} is not in the exceptions.")
 
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
-    guild_id = str(ctx.guild.id)  # الحصول على معرف السيرفر
+    guild_id = str(ctx.guild.id)  # Get the guild ID as a string
 
-    # استرجاع قنوات الاستثناءات من قاعدة البيانات
+    # Fetch exception channels from the database
     exception_manager = ExceptionManager(db)
-    exceptions = exception_manager.get_exceptions(guild_id)  # جلب الاستثناءات من قاعدة البيانات
+    exceptions = exception_manager.get_exceptions(guild_id)  # Fetch from DB
+    
+    # Add a debug message to check the retrieved data
+    print(f"Fetched exceptions for guild {guild_id}: {exceptions}")  # Debugging line
     
     if exceptions:
         exception_channels = []
         for channel_id in exceptions:
-            # الحصول على القناة باستخدام ID القناة
-            channel = ctx.guild.get_channel(int(channel_id))  # تحويل ID القناة إلى صحيح
-            
-            if channel:  # التأكد من وجود القناة
+            # Use the guild ID to retrieve the channel directly from the guild object
+            channel = ctx.guild.get_channel(int(channel_id))  # Convert channel ID to integer
+            if channel:  # Ensure the channel exists
                 channel_type = 'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'
                 exception_channels.append(f"**{channel.name}** ({channel_type})")
         
-        # إذا كانت هناك قنوات مستثناة، عرضها باستخدام Embed
+        # If there are exception channels, create an embed to list them
         if exception_channels:
             embed = discord.Embed(title="Exception Channels", color=0x2f3136)
             embed.add_field(name="📝 Exception Channels List", value="\n".join(exception_channels), inline=False)
