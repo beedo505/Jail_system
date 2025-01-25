@@ -135,6 +135,7 @@ async def on_ready():
         # تأكد من وجود الرتبة "Prisoner"
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
+            # إنشاء الرتبة إذا لم تكن موجودة
             prisoner_role = await guild.create_role(
                 name="Prisoner",
                 permissions=discord.Permissions.none(),
@@ -142,7 +143,7 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
-        # حفظ بيانات الرتبة في قاعدة البيانات
+        # الحصول على بيانات الرتبة الفعلية
         role_data = {
             "name": prisoner_role.name,
             "color": prisoner_role.color.value,  # تحويل اللون إلى قيمة رقمية
@@ -150,19 +151,19 @@ async def on_ready():
         }
 
         # تحديث البيانات في قاعدة البيانات
-        await save_role_data_to_db(guild.id, role_data)
+        await save_role_data_to_db(str(guild.id), role_data)
 
         print(f"Saved 'Prisoner' role data for guild {guild.name}: {role_data}")
-
 
 async def save_role_data_to_db(guild_id, role_data):
     try:
         # هنا نتأكد أن البيانات هي من النوع الذي يمكن تخزينه في MongoDB
-        await db.servers.update_one(
-            {"guild_id": str(guild_id)},
+        result = await db.servers.update_one(
+            {"guild_id": guild_id},
             {"$set": {"prisoner_role": role_data}},
             upsert=True
         )
+        print(f"Data saved successfully for guild {guild_id}: {result}")
     except Exception as e:
         print(f"Error saving role data to DB: {e}")
 
