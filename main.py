@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-import pymongo
 from pymongo import MongoClient
+import pymongo
 import logging
 import asyncio
 import dns.resolver
@@ -16,16 +16,16 @@ from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
-# def get_current_ip():
-#     response = requests.get('https://api.ipify.org')
-#     return response.text
-# print(get_current_ip())
+def get_current_ip():
+    response = requests.get('https://api.ipify.org')
+    return response.text
+print(get_current_ip())
 
-uri = "mongodb+srv://Bedo:X1JeK6PJ8rg9BU8w@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb+srv://Bedo:L36dXXAVTYyDgvL6@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
-db = client["King_bedo"]
-collection = db["Prison"]
+db = client["Prison"]
+collection = db["user"]
 exceptions_collection = db['exceptions']
 
 try:
@@ -103,7 +103,8 @@ SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
-        
+
+
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
@@ -357,7 +358,6 @@ async def list(ctx):
             await ctx.message.reply("No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
-
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
