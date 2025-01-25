@@ -203,7 +203,7 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-sync def add(ctx, *, channel=None):
+async def add(ctx, *, channel=None):
     guild_id = ctx.guild.id
     channel_to_add = None
 
