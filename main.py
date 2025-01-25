@@ -143,54 +143,6 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
-        # الحصول على بيانات الرتبة الفعلية
-        role_data = {
-            "name": prisoner_role.name,
-            "color": prisoner_role.color.value,  # تحويل اللون إلى قيمة رقمية
-            "permissions": list(prisoner_role.permissions.value)  # تحويل الصلاحيات إلى قائمة
-        }
-
-        # تحديث البيانات في قاعدة البيانات
-        await save_role_data_to_db(str(guild.id), role_data)
-
-        print(f"Saved 'Prisoner' role data for guild {guild.name}: {role_data}")
-
-async def save_role_data_to_db(guild_id, role_data):
-    try:
-        # هنا نتأكد أن البيانات هي من النوع الذي يمكن تخزينه في MongoDB
-        result = await db.servers.update_one(
-            {"guild_id": guild_id},
-            {"$set": {"prisoner_role": role_data}},
-            upsert=True
-        )
-        print(f"Data saved successfully for guild {guild_id}: {result}")
-    except Exception as e:
-        print(f"Error saving role data to DB: {e}")
-        
-@bot.event
-async def on_role_update(before, after):
-    # إذا تم تعديل الرتبة "Prisoner"
-    if before.name == "Prisoner" or after.name == "Prisoner":
-        guild = after.guild  # السيرفر الذي تم فيه التعديل
-        role = after if after.name == "Prisoner" else before
-        
-        # حفظ التعديلات في قاعدة البيانات
-        role_data = {
-            "name": role.name,
-            "color": role.color.value,  # تحويل اللون إلى قيمة رقمية
-            "permissions": list(role.permissions.value)  # تحويل الصلاحيات إلى قائمة
-        }
-
-        # تحديث البيانات في قاعدة البيانات
-        db.servers.update_one(
-            {"guild_id": str(guild.id)},
-            {"$set": {"prisoner_role": role_data}},
-            upsert=True
-        )
-
-        print(f"Updated 'Prisoner' role in guild {guild.name}: {role_data}")
-            
-
 @bot.event
 async def on_message(message):
     # تجاهل رسائل البوتات
@@ -317,7 +269,7 @@ async def add(ctx, *, channel=None):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def remove(ctx, *, channel=None):
+async def rem(ctx, *, channel=None):
     guild_id = ctx.guild.id
     channel_to_remove = None
 
