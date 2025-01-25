@@ -12,7 +12,7 @@ import json
 import os
 from collections import defaultdict
 import time
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta, timezone
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
@@ -108,7 +108,7 @@ user_messages = defaultdict(list)
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
+    print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     exception_manager = ExceptionManager(db)
 
     for guild in bot.guilds:
@@ -120,12 +120,6 @@ async def on_ready():
             # لاحظ: لا يتم إضافة أي استثناءات افتراضية هنا
 
         print(f"Exceptions for guild {guild_id}: {exceptions}")
-
-    print(f"Bot is connected to the following servers:")
-    for guild in bot.guilds:
-        print(f'{guild.name} (ID: {guild.id})')
-
-    print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     
     # if exception_manager.data:
     #     print(f"Data Loaded: {exception_manager.data}")
@@ -141,11 +135,22 @@ async def on_ready():
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+
+        # Fetch server data from the database
+        server_data = db.servers.find_one({"guild_id": guild_id})
+        if not server_data:
+            db.servers.insert_one({"guild_id": guild_id, "exception_channels": []})
+            print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
             
             for channel in guild.channels:
                 await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
                 
             print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
+
+
+        print(f"Bot is connected to the following servers:")
+        for guild in bot.guilds:
+            print(f'{guild.name} (ID: {guild.id})')
             
 
 @bot.event
@@ -290,13 +295,10 @@ async def rem(ctx, *, channel=None):
     guild_id = ctx.guild.id
     channel_to_remove = None
 
-    # تحديد القناة
     if channel:
-        # إذا كان المدخل ID
         if channel.isdigit():
             channel_to_remove = ctx.guild.get_channel(int(channel))
         else:
-            # إذا كان المدخل منشن
             channel_to_remove = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
 
         if not channel_to_remove:
@@ -306,24 +308,22 @@ async def rem(ctx, *, channel=None):
             await ctx.message.reply("The channel provided is neither a text nor a voice channel!")
             return
     else:
-        # استخدام القناة الحالية إذا لم يتم تحديد قناة
         channel_to_remove = ctx.channel
 
-    # استدعاء البيانات من قاعدة البيانات
     server_data = db.servers.find_one({"guild_id": guild_id})
+
     if server_data:
         exception_channels = server_data.get("exception_channels", [])
+        print(f"Current exceptions: {exception_channels}")  # Debugging line
         if channel_to_remove.id in exception_channels:
             exception_channels.remove(channel_to_remove.id)
             db.servers.update_one(
                 {"guild_id": guild_id},
                 {"$set": {"exception_channels": exception_channels}}
             )
-
-            # تحديث صلاحيات الرتبة "Prisoner"
             prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
             if prisoner_role:
-                await channel_to_remove.set_permissions(prisoner_role, overwrite=None)  # إزالة التخصيص
+                await channel_to_remove.set_permissions(prisoner_role, overwrite=None)
                 await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions.")
             else:
                 await ctx.message.reply("No 'Prisoner' role found in this server.")
@@ -335,29 +335,32 @@ async def rem(ctx, *, channel=None):
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
 async def list(ctx):
-    guild_id = str(ctx.guild.id)
+    guild_id = str(ctx.guild.id)  # Get the guild ID as a string
 
-    # استدعاء الاستثناءات من قاعدة البيانات
-    server_data = db.servers.find_one({"guild_id": guild_id})
-    if server_data:
-        exception_channels = server_data.get("exception_channels", [])
-        if exception_channels:
-            channel_details = []
-            for channel_id in exception_channels:
-                channel = ctx.guild.get_channel(int(channel_id))
-                if channel:  # إذا القناة ما زالت موجودة
-                    channel_type = 'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'
-                    channel_details.append(f"**{channel.name}** ({channel_type})")
+    # Fetch exception channels from the database
+    server_data = db.servers.find_one({"guild_id": int(guild_id)})
+    if server_data and "exception_channels" in server_data:
+        exception_channels = server_data["exception_channels"]  # Fetch stored channel IDs
+    else:
+        exception_channels = []
 
-            # عرض الاستثناءات باستخدام Embed
-            if channel_details:
-                embed = discord.Embed(title="Exception Channels", color=0x2f3136)
-                embed.add_field(name="📝 Exception Channels List", value="\n".join(channel_details), inline=False)
-                await ctx.message.reply(embed=embed)
-            else:
-                await ctx.message.reply("No valid exception channels found.")
+    print(f"Fetched exceptions for guild {guild_id}: {exception_channels}")  # Debugging line
+
+    if exception_channels:
+        valid_channels = []
+        for channel_id in exception_channels:
+            # Attempt to fetch the channel using its ID
+            channel = ctx.guild.get_channel(channel_id)
+            if channel:  # Ensure the channel exists in the server
+                channel_type = 'Voice' if isinstance(channel, discord.VoiceChannel) else 'Text'
+                valid_channels.append(f"**{channel.name}** ({channel_type})")
+
+        if valid_channels:
+            embed = discord.Embed(title="Exception Channels", color=0x2f3136)
+            embed.add_field(name="📝 Exception Channels List", value="\n".join(valid_channels), inline=False)
+            await ctx.message.reply(embed=embed)
         else:
-            await ctx.message.reply("No exception channels found in this server.")
+            await ctx.message.reply("No valid exception channels found in this server.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
         
@@ -549,8 +552,8 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         return
 
     delta = timedelta(**{time_units[duration[-1]]: time_value})
-    release_time = datetime.utcnow() + delta
-
+    release_time = datetime.now(timezone.utc) + delta
+    
     # Save member's roles and jail them
     previous_roles = [role.id for role in member.roles if role != guild.default_role]
     await member.edit(roles=[prisoner_role])
