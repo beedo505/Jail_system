@@ -78,6 +78,13 @@ class ExceptionManager:
             print(f"❌ Error loading data: {e}")
             return []
 
+    def update_server_data(self, guild_id, server_data):
+    self.collection.update_one(
+        {"guild_id": guild_id},
+        {"$set": server_data},
+        upsert=True
+    )
+
 # مثال على استخدام الكود:
 exception_manager = ExceptionManager(db)
 
@@ -133,6 +140,43 @@ async def on_ready():
                 color=discord.Color.dark_red()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+
+
+@bot.event
+async def on_member_update(before, after):
+    """مراقبة التغييرات في الرتبة 'Prisoner' وتخزين التعديلات."""
+    # التحقق من إذا كان التغيير في الرتبة "Prisoner"
+    guild = after.guild
+    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+
+    if prisoner_role in after.roles:
+        # تحقق من أي تغييرات طرأت على الرتبة
+        if prisoner_role.name != before.roles[0].name:  # اسم الرتبة تغير
+            # تخزين الاسم الجديد في قاعدة البيانات
+            guild_id = str(guild.id)
+            exception_manager = ExceptionManager(db)
+            server_data = exception_manager.get_exceptions(guild_id)
+            server_data["role_name"] = prisoner_role.name
+            exception_manager.update_server_data(guild_id, server_data)
+            print(f"Updated 'Prisoner' role name to {prisoner_role.name}.")
+
+        if prisoner_role.color != before.roles[0].color:  # لون الرتبة تغير
+            # تخزين اللون الجديد في قاعدة البيانات
+            guild_id = str(guild.id)
+            exception_manager = ExceptionManager(db)
+            server_data = exception_manager.get_exceptions(guild_id)
+            server_data["role_color"] = prisoner_role.color.value
+            exception_manager.update_server_data(guild_id, server_data)
+            print(f"Updated 'Prisoner' role color to {prisoner_role.color}.")
+        
+        # تحقق إذا كانت الصلاحيات قد تغيرت
+        if prisoner_role.permissions != before.roles[0].permissions:
+            guild_id = str(guild.id)
+            exception_manager = ExceptionManager(db)
+            server_data = exception_manager.get_exceptions(guild_id)
+            server_data["role_permissions"] = prisoner_role.permissions.value
+            exception_manager.update_server_data(guild_id, server_data)
+            print(f"Updated 'Prisoner' role permissions.")
             
 
 @bot.event
