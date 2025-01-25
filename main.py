@@ -244,16 +244,11 @@ async def add(ctx, *, channel=None):
         # إذا لم يتم تقديم قناة، سيتم استخدام القناة التي تم إرسال الأمر فيها
         channel_to_add = ctx.channel
 
-    # تحقق إذا كانت القناة موجودة في السيرفر
-    if not channel_to_add:
-        await ctx.message.reply("No valid channel provided.")
-        return
-
     # إضافة القناة إلى الاستثناء في قاعدة البيانات
     server_data = db.servers.find_one({"guild_id": guild_id})
     
     if server_data:
-        exception_channels = server_data["exception_channels"]
+        exception_channels = server_data.get("exception_channels", [])
         if channel_to_add.id not in exception_channels:
             exception_channels.append(channel_to_add.id)
             db.servers.update_one(
@@ -272,7 +267,7 @@ async def add(ctx, *, channel=None):
         else:
             await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
     else:
-        await ctx.message.reply("No exception channels found in this server.")
+        await ctx.message.reply("No server data found for this server. Please ensure the bot is properly initialized.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
