@@ -140,43 +140,44 @@ async def on_ready():
                 color=discord.Color.dark_red()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+            # حفظ بيانات الرتبة في قاعدة البيانات
+        role_data = {
+            "name": prisoner_role.name,
+            "color": prisoner_role.color.value,  # تحويل اللون إلى قيمة رقمية
+            "permissions": list(prisoner_role.permissions.value)  # تحويل الصلاحيات إلى قائمة
+        }
 
+        # تحديث البيانات في قاعدة البيانات
+        db.servers.update_one(
+            {"guild_id": str(guild.id)},
+            {"$set": {"prisoner_role": role_data}},
+            upsert=True
+        )
+
+        print(f"Saved 'Prisoner' role data for guild {guild.name}: {role_data}")
 
 @bot.event
-async def on_member_update(before, after):
-    """مراقبة التغييرات في الرتبة 'Prisoner' وتخزين التعديلات."""
-    # التحقق من إذا كان التغيير في الرتبة "Prisoner"
-    guild = after.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-
-    if prisoner_role in after.roles:
-        # تحقق من أي تغييرات طرأت على الرتبة
-        if prisoner_role.name != before.roles[0].name:  # اسم الرتبة تغير
-            # تخزين الاسم الجديد في قاعدة البيانات
-            guild_id = str(guild.id)
-            exception_manager = ExceptionManager(db)
-            server_data = exception_manager.get_exceptions(guild_id)
-            server_data["role_name"] = prisoner_role.name
-            exception_manager.update_server_data(guild_id, server_data)
-            print(f"Updated 'Prisoner' role name to {prisoner_role.name}.")
-
-        if prisoner_role.color != before.roles[0].color:  # لون الرتبة تغير
-            # تخزين اللون الجديد في قاعدة البيانات
-            guild_id = str(guild.id)
-            exception_manager = ExceptionManager(db)
-            server_data = exception_manager.get_exceptions(guild_id)
-            server_data["role_color"] = prisoner_role.color.value
-            exception_manager.update_server_data(guild_id, server_data)
-            print(f"Updated 'Prisoner' role color to {prisoner_role.color}.")
+async def on_role_update(before, after):
+    # إذا تم تعديل الرتبة "Prisoner"
+    if before.name == "Prisoner" or after.name == "Prisoner":
+        guild = after.guild  # السيرفر الذي تم فيه التعديل
+        role = after if after.name == "Prisoner" else before
         
-        # تحقق إذا كانت الصلاحيات قد تغيرت
-        if prisoner_role.permissions != before.roles[0].permissions:
-            guild_id = str(guild.id)
-            exception_manager = ExceptionManager(db)
-            server_data = exception_manager.get_exceptions(guild_id)
-            server_data["role_permissions"] = prisoner_role.permissions.value
-            exception_manager.update_server_data(guild_id, server_data)
-            print(f"Updated 'Prisoner' role permissions.")
+        # حفظ التعديلات في قاعدة البيانات
+        role_data = {
+            "name": role.name,
+            "color": role.color.value,  # تحويل اللون إلى قيمة رقمية
+            "permissions": list(role.permissions.value)  # تحويل الصلاحيات إلى قائمة
+        }
+
+        # تحديث البيانات في قاعدة البيانات
+        db.servers.update_one(
+            {"guild_id": str(guild.id)},
+            {"$set": {"prisoner_role": role_data}},
+            upsert=True
+        )
+
+        print(f"Updated 'Prisoner' role in guild {guild.name}: {role_data}")
             
 
 @bot.event
