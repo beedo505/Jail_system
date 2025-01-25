@@ -12,7 +12,7 @@ import json
 import os
 from collections import defaultdict
 import time
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta, timezone
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
@@ -532,7 +532,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         return
 
     delta = timedelta(**{time_units[duration[-1]]: time_value})
-    release_time = datetime.utcnow() + delta
+    release_time = datetime.now(timezone.utc) + delta
 
     # Save member's roles and jail them
     previous_roles = [role.id for role in member.roles if role != guild.default_role]
