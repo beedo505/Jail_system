@@ -166,7 +166,7 @@ async def save_role_data_to_db(guild_id, role_data):
         print(f"Data saved successfully for guild {guild_id}: {result}")
     except Exception as e:
         print(f"Error saving role data to DB: {e}")
-
+        
 @bot.event
 async def on_role_update(before, after):
     # إذا تم تعديل الرتبة "Prisoner"
