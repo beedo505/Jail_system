@@ -48,7 +48,7 @@ class ExceptionManager:
         else:
             return []
 
-    def add_exception(self, guild_id, channel_id):
+    def add(self, guild_id, channel_id):
         # Add a channel to the exception list
         exceptions = self.get_exceptions(guild_id)
         if channel_id not in exceptions:
@@ -59,7 +59,7 @@ class ExceptionManager:
                 upsert=True
             )
 
-    def remove_exception(self, guild_id, channel_id):
+    def rem(self, guild_id, channel_id):
         # Remove a channel from the exception list
         exceptions = self.get_exceptions(guild_id)
         if channel_id in exceptions:
