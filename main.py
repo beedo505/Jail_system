@@ -42,43 +42,43 @@ class ExceptionManager:
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
-        server_data = self.db.servers.find_one({"guild_id": guild_id})
-        if server_data:
-            return server_data.get("exception_channels", [])
-        else:
-            return []
+    server_data = self.collection.find_one({"guild_id": guild_id})
+    if server_data:
+        return server_data.get("exception_channels", [])
+    else:
+        return []
+        
 
     def add_exception(self, guild_id, channel_id):
-        # Add a channel to the exception list
-        exceptions = self.get_exceptions(guild_id)
-        if channel_id not in exceptions:
-            exceptions.append(channel_id)
-            self.collection.update_one(
-                {"guild_id": guild_id},
-                {"$set": {"exception_channels": exceptions}},
-                upsert=True
-            )
+    exceptions = self.get_exceptions(guild_id)
+    if channel_id not in exceptions:
+        exceptions.append(channel_id)
+        self.collection.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"exception_channels": exceptions}},
+            upsert=True
+        )
 
-    def remove_exception(self, guild_id, channel_id):
-        # Remove a channel from the exception list
-        exceptions = self.get_exceptions(guild_id)
-        if channel_id in exceptions:
-            exceptions.remove(channel_id)
-            self.collection.update_one(
-                {"guild_id": guild_id},
-                {"$set": {"exception_channels": exceptions}}
-            )
+def remove_exception(self, guild_id, channel_id):
+    exceptions = self.get_exceptions(guild_id)
+    if channel_id in exceptions:
+        exceptions.remove(channel_id)
+        self.collection.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"exception_channels": exceptions}}
+        )
 
-    def load(self):
-        try:
-            guild_data = self.collection.find_one({"guild_id": "guild_id_example"})  # استخدم guild_id المناسب
-            if guild_data:
-                return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
-            else:
-                return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
-        except Exception as e:
-            print(f"❌ Error loading data: {e}")
-            return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+    def load(self, guild_id):
+    try:
+        guild_data = self.collection.find_one({"guild_id": guild_id})  # استخدم guild_id المناسب
+        if guild_data:
+            return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
+        else:
+            return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
+    except Exception as e:
+        print(f"❌ Error loading data: {e}")
+        return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+
 
 
 exception_manager = ExceptionManager(db)
@@ -117,16 +117,10 @@ async def on_ready():
 
         if not exceptions:
             print(f"No exceptions found for guild {guild_id}.")
-            # لاحظ: لا يتم إضافة أي استثناءات افتراضية هنا
+            # لا يتم إضافة استثناءات افتراضية هنا
 
         print(f"Exceptions for guild {guild_id}: {exceptions}")
     
-    # if exception_manager.data:
-    #     print(f"Data Loaded: {exception_manager.data}")
-    # else:
-    #     print("No data found.")
-    
-    for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
             prisoner_role = await guild.create_role(
@@ -135,18 +129,20 @@ async def on_ready():
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
-
+        
         # Fetch server data from the database
         server_data = db.servers.find_one({"guild_id": guild_id})
         if not server_data:
             db.servers.insert_one({"guild_id": guild_id, "exception_channels": []})
             print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
             
+            # Hide all channels for the 'Prisoner' role
             for channel in guild.channels:
                 await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
                 
             print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
-
+        else:
+            print(f"Existing database entry found for guild {guild.name}.")
 
         print(f"Bot is connected to the following servers:")
         for guild in bot.guilds:
