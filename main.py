@@ -109,23 +109,20 @@ user_messages = defaultdict(list)
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
     for guild in bot.guilds:
-        guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
+        guild_id = str(guild.id)  # Use the guild ID
         exception_manager = ExceptionManager(db)
         exceptions = exception_manager.get_exceptions(guild_id)
-        if not exceptions:
-            print(f"No exceptions found for {guild.name}. Not adding any default data.")  # Just print a message
-        else:
+
+        if exceptions:
             print(f"Exceptions for guild {guild_id}: {exceptions}")  # If exceptions exist, show them
+        else:
+            print(f"No exceptions found for {guild.name}. No data added.")  # Just print a message
 
     print(f'Bot is connected to the following servers:')
     for guild in bot.guilds:
         print(f'{guild.name} (ID: {guild.id})')
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     
-    if exception_manager.data:
-        print(f"Data Loaded: {exception_manager.data}")
-    else:
-        print("No data found.")
     
     for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
@@ -133,7 +130,7 @@ async def on_ready():
             prisoner_role = await guild.create_role(
                 name="Prisoner",
                 permissions=discord.Permissions.none(),
-                color=discord.Color.dark_gray()
+                color=discord.Color.dark_red()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
             
