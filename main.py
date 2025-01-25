@@ -79,11 +79,11 @@ class ExceptionManager:
             return []
 
     def update_server_data(self, guild_id, server_data):
-    self.collection.update_one(
-        {"guild_id": guild_id},
-        {"$set": server_data},
-        upsert=True
-    )
+        self.collection.update_one(
+            {"guild_id": guild_id},
+            {"$set": server_data},
+            upsert=True
+        )
 
 # مثال على استخدام الكود:
 exception_manager = ExceptionManager(db)
