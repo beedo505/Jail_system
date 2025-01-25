@@ -38,29 +38,27 @@ except Exception as e:
 class ExceptionManager:
     def __init__(self, db):
         self.db = db
-        self.collection = self.db["servers"]  # قم بتغيير "servers" إلى اسم المجموعة التي تستخدمها
+        self.collection = self.db["servers"]  # تأكد من اسم المجموعة في قاعدة البيانات
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
-        server_data = self.db.servers.find_one({"guild_id": guild_id})
+        server_data = self.collection.find_one({"guild_id": guild_id})
         if server_data:
             return server_data.get("exception_channels", [])
         else:
             return []
 
     def add_exception(self, guild_id, channel_id):
-        # Add a channel to the exception list
         exceptions = self.get_exceptions(guild_id)
         if channel_id not in exceptions:
             exceptions.append(channel_id)
             self.collection.update_one(
                 {"guild_id": guild_id},
                 {"$set": {"exception_channels": exceptions}},
-                upsert=True
+                upsert=True  # تأكد من أنه إذا لم تكن السجلات موجودة، يتم إضافتها
             )
 
     def remove_exception(self, guild_id, channel_id):
-        # Remove a channel from the exception list
         exceptions = self.get_exceptions(guild_id)
         if channel_id in exceptions:
             exceptions.remove(channel_id)
@@ -69,19 +67,24 @@ class ExceptionManager:
                 {"$set": {"exception_channels": exceptions}}
             )
 
-    def load(self):
+    def load(self, guild_id):
         try:
-            guild_data = self.collection.find_one({"guild_id": "guild_id_example"})  # استخدم guild_id المناسب
+            guild_data = self.collection.find_one({"guild_id": guild_id})  # استخدم guild_id المناسب
             if guild_data:
-                return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
+                return guild_data.get('exception_channels', [])
             else:
-                return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
+                return []  # إرجاع قائمة فارغة إذا لم يتم العثور على بيانات
         except Exception as e:
             print(f"❌ Error loading data: {e}")
-            return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+            return []
 
-
+# مثال على استخدام الكود:
 exception_manager = ExceptionManager(db)
+
+exception_manager.add_exception(guild_id, str(channel_id))  # تأكد من أن channel_id هو معرف القناة الصحيح
+
+exception_manager.remove_exception(guild_id, str(channel_id))  # تأكد من أن channel_id هو معرف القناة الصحيح
+
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
