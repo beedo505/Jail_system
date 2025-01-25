@@ -81,10 +81,6 @@ class ExceptionManager:
 # مثال على استخدام الكود:
 exception_manager = ExceptionManager(db)
 
-exception_manager.add_exception(guild_id, str(channel_id))  # تأكد من أن channel_id هو معرف القناة الصحيح
-
-exception_manager.remove_exception(guild_id, str(channel_id))  # تأكد من أن channel_id هو معرف القناة الصحيح
-
         
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
