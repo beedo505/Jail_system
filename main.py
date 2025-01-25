@@ -16,10 +16,10 @@ from datetime import timedelta, datetime
 TOKEN = os.getenv('B')
 print(discord.__version__)
 
-def get_current_ip():
-    response = requests.get('https://api.ipify.org')
-    return response.text
-print(get_current_ip())
+# def get_current_ip():
+#     response = requests.get('https://api.ipify.org')
+#     return response.text
+# print(get_current_ip())
 
 uri = "mongodb+srv://Bedo:X1JeK6PJ8rg9BU8w@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -104,7 +104,17 @@ TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
 
-
+@bot.event
+async def on_guild_join(guild):
+    # تأكد من إضافة بيانات السيرفر في قاعدة البيانات عند انضمام البوت
+    if db.servers.find_one({"guild_id": str(guild.id)}) is None:
+        # إذا لم يكن هناك بيانات لهذا السيرفر، نقوم بإضافتها
+        db.servers.insert_one({
+            "guild_id": str(guild.id),
+            "exception_channels": []  # القنوات الاستثنائية، مبدئيًا لا توجد
+        })
+        print(f"Server data initialized for {guild.name}.")
+        
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
