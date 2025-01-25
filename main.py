@@ -142,6 +142,11 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
             
+            for channel in guild.channels:
+            await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
+
+        print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
+            
 
 @bot.event
 async def on_message(message):
