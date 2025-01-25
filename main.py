@@ -42,42 +42,42 @@ class ExceptionManager:
 
     # إضافة قناة للاستثناءات
     def get_exceptions(self, guild_id):
-    server_data = self.collection.find_one({"guild_id": guild_id})
-    if server_data:
-        return server_data.get("exception_channels", [])
-    else:
-        return []
+        server_data = self.collection.find_one({"guild_id": guild_id})
+        if server_data:
+            return server_data.get("exception_channels", [])
+        else:
+            return []
         
 
     def add_exception(self, guild_id, channel_id):
-    exceptions = self.get_exceptions(guild_id)
-    if channel_id not in exceptions:
-        exceptions.append(channel_id)
-        self.collection.update_one(
-            {"guild_id": guild_id},
-            {"$set": {"exception_channels": exceptions}},
-            upsert=True
-        )
+        exceptions = self.get_exceptions(guild_id)
+        if channel_id not in exceptions:
+            exceptions.append(channel_id)
+            self.collection.update_one(
+                {"guild_id": guild_id},
+                {"$set": {"exception_channels": exceptions}},
+                upsert=True
+            )
 
-def remove_exception(self, guild_id, channel_id):
-    exceptions = self.get_exceptions(guild_id)
-    if channel_id in exceptions:
-        exceptions.remove(channel_id)
-        self.collection.update_one(
-            {"guild_id": guild_id},
-            {"$set": {"exception_channels": exceptions}}
-        )
+    def remove_exception(self, guild_id, channel_id):
+        exceptions = self.get_exceptions(guild_id)
+        if channel_id in exceptions:
+            exceptions.remove(channel_id)
+            self.collection.update_one(
+                {"guild_id": guild_id},
+                {"$set": {"exception_channels": exceptions}}
+            )
 
     def load(self, guild_id):
-    try:
-        guild_data = self.collection.find_one({"guild_id": guild_id})  # استخدم guild_id المناسب
-        if guild_data:
-            return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
-        else:
-            return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
-    except Exception as e:
-        print(f"❌ Error loading data: {e}")
-        return []  # إعادة قائمة فارغة في حالة حدوث خطأ
+        try:
+            guild_data = self.collection.find_one({"guild_id": guild_id})  # استخدم guild_id المناسب
+            if guild_data:
+                return guild_data['exception_channels']  # العودة بالقنوات المستثناة إذا وجدت
+            else:
+                return []  # إذا لم توجد بيانات، ارجع قائمة فارغة
+        except Exception as e:
+            print(f"❌ Error loading data: {e}")
+            return []  # إعادة قائمة فارغة في حالة حدوث خطأ
 
 
 
