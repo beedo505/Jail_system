@@ -259,8 +259,7 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def add(ctx, *, channel=None):
-    async def add_exception(ctx, channel: discord.TextChannel):
+async def add_exception(ctx, channel: discord.TextChannel):
     guild_id = str(ctx.guild.id)
     channel_to_add = channel  # استخدام القناة التي قدمها المستخدم
 
