@@ -103,35 +103,33 @@ SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
-
-@bot.event
-async def on_guild_join(guild):
-    # تأكد من إضافة بيانات السيرفر في قاعدة البيانات عند انضمام البوت
-    if db.servers.find_one({"guild_id": str(guild.id)}) is None:
-        # إذا لم يكن هناك بيانات لهذا السيرفر، نقوم بإضافتها
-        db.servers.insert_one({
-            "guild_id": str(guild.id),
-            "exception_channels": []  # القنوات الاستثنائية، مبدئيًا لا توجد
-        })
-        print(f"Server data initialized for {guild.name}.")
         
 # الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')  # طباعة اسم البوت في التيرمينال عندما يصبح جاهزًا
-
     for guild in bot.guilds:
-        guild_id = str(guild.id)  # تحويل ID إلى نص للتعامل مع قاعدة البيانات
-        exception_manager = ExceptionManager(db)  # تأكد من تمرير قاعدة البيانات بشكل صحيح
+        guild_id = str(guild.id)  # هنا تستخدم guild.id مباشرة
+        exception_manager = ExceptionManager(db)
         exceptions = exception_manager.get_exceptions(guild_id)
+    if not exceptions:
+        print("No exceptions found. Adding default data.")
+        # إضافة بيانات افتراضية أو تعيين القيم الافتراضية هنا
+        exception_manager.add_exception(guild_id, "some_channel_id")  # مثال لإضافة استثناء افتراضي
 
-        if not exceptions:  # إذا لم يتم العثور على استثناءات
-            print(f"No exceptions found for guild {guild.name}. Adding default data.")
-            exception_manager.get_exception(guild_id, "some_channel_id")  # إضافة استثناء افتراضي
+    print(f"Exceptions for guild {guild_id}: {exceptions}")
 
-        print(f"Exceptions for guild {guild.name} (ID: {guild_id}): {exceptions}")
-
-        # التأكد من وجود دور "Prisoner"
+    print(f'Bot is connected to the following servers:')
+    for guild in bot.guilds:
+        print(f'{guild.name} (ID: {guild.id})')
+    print(f"✅ Bot is ready! Logged in as {bot.user.name}")
+    
+    # if exception_manager.data:
+    #     print(f"Data Loaded: {exception_manager.data}")
+    # else:
+    #     print("No data found.")
+    
+    for guild in bot.guilds:
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
             prisoner_role = await guild.create_role(
@@ -140,11 +138,6 @@ async def on_ready():
                 color=discord.Color.dark_gray()
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
-
-    print(f"✅ Bot is ready! Logged in as {bot.user.name}")
-    print(f"Bot is connected to the following servers:")
-    for guild in bot.guilds:
-        print(f"{guild.name} (ID: {guild.id})")
             
 
 @bot.event
@@ -258,7 +251,7 @@ async def add(ctx, *, channel=None):
     server_data = db.servers.find_one({"guild_id": guild_id})
     
     if server_data:
-        exception_channels = server_data.get("exception_channels", [])
+        exception_channels = server_data["exception_channels"]
         if channel_to_add.id not in exception_channels:
             exception_channels.append(channel_to_add.id)
             db.servers.update_one(
@@ -277,7 +270,7 @@ async def add(ctx, *, channel=None):
         else:
             await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
     else:
-        await ctx.message.reply("No server data found for this server. Please ensure the bot is properly initialized.")
+        await ctx.message.reply("No exception channels found in this server.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -364,6 +357,7 @@ async def list(ctx):
             await ctx.message.reply("No valid exception channels found.")
     else:
         await ctx.message.reply("No exception channels found in this server.")
+
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
