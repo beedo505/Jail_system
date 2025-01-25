@@ -248,30 +248,34 @@ async def add(ctx, *, channel=None):
         # إذا لم يتم تقديم قناة، سيتم استخدام القناة التي تم إرسال الأمر فيها
         channel_to_add = ctx.channel
 
-    # إضافة القناة إلى الاستثناء في قاعدة البيانات
+    # التحقق من وجود القناة في قاعدة البيانات
     server_data = db.servers.find_one({"guild_id": guild_id})
     
-    if server_data:
-        exception_channels = server_data["exception_channels"]
-        if channel_to_add.id not in exception_channels:
-            exception_channels.append(channel_to_add.id)
-            db.servers.update_one(
-                {"guild_id": guild_id}, 
-                {"$set": {"exception_channels": exception_channels}}
-            )
+    if not server_data:
+        # إنشاء سجل جديد إذا لم يكن موجودًا
+        db.servers.insert_one({"guild_id": guild_id, "exception_channels": []})
+        server_data = {"guild_id": guild_id, "exception_channels": []}
 
-            # تحديث صلاحيات الرتبة "Prisoner"
-            prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    exception_channels = server_data["exception_channels"]
 
-            if prisoner_role:
-                await channel_to_add.set_permissions(prisoner_role, read_messages=True)  # إعطاء صلاحيات القراءة للرتبة
-                await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions and permissions granted.")
-            else:
-                await ctx.message.reply("No 'Prisoner' role found in this server.")
+    if str(channel_to_add.id) not in exception_channels:
+        # إضافة القناة إلى الاستثناءات
+        exception_channels.append(str(channel_to_add.id))
+        db.servers.update_one(
+            {"guild_id": guild_id}, 
+            {"$set": {"exception_channels": exception_channels}}
+        )
+
+        # تحديث صلاحيات الرتبة "Prisoner"
+        prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+
+        if prisoner_role:
+            await channel_to_add.set_permissions(prisoner_role, read_messages=True)  # إعطاء صلاحيات القراءة للرتبة
+            await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions and permissions granted.")
         else:
-            await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
+            await ctx.message.reply("No 'Prisoner' role found in this server.")
     else:
-        await ctx.message.reply("No exception channels found in this server.")
+        await ctx.message.reply(f"{channel_to_add.name} is already in the exceptions.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
