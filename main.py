@@ -85,6 +85,7 @@ intents.members = True  # تفعيل الصلاحية للوصول إلى الأ
 intents.messages = True  # تفعيل صلاحية قراءة الرسائل
 intents.guilds = True
 intents.message_content = True # صلاحية الرد والتفاعل مع الرسائل
+is_adding_word = False  # متغير للتحكم في إضافة الكلمات
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -146,8 +147,6 @@ async def on_ready():
 
 data = guilds_collection.find_one({"guild_id": 1049390476479963138})
 print(data)
-
-is_adding_word = False  # متغير للتحكم في إضافة الكلمات
 
 # on message
 @bot.event
