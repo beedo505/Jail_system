@@ -783,7 +783,7 @@ async def words(ctx):
         # تحديد التفاعل مع زر Back
         async def back_callback(interaction):
             await interaction.response.send_message("❌ Operation cancelled. Returning to main menu.", ephemeral=True)
-            await interaction.message.delete()
+            # await interaction.message.delete()
             await words(ctx)
             
             back_button.callback = back_callback
