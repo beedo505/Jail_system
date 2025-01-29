@@ -90,8 +90,6 @@ TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
 
-
-# الحدث عندما يصبح البوت جاهزًا
 @bot.event
 async def on_ready():
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
@@ -110,18 +108,17 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
+        for channel in guild.channels:
+            await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
+
+        print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
+
+
         # تخزين القنوات الاستثنائية
         server_data = guilds_collection.find_one({"guild_id": guild_id})
         if not server_data:
             guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
             print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
-        
-        # تأكد من أن جميع القنوات مخفية عن رتبة 'Prisoner'
-        for channel in guild.channels:
-            await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
-
-        print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
-            
 
 @bot.event
 async def on_message(message):
@@ -146,14 +143,12 @@ async def on_message(message):
     # Check for spam
     if len(user_messages[user_id]) == SPAM_THRESHOLD:
         try:
-            # تأكد من أن TIMEOUT_DURATION_MINUTES محددة
             if TIMEOUT_DURATION_MINUTES is None:
                 raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
 
             # تحويل الدقائق إلى ثواني
             timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
 
-            # Apply timeout (استخدم `until` بدلاً من `duration`)
             timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
             await message.author.timeout(timeout_until, reason="Spam detected")
             await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
@@ -168,7 +163,6 @@ async def on_message(message):
             print(f"Error: {e}")
             await message.channel.send("❌ An unexpected error occurred")
 
-    # *** التحقق من الأوامر ***
     if message.content.startswith("-"):
         command_name = message.content.split(" ")[0][1:]  # استخراج اسم الأمر
         if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
