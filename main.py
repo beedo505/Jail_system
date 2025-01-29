@@ -114,6 +114,14 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
+            # حفظ الـ ID الخاص بالرتبة في قاعدة البيانات
+            guilds_collection.update_one(
+                {"guild_id": guild_id},
+                {"$set": {"prisoner_role_id": str(prisoner_role.id)}},
+                upsert=True
+            )
+            print(f"Saved 'Prisoner' role ID to the database for guild {guild.name}.")
+
         # استرجاع القنوات المستثناة من قاعدة البيانات
         exception_channels = exception_manager.get_exceptions(guild_id)
 
