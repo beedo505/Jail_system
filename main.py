@@ -47,23 +47,32 @@ class ExceptionManager:
 
     def add_exception(self, guild_id, channel_id):
         exceptions = self.get_exceptions(guild_id)
-        if channel_id not in exceptions:
-            exceptions.append(channel_id)
-            self.collection.update_one(
-                {"guild_id": guild_id},
-                {"$set": {"exception_channels": exceptions}},
-                upsert=True
-            )
+        if channel_id in exceptions:  # ✅ التحقق قبل الإضافة
+            return False  # القناة موجودة بالفعل
+        
+        exceptions.append(channel_id)
+        self.collection.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"exception_channels": exceptions}},
+            upsert=True
+        )
+        return True  # تم إضافة القناة
 
     def remove_exception(self, guild_id, channel_id):
         exceptions = self.get_exceptions(guild_id)
-        if channel_id in exceptions:
-            exceptions.remove(channel_id)
-            self.collection.update_one(
-                {"guild_id": guild_id},
-                {"$set": {"exception_channels": exceptions}},
-                upsert=True
-            )
+        if channel_id not in exceptions:
+            return False  # القناة غير موجودة في القائمة
+
+        exceptions.remove(channel_id)
+        self.collection.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"exception_channels": exceptions}}
+        )
+        return True  # تم حذف القناة
+
+    def is_exception(self, guild_id, channel_id):
+        return channel_id in self.get_exceptions(guild_id)
+
 
 
 exception_manager = ExceptionManager(db)
@@ -240,10 +249,10 @@ async def add(ctx, *, channel=None):
     prisoner_role = ctx.guild.get_role(int(prisoner_role_id)) if prisoner_role_id else None
 
     if not prisoner_role:
-        await ctx.message.reply("❌ No prisoner role has been set for this server. Use `!set_prisoner_role` first.")
+        await ctx.message.reply("❌ No prisoner role set for this server. Use the command to set it.")
         return
 
-    # Check if channel is provided (ID or mention)
+    # Check if a channel was mentioned (ID or mention)
     if channel:
         if channel.isdigit():
             channel_to_add = ctx.guild.get_channel(int(channel))
@@ -251,22 +260,24 @@ async def add(ctx, *, channel=None):
             channel_to_add = ctx.message.channel_mentions[0] if ctx.message.channel_mentions else None
 
         if not channel_to_add:
-            await ctx.message.reply("❌ Invalid channel! Provide a valid ID or mention a channel.")
+            await ctx.message.reply("❌ Invalid channel ID or mention!")
             return
     else:
-        channel_to_add = ctx.channel
+        channel_to_add = ctx.channel  # Use the current channel if none was specified
 
-    # Add channel to exceptions
+    # Add the channel to exceptions
     exception_manager = ExceptionManager(db)
-    exception_manager.add_exception(guild_id, str(channel_to_add.id))
+    if not exception_manager.add_exception(guild_id, str(channel_to_add.id)):  
+        await ctx.message.reply(f"⚠ Channel {channel_to_add.name} is already in the exception list!")
+        return
 
-    # Update channel permissions
+    # Update permissions
     if isinstance(channel_to_add, discord.VoiceChannel):
         await channel_to_add.set_permissions(prisoner_role, view_channel=True, speak=True, connect=True)
     elif isinstance(channel_to_add, discord.TextChannel):
         await channel_to_add.set_permissions(prisoner_role, read_messages=True, send_messages=True)
 
-    await ctx.message.reply(f"✅ Channel {channel_to_add.mention} has been added to exceptions.")
+    await ctx.message.reply(f"✅ Channel {channel_to_add.name} has been added to exceptions.")
 
 
 # Remove channel from exceptions
