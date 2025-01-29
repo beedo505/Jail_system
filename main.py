@@ -759,56 +759,59 @@ async def words(ctx):
     async def remove_word_callback(interaction):
         banned_words = [word['word'] for word in words_collection.find()]
         if not banned_words:
-            await interaction.response.send_message("❌ No banned words to remove.", ephemeral=True)
+            await interaction.response.send_message("❌ No banned words to remove.")
             return
 
-        # إنشاء Embed مع قائمة الكلمات المحظورة
+        # إرسال Embed بالكلمات المحظورة
         embed = discord.Embed(
             title="⚙️ Choose the word to remove",
-            description="Please select a word to remove. You can type the word or click the 'Cancel' button to cancel.",
+            description="Please select a word to remove. You can type the word or click the 'Back' button to return to the main menu.",
             color=0xFF5733
         )
         embed.add_field(name="Banned Words", value="\n".join([f"🛑 **{word}**" for word in banned_words]), inline=False)
 
-        # زر "Cancel" للتفاعل
-        cancel_button = Button(label="Cancel", style=discord.ButtonStyle.red)
+        # أزرار للتفاعل
+        back_button = Button(label="Back", style=discord.ButtonStyle.green)
 
-        # إنشاء View وإضافة الأزرار
+        # إنشاء الواجهة التي تحتوي على الأزرار
         view = View()
-        view.add_item(cancel_button)
+        view.add_item(back_button)
 
         # إرسال Embed مع الأزرار
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-        # تحديد التفاعل مع زر "Cancel"
-        async def cancel_callback(interaction):
-            # إلغاء العملية وحذف الأزرار
-            await interaction.response.send_message("❌ The word removal process has been canceled.", ephemeral=True)
-            await interaction.message.delete()  # حذف الرسالة الأصلية التي تحتوي على الأزرار
-            view.stop()  # إيقاف عرض الأزرار
+        # تحديد التفاعل مع زر "Back"
+        async def back_callback(interaction):
+            # إرسال القائمة الرئيسية
+            embed_main = discord.Embed(
+                title="📋 Manage Banned Words",
+                description="Here you can manage the banned words in the server.",
+                color=0xFF5733
+            )
 
-        cancel_button.callback = cancel_callback
-
-        # انتظار رسالة المستخدم لاختيار الكلمة فقط بعد الضغط على زر "Remove Banned Word"
-        try:
-            message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
-            word_to_remove = message.content.lower()
-
-            # التحقق مما إذا كانت الكلمة موجودة في الكلمات المحظورة
-            if word_to_remove in banned_words:
-                result = words_collection.delete_one({"word": word_to_remove})
-
-                if result.deleted_count > 0:
-                    await interaction.followup.send(f"✅ The word '{word_to_remove}' has been successfully removed from the banned list.", ephemeral=True)
-                else:
-                    await interaction.followup.send(f"❌ The word '{word_to_remove}' could not be removed. Please try again.", ephemeral=True)
+            banned_words = [word['word'] for word in words_collection.find()]
+            if banned_words:
+                embed_main.add_field(name="Banned Words", value="\n".join(banned_words), inline=False)
             else:
-                await interaction.followup.send(f"❌ The word '{word_to_remove}' is not in the banned list.", ephemeral=True)
-    
-        except asyncio.TimeoutError:
-            await interaction.followup.send("❌ You took too long to provide a word to remove.", ephemeral=True)
+                embed_main.add_field(name="Banned Words", value="No words have been banned yet.", inline=False)
+
+            # إعادة الأزرار للقائمة الرئيسية
+            add_button = Button(label="Add Banned Word", style=discord.ButtonStyle.green)
+            list_button = Button(label="List Banned Words", style=discord.ButtonStyle.blurple)
+            remove_button = Button(label="Remove Banned Word", style=discord.ButtonStyle.red)
+
+            # إنشاء الواجهة التي تحتوي على الأزرار
+            view_main = View()
+            view_main.add_item(add_button)
+            view_main.add_item(list_button)
+            view_main.add_item(remove_button)
+
+            # إرسال القائمة الرئيسية مجددًا
+            await interaction.message.edit(embed=embed_main, view=view_main)
+
+    back_button.callback = back_callback
         
-    remove_button.callback = remove_word_callback
+    # remove_button.callback = remove_word_callback
 
     await ctx.send(embed=embed, view=view)
 
