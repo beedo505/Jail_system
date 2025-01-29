@@ -782,14 +782,12 @@ async def words(ctx):
 
         # تحديد التفاعل مع زر Back
         async def back_callback(interaction):
-            # العودة إلى القائمة الرئيسية
             await interaction.response.send_message("You are now back to the main menu.", ephemeral=True)
-            # أعد إرسال القائمة الرئيسية أو الـ Embed هنا إذا أردت.
             await words(ctx)  # هذا سيعيد إظهار قائمة الكلمات
-
-    back_button.callback = back_callback
+            
+            back_button.callback = back_callback
         
-    # remove_button.callback = remove_word_callback
+    remove_button.callback = remove_word_callback
 
     await ctx.send(embed=embed, view=view)
 
