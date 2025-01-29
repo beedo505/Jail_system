@@ -155,13 +155,6 @@ async def on_message(message):
         return
 
     # جلب الكلمات المحظورة من قاعدة البيانات
-    @bot.event
-async def on_message(message):
-    # تجاهل الرسائل من البوت
-    if message.author == bot.user:
-        return
-
-    # جلب الكلمات المحظورة من قاعدة البيانات
     banned_words = [word['word'] for word in words_collection.find()]
 
     # تحقق إذا كانت الرسالة تحتوي على كلمة محظورة
@@ -179,7 +172,7 @@ async def on_message(message):
             break  # إيقاف التحقق بعد الحظر
             
     # تأكد من إرسال الرسائل التي لا تحتوي على كلمات محظورة
-    await bot.process_commands(message)  # معالجة الأوامر بعد معالجة الرسائل
+    await bot.process_commands(message)
 
 
     # Log user messages
