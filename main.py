@@ -778,36 +778,14 @@ async def words(ctx):
         view.add_item(back_button)
 
         # إرسال Embed مع الأزرار
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+        await interaction.response.send_message(embed=embed, view=view)
 
-        # تحديد التفاعل مع زر "Back"
+        # تحديد التفاعل مع زر Back
         async def back_callback(interaction):
-            # إرسال القائمة الرئيسية
-            embed_main = discord.Embed(
-                title="📋 Manage Banned Words",
-                description="Here you can manage the banned words in the server.",
-                color=0xFF5733
-            )
-
-            banned_words = [word['word'] for word in words_collection.find()]
-            if banned_words:
-                embed_main.add_field(name="Banned Words", value="\n".join(banned_words), inline=False)
-            else:
-                embed_main.add_field(name="Banned Words", value="No words have been banned yet.", inline=False)
-
-            # إعادة الأزرار للقائمة الرئيسية
-            add_button = Button(label="Add Banned Word", style=discord.ButtonStyle.green)
-            list_button = Button(label="List Banned Words", style=discord.ButtonStyle.blurple)
-            remove_button = Button(label="Remove Banned Word", style=discord.ButtonStyle.red)
-
-            # إنشاء الواجهة التي تحتوي على الأزرار
-            view_main = View()
-            view_main.add_item(add_button)
-            view_main.add_item(list_button)
-            view_main.add_item(remove_button)
-
-            # إرسال القائمة الرئيسية مجددًا
-            await interaction.message.edit(embed=embed_main, view=view_main)
+            # العودة إلى القائمة الرئيسية
+            await interaction.response.send_message("You are now back to the main menu.", ephemeral=True)
+            # أعد إرسال القائمة الرئيسية أو الـ Embed هنا إذا أردت.
+            await words(ctx)  # هذا سيعيد إظهار قائمة الكلمات
 
     back_button.callback = back_callback
         
