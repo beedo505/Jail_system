@@ -617,75 +617,51 @@ async def عفو(ctx, member: discord.Member = None):
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
     if not server_data:
-        await ctx.message.reply("The bot is not properly set up for this server.")
+        await ctx.message.reply("⚠️ The bot is not properly set up for this server.")
         return
 
-    prisoner_role_id = server_data.get('prisoner_role_id')
+    prisoner_role_id = server_data.get("prisoner_role_id") if server_data else None
     if not prisoner_role_id:
-        await ctx.message.reply("The 'Prisoner' role is not set.")
+        await ctx.message.reply("⚠️ The 'Prisoner' role is not set.")
         return
 
-    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
+    prisoner_role = guild.get_role(int(prisoner_role_id)) if prisoner_role_id else None
+    if not prisoner_role:
+        await ctx.message.reply("⚠️ The saved prisoner role does not exist anymore.")
+        return
 
     if member is None:
-        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
-        usage_lines = [
-            "•  الأمر        :  -عفو \n",
-            "•  الوظيفة        :  العفو عن العضو المسجون \n"
-        ]
-
-        aliases_lines = [
-            "•  -اعفي \n",
-            "•  -اعفاء \n",
-            "•  -اخرج \n",
-            "•  -سامح \n",
-            "•  -طلع \n",
-            "•  -اخراج \n",
-            "•  -اطلع \n",
-        ]
-
-        embed.add_field(
-            name="📌 معلومات الأمر",
-            value=f"{''.join(usage_lines)}",
-            inline=False
-        )
-
-        embed.add_field(
-            name="💡 الاختصارات المتاحة",
-            value=f"{''.join(aliases_lines)}",
-            inline=False
-        )
-
-        await ctx.message.reply(embed=embed)
+        await ctx.message.reply("⚠️ You must mention a member to pardon!")
         return
 
     if isinstance(member, str):
         member = guild.get_member(int(member))
         if not member:
-            await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
+            await ctx.message.reply("❌ Member not found. Please provide a valid ID or mention.")
             return
 
     if member == ctx.author:
-        await ctx.message.reply("You cannot pardon yourself!")
+        await ctx.message.reply("❌ You cannot pardon yourself!")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot pardon this member because their role is equal to or higher than mine.")
+        await ctx.message.reply("❌ I cannot pardon this member because their role is equal to or higher than mine.")
         return
 
     data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
+
     if not data:
         if prisoner_role in member.roles:
-            await ctx.message.reply(f"{member.mention} has the prisoner role but is not found in the database! Fixing...")
+            await ctx.message.reply(f"⚠️ {member.mention} has the prisoner role but is not found in the database! Fixing...")
             collection.insert_one({"user_id": member.id, "guild_id": guild.id, "roles": []})  # إصلاح المشكلة
         else:
-            await ctx.message.reply(f"{member.mention} is not in jail.")
+            await ctx.message.reply(f"❌ {member.mention} is not in jail.")
             return
 
-    if prisoner_role and prisoner_role in member.roles:
+    if prisoner_role in member.roles:
         await member.remove_roles(prisoner_role)
 
-    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
+    previous_roles = [guild.get_role(role_id) for role_id in (data.get("roles") or []) if guild.get_role(role_id)]
     if previous_roles:
         await member.edit(roles=previous_roles)
     else:
@@ -693,7 +669,7 @@ async def عفو(ctx, member: discord.Member = None):
 
     collection.delete_one({"user_id": member.id, "guild_id": guild.id})
 
-    await ctx.message.reply(f"{member.mention} has been pardoned")
+    await ctx.message.reply(f"✅ {member.mention} has been pardoned!")
 
 
 bot.run(os.environ['B'])
