@@ -757,54 +757,54 @@ async def words(ctx):
 
         # عند الضغط على زر "Remove Banned Word"
     async def remove_word_callback(interaction):
-    banned_words = [word['word'] for word in words_collection.find()]
+        banned_words = [word['word'] for word in words_collection.find()]
 
-    if not banned_words:
-        await interaction.response.send_message("❌ No banned words to remove.")
-        return
+        if not banned_words:
+            await interaction.response.send_message("❌ No banned words to remove.")
+            return
 
-    # إنشاء Embed مع قائمة الكلمات المحظورة
-    embed = discord.Embed(
-        title="⚙️ Choose the word to remove",
-        description="Please select a word to remove. You can type the word or click the 'Cancel' button to cancel.",
-        color=0xFF5733
-    )
-    embed.add_field(name="Banned Words", value="\n".join([f"🛑 **{word}**" for word in banned_words]), inline=False)
+        # إنشاء Embed مع قائمة الكلمات المحظورة
+        embed = discord.Embed(
+            title="⚙️ Choose the word to remove",
+            description="Please select a word to remove. You can type the word or click the 'Cancel' button to cancel.",
+            color=0xFF5733
+        )
+        embed.add_field(name="Banned Words", value="\n".join([f"🛑 **{word}**" for word in banned_words]), inline=False)
 
-    # زر "Cancel" للتفاعل
-    cancel_button = Button(label="Cancel", style=discord.ButtonStyle.red)
+        # زر "Cancel" للتفاعل
+        cancel_button = Button(label="Cancel", style=discord.ButtonStyle.red)
 
-    # إنشاء View وإضافة الأزرار
-    view = View()
-    view.add_item(cancel_button)
+        # إنشاء View وإضافة الأزرار
+        view = View()
+        view.add_item(cancel_button)
 
-    # إرسال Embed مع الأزرار
-    await interaction.response.send_message(embed=embed, view=view)
+        # إرسال Embed مع الأزرار
+        await interaction.response.send_message(embed=embed, view=view)
 
-    # التعامل مع التفاعل مع زر "Cancel"
-    async def cancel_callback(interaction):
-        await interaction.response.send_message("❌ The word removal process has been canceled.", ephemeral=True)
+        # التعامل مع التفاعل مع زر "Cancel"
+        async def cancel_callback(interaction):
+            await interaction.response.send_message("❌ The word removal process has been canceled.", ephemeral=True)
 
-    cancel_button.callback = cancel_callback
+        cancel_button.callback = cancel_callback
 
-    # انتظار رسالة المستخدم لاختيار الكلمة
-    try:
-        message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
-        word_to_remove = message.content.lower()
+        # انتظار رسالة المستخدم لاختيار الكلمة
+        try:
+            message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
+            word_to_remove = message.content.lower()
 
-        # التحقق مما إذا كانت الكلمة موجودة في الكلمات المحظورة
-        if word_to_remove in banned_words:
-            result = words_collection.delete_one({"word": word_to_remove})
+            # التحقق مما إذا كانت الكلمة موجودة في الكلمات المحظورة
+            if word_to_remove in banned_words:
+                result = words_collection.delete_one({"word": word_to_remove})
 
-            if result.deleted_count > 0:
-                await interaction.followup.send(f"✅ The word '{word_to_remove}' has been successfully removed from the banned list.")
+                if result.deleted_count > 0:
+                    await interaction.followup.send(f"✅ The word '{word_to_remove}' has been successfully removed from the banned list.")
+                else:
+                    await interaction.followup.send(f"❌ The word '{word_to_remove}' could not be removed. Please try again.")
             else:
-                await interaction.followup.send(f"❌ The word '{word_to_remove}' could not be removed. Please try again.")
-        else:
-            await interaction.followup.send(f"❌ The word '{word_to_remove}' is not in the banned list.")
+                await interaction.followup.send(f"❌ The word '{word_to_remove}' is not in the banned list.")
     
-    except asyncio.TimeoutError:
-        await interaction.followup.send("❌ You took too long to provide a word to remove.")
+        except asyncio.TimeoutError:
+            await interaction.followup.send("❌ You took too long to provide a word to remove.")
         
     remove_button.callback = remove_word_callback
 
