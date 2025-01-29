@@ -170,10 +170,6 @@ async def on_message(message):
             except discord.HTTPException as e:
                 await message.channel.send(f"❌ Error occurred while banning {message.author.mention}: {e}")
             break  # إيقاف التحقق بعد الحظر
-            
-    # تأكد من إرسال الرسائل التي لا تحتوي على كلمات محظورة
-    # await bot.process_commands(message)
-
 
     # Log user messages
     user_id = message.author.id
