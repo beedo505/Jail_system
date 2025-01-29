@@ -194,8 +194,7 @@ async def on_command_error(ctx, error):
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
-
-
+# Add command
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def add(ctx, *, channel=None):
@@ -224,11 +223,15 @@ async def add(ctx, *, channel=None):
     # تحديث صلاحيات رتبة 'Prisoner'
     prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     if prisoner_role:
-        await channel_to_add.set_permissions(prisoner_role, read_messages=True)  # إعطاء صلاحيات القراءة للرتبة
-        await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions and permissions granted.")
+        if isinstance(channel_to_add, discord.VoiceChannel):
+            await channel_to_add.set_permissions(prisoner_role, speak=True, connect=True)
+        elif isinstance(channel_to_add, discord.TextChannel):
+            await channel_to_add.set_permissions(prisoner_role, read_messages=True)
+        await ctx.message.reply(f"Channel {channel_to_add.name} has been added to exceptions.")
     else:
-        await ctx.message.reply("No 'Prisoner' role found in this server.")
+        await ctx.message.reply("The 'Prisoner' role wasn't found in this server.")
 
+# Remove command
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def rem(ctx, *, channel=None):
@@ -252,18 +255,27 @@ async def rem(ctx, *, channel=None):
 
     # إزالة القناة من الاستثناء
     exception_manager = ExceptionManager(db)
+    if not exception_manager.is_exception(str(guild_id), str(channel_to_remove.id)):
+        await ctx.message.reply(f"Channel {channel_to_remove.name} is not in the exception list.")
+        return
+
     exception_manager.remove_exception(str(guild_id), str(channel_to_remove.id))
 
     # تحديث صلاحيات رتبة 'Prisoner' لإزالة صلاحية قراءة الرسائل
     prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
     if prisoner_role:
-        await channel_to_remove.set_permissions(prisoner_role, read_messages=False)  # إزالة صلاحيات القراءة للرتبة
-        await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions and permissions revoked.")
-    else:
-        await ctx.message.reply("No 'Prisoner' role found in this server.")
+        if isinstance(channel_to_remove, discord.VoiceChannel):
+            await channel_to_remove.set_permissions(prisoner_role, speak=False, connect=False)
+        elif isinstance(channel_to_remove, discord.TextChannel):
+            await channel_to_remove.set_permissions(prisoner_role, read_messages=False, send_messages=False)
 
-@commands.has_permissions(administrator=True)
+        await ctx.message.reply(f"Channel {channel_to_remove.name} has been removed from exceptions.")
+    else:
+        await ctx.message.reply("The 'Prisoner' role wasn't found in this server.")
+
+# List command
 @bot.command(aliases=['عرض_الاستثناءات', 'رؤية_الرومات', 'show_exp'])
+@commands.has_permissions(administrator=True)
 async def list(ctx):
     guild_id = str(ctx.guild.id)
     exception_manager = ExceptionManager(db)
@@ -391,7 +403,7 @@ async def فك(ctx, *, user_input=None):
         # إذا حدث خطأ آخر في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
-# امر السجن
+# Jail command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
 async def سجن(ctx, member: discord.Member = None, duration: str = None):
@@ -493,31 +505,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         await asyncio.sleep(delta.total_seconds())
         await release_member(ctx, member)
 
-async def release_member(ctx, member: discord.Member):
-    guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
-
-    # Fetch member's data from the database
-    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
-    if not data:
-        return
-
-    # Remove the "Prisoner" role
-    if prisoner_role and prisoner_role in member.roles:
-        await member.remove_roles(prisoner_role)
-
-    # Restore the member's previous roles
-    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
-    if previous_roles:
-        await member.edit(roles=previous_roles)
-    else:
-        await member.edit(roles=[guild.default_role])  # Assign default role if no previous roles exist
-
-    # Remove jail data from the database
-    collection.delete_one({"user_id": member.id, "guild_id": guild.id})
-
-    await ctx.send(f"{member.mention} has been released from jail.")
-
+# Pardon command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
 async def عفو(ctx, member: discord.Member = None):
@@ -563,11 +551,11 @@ async def عفو(ctx, member: discord.Member = None):
             return
 
     if member == ctx.author:
-        await ctx.message.reply("You cannot jail yourself.")
+        await ctx.message.reply("You cannot pardon yourself!")
         return
 
     if member.top_role >= ctx.guild.me.top_role:
-        await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
+        await ctx.message.reply("I cannot pardon this member because their role is equal to or higher than mine.")
         return
 
     # Fetch member's data from the database
@@ -590,7 +578,7 @@ async def عفو(ctx, member: discord.Member = None):
     # Remove jail data from the database
     collection.delete_one({"user_id": member.id, "guild_id": guild.id})
 
-    await ctx.message.reply(f"{member.mention} has been pardoned.")
+    await ctx.message.reply(f"{member.mention} has been pardoned")
 
 
 bot.run(os.environ['B'])
