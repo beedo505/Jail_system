@@ -104,15 +104,33 @@ async def on_ready():
             guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
             print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
 
+        # استرجاع إعدادات الرتبة "Prisoner" من قاعدة البيانات
+        prisoner_settings = server_data.get('prisoner_role', {})
+        prisoner_name = prisoner_settings.get('name', "Prisoner")
+        prisoner_color = prisoner_settings.get('color', discord.Color.dark_gray().value)
+        prisoner_permissions = prisoner_settings.get('permissions', [])
+
         # التحقق مما إذا كانت رتبة 'Prisoner' موجودة، وإن لم تكن موجودة يتم إنشاؤها
-        prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+        prisoner_role = discord.utils.get(guild.roles, name=prisoner_name)
         if not prisoner_role:
             prisoner_role = await guild.create_role(
-                name="Prisoner",
+                name=prisoner_name,
                 permissions=discord.Permissions.none(),
-                color=discord.Color.dark_gray()
+                color=discord.Color(prisoner_color)
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+        else:
+            # تحديث لون الرتبة إذا كان مختلفًا
+            if prisoner_role.color != discord.Color(prisoner_color):
+                await prisoner_role.edit(color=discord.Color(prisoner_color))
+                print(f"Updated 'Prisoner' role color in {guild.name}.")
+
+        # تحديث صلاحيات الرتبة
+        permissions = discord.Permissions.none()
+        for perm in prisoner_permissions:
+            if hasattr(permissions, perm):
+                setattr(permissions, perm, True)
+        await prisoner_role.edit(permissions=permissions)
 
         # استرجاع القنوات المستثناة من قاعدة البيانات
         exception_channels = exception_manager.get_exceptions(guild_id)
@@ -121,7 +139,7 @@ async def on_ready():
         for channel in guild.channels:
             if str(channel.id) in exception_channels:
                 if isinstance(channel, discord.TextChannel):
-                    await channel.set_permissions(prisoner_role, view_channel=True, read_messages=True, send_messages=True)
+                    await channel.set_permissions(prisoner_role, read_messages=True, send_messages=True)
                     print(f"Restored exception permissions for text channel: {channel.name} in {guild.name}.")
                 elif isinstance(channel, discord.VoiceChannel):
                     await channel.set_permissions(prisoner_role, view_channel=True, connect=True, speak=True)
@@ -205,6 +223,72 @@ async def on_command_error(ctx, error):
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def role(ctx):
+    """إعداد الرتبة من خلال واجهة تفاعلية"""
+    # إعداد الأزرار
+    button_name = Button(label="Change Name", style=discord.ButtonStyle.primary)
+    button_color = Button(label="Change Color", style=discord.ButtonStyle.success)
+    button_permissions = Button(label="Change Permissions", style=discord.ButtonStyle.danger)
+
+    # تعريف الواجهة التي تحتوي على الأزرار
+    view = View()
+    view.add_item(button_name)
+    view.add_item(button_color)
+    view.add_item(button_permissions)
+
+    # إرسال الرسالة
+    await ctx.send("Choose an option to modify the 'Prisoner' role:", view=view)
+
+    # وظيفة الزر: تغيير الاسم
+    async def change_name(interaction: discord.Interaction):
+        await interaction.response.send_message("Please enter the new name for the 'Prisoner' role:")
+        name_message = await bot.wait_for('message', check=lambda m: m.author == interaction.user and m.channel == ctx.channel)
+        new_name = name_message.content.strip()
+
+        # تحديث الرتبة في قاعدة البيانات
+        guild_id = str(ctx.guild.id)
+        prisoner_settings = guilds_collection.find_one({"guild_id": guild_id})['prisoner_role']
+        prisoner_settings['name'] = new_name
+        guilds_collection.update_one({"guild_id": guild_id}, {"$set": {"prisoner_role": prisoner_settings}})
+        
+        await interaction.followup.send(f"The 'Prisoner' role name has been updated to: {new_name}")
+
+    # وظيفة الزر: تغيير اللون
+    async def change_color(interaction: discord.Interaction):
+        await interaction.response.send_message("Please enter the new color for the 'Prisoner' role (e.g., #FF5733):")
+        color_message = await bot.wait_for('message', check=lambda m: m.author == interaction.user and m.channel == ctx.channel)
+        new_color = discord.Color(int(color_message.content.strip()[1:], 16))
+
+        # تحديث الرتبة في قاعدة البيانات
+        guild_id = str(ctx.guild.id)
+        prisoner_settings = guilds_collection.find_one({"guild_id": guild_id})['prisoner_role']
+        prisoner_settings['color'] = new_color.value
+        guilds_collection.update_one({"guild_id": guild_id}, {"$set": {"prisoner_role": prisoner_settings}})
+        
+        await interaction.followup.send(f"The 'Prisoner' role color has been updated to: {new_color}")
+
+    # وظيفة الزر: تغيير الصلاحيات
+    async def change_permissions(interaction: discord.Interaction):
+        await interaction.response.send_message("Please enter the new permissions for the 'Prisoner' role (comma-separated, e.g., read_messages, send_messages):")
+        permissions_message = await bot.wait_for('message', check=lambda m: m.author == interaction.user and m.channel == ctx.channel)
+        new_permissions = permissions_message.content.split(',')
+        new_permissions = [perm.strip() for perm in new_permissions]
+
+        # تحديث الرتبة في قاعدة البيانات
+        guild_id = str(ctx.guild.id)
+        prisoner_settings = guilds_collection.find_one({"guild_id": guild_id})['prisoner_role']
+        prisoner_settings['permissions'] = new_permissions
+        guilds_collection.update_one({"guild_id": guild_id}, {"$set": {"prisoner_role": prisoner_settings}})
+        
+        await interaction.followup.send(f"The 'Prisoner' role permissions have been updated to: {new_permissions}")
+
+    # ربط الوظائف بالأزرار
+    button_name.callback = change_name
+    button_color.callback = change_color
+    button_permissions.callback = change_permissions
+
 # Add command
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -231,8 +315,15 @@ async def add(ctx, *, channel=None):
     exception_manager = ExceptionManager(db)
     exception_manager.add_exception(str(guild_id), str(channel_to_add.id))
 
-    # تحديث صلاحيات رتبة 'Prisoner'
-    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    # استرجاع معرّف الرتبة "Prisoner" من قاعدة البيانات
+    server_data = guilds_collection.find_one({"guild_id": str(guild_id)})
+    prisoner_role_id = server_data.get('prisoner_role_id')
+
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role wasn't found in this server.")
+        return
+
+    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
     if prisoner_role:
         if isinstance(channel_to_add, discord.VoiceChannel):
             await channel_to_add.set_permissions(prisoner_role, view_channel=True, speak=True, connect=True)
@@ -272,8 +363,15 @@ async def rem(ctx, *, channel=None):
 
     exception_manager.remove_exception(str(guild_id), str(channel_to_remove.id))
 
-    # تحديث صلاحيات رتبة 'Prisoner' لإزالة صلاحية قراءة الرسائل
-    prisoner_role = discord.utils.get(ctx.guild.roles, name="Prisoner")
+    # استرجاع معرّف الرتبة "Prisoner" من قاعدة البيانات
+    server_data = guilds_collection.find_one({"guild_id": str(guild_id)})
+    prisoner_role_id = server_data.get('prisoner_role_id')
+
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role wasn't found in this server.")
+        return
+
+    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
     if prisoner_role:
         if isinstance(channel_to_remove, discord.VoiceChannel):
             await channel_to_remove.set_permissions(prisoner_role, speak=False, connect=False)
@@ -291,6 +389,14 @@ async def list(ctx):
     guild_id = str(ctx.guild.id)
     exception_manager = ExceptionManager(db)
     exceptions = exception_manager.get_exceptions(guild_id)
+
+    # استرجاع معرّف الرتبة "Prisoner" من قاعدة البيانات
+    server_data = guilds_collection.find_one({"guild_id": guild_id})
+    prisoner_role_id = server_data.get('prisoner_role_id')
+
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role doesn't exist in this server.")
+        return
 
     if exceptions:
         exception_channels = []
@@ -414,8 +520,15 @@ async def فك(ctx, *, user_input=None):
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
 async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
 
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+    prisoner_role_id = server_data.get('prisoner_role_id')
+
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+        return
+
+    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
     if not prisoner_role:
         await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
         return
@@ -541,7 +654,19 @@ async def release_member(ctx, member: discord.Member):
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
 async def عفو(ctx, member: discord.Member = None):
     guild = ctx.guild
-    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+
+    # استرجاع معرّف الرتبة "Prisoner" من قاعدة البيانات
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+    prisoner_role_id = server_data.get('prisoner_role_id')
+
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+        return
+
+    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        await ctx.message.reply("The 'Prisoner' role does not exist. Please ensure the bot is running properly.")
+        return
 
     if member is None:
         embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
