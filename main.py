@@ -14,12 +14,12 @@ from collections import defaultdict
 import time
 from datetime import datetime, timedelta, timezone
 TOKEN = os.getenv('B')
-print(discord.__version__)
 
-def get_current_ip():
-    response = requests.get('https://api.ipify.org')
-    return response.text
-print(get_current_ip())
+# print(discord.__version__)
+# def get_current_ip():
+#     response = requests.get('https://api.ipify.org')
+#     return response.text
+# print(get_current_ip())
 
 uri = "mongodb+srv://Bedo:L36dXXAVTYyDgvL6@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -77,10 +77,9 @@ intents.messages = True  # تفعيل صلاحية قراءة الرسائل
 intents.guilds = True
 intents.message_content = True # صلاحية الرد والتفاعل مع الرسائل
 
-# إعداد سجل الأخطاء
 logging.basicConfig(level=logging.ERROR)
 
-bot = commands.Bot(command_prefix='-', intents=intents)  # تحديد البادئة '-'
+bot = commands.Bot(command_prefix='-', intents=intents)
 
 # تخزين رتب الأعضاء المسجونين
 prison_data = {}
@@ -123,7 +122,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    # تجاهل رسائل البوتات
+    # Ignore bot messages
     if message.author.bot:
         return
 
@@ -147,7 +146,7 @@ async def on_message(message):
             if TIMEOUT_DURATION_MINUTES is None:
                 raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
 
-            # تحويل الدقائق إلى ثواني
+            # Convert min to sec
             timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
 
             timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
@@ -156,7 +155,7 @@ async def on_message(message):
             # Clear the user's message log after punishment
             user_messages[user_id] = []
         except discord.Forbidden:
-            await message.channel.send("❌ I don't have permission to timeout this user")
+            await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
         except ValueError as ve:
             print(f"Error: {ve}")
             await message.channel.send(f"❌ Error: {ve}")
@@ -335,7 +334,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         return
 
     if user == ctx.author:
-        await ctx.message.reply("You cannot ban yourself")
+        await ctx.message.reply("You cannot ban yourself!")
         return
 
     # if user.top_role >= ctx.guild.me.top_role:
@@ -343,16 +342,11 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
     #     return
 
     try:
-        # تحقق من أن المستخدم قد أدخل منشن أو ID
         if user:
-            user_id = user.id  # مباشرة استخدم ID من الكائن user
+            user_id = user.id
 
         # محاولة الحصول على المستخدم من السيرفر
         member = ctx.guild.get_member(user_id)
-
-        # if member.top_role >= ctx.guild.me.top_role:
-        #     await ctx.message.reply("❌ | I cannot ban this member because their role is equal to or higher than mine.")
-        #     return
 
         if member:
             await member.ban(reason=reason)
