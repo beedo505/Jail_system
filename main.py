@@ -127,7 +127,7 @@ async def on_ready():
                     await channel.set_permissions(prisoner_role, view_channel=True, connect=True, speak=True)
                     print(f"Restored exception permissions for voice channel: {channel.name} in {guild.name}.")
             else:
-                await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False, connect=False, speak=False)
+                await channel.set_permissions(prisoner_role, view_channel=False, read_messages=False, send_messages=False, connect=False, speak=False)
 
     print("✅ All exceptions have been restored successfully!")
 
