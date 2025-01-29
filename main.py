@@ -98,7 +98,13 @@ async def on_ready():
     for guild in bot.guilds:
         guild_id = str(guild.id)
 
-        # تحقق إذا كانت رتبة 'Prisoner' موجودة
+        # التحقق مما إذا كان السيرفر موجودًا في قاعدة البيانات، وإضافته إن لم يكن موجودًا
+        server_data = guilds_collection.find_one({"guild_id": guild_id})
+        if not server_data:
+            guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
+            print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
+
+        # التحقق مما إذا كانت رتبة 'Prisoner' موجودة، وإن لم تكن موجودة يتم إنشاؤها
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
         if not prisoner_role:
             prisoner_role = await guild.create_role(
@@ -108,18 +114,24 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
+        # استرجاع القنوات المستثناة من قاعدة البيانات
+        exception_channels = exception_manager.get_exceptions(guild_id)
+
+        # تحديث صلاحيات القنوات
         for channel in guild.channels:
-            await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False)
+            if str(channel.id) in exception_channels:
+                if isinstance(channel, discord.TextChannel):
+                    await channel.set_permissions(prisoner_role, read_messages=True, send_messages=True)
+                    print(f"Restored exception permissions for text channel: {channel.name} in {guild.name}.")
+                elif isinstance(channel, discord.VoiceChannel):
+                    await channel.set_permissions(prisoner_role, connect=True, speak=True)
+                    print(f"Restored exception permissions for voice channel: {channel.name} in {guild.name}.")
+            else:
+                await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False, connect=False, speak=False)
 
-        print(f"Set 'Prisoner' role permissions to hide all channels in {guild.name}.")
+    print("✅ All exceptions have been restored successfully!")
 
-
-        # تخزين القنوات الاستثنائية
-        server_data = guilds_collection.find_one({"guild_id": guild_id})
-        if not server_data:
-            guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
-            print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
-
+# on message
 @bot.event
 async def on_message(message):
     # Ignore bot messages
