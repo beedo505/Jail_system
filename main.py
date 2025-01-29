@@ -225,11 +225,24 @@ async def on_command_error(ctx, error):
 async def set(ctx, role: discord.Role = None):
     guild_id = str(ctx.guild.id)
 
+    if role is None:
+        await ctx.message.reply("You must mention a role!")
+        return
+
     if not role:
         await ctx.message.reply("❌ You must mention a role or provide a valid role ID.")
         return
 
-    # Save the role ID in the database
+    # استرجاع الرتبة المخزنة من قاعدة البيانات
+    server_data = guilds_collection.find_one({"guild_id": guild_id})
+    current_role_id = server_data.get("prisoner_role_id") if server_data else None
+
+    # إذا كانت نفس الرتبة المخزنة، لا داعي للحفظ مرة أخرى
+    if current_role_id == str(role.id):
+        await ctx.message.reply(f"⚠️ The prisoner role is already set to: **{role.name}**.")
+        return
+
+    # حفظ الرتبة الجديدة في قاعدة البيانات
     guilds_collection.update_one(
         {"guild_id": guild_id},
         {"$set": {"prisoner_role_id": str(role.id)}},
