@@ -737,6 +737,7 @@ async def words(ctx):
             await interaction.followup.send("❌ You took too long to provide a word. Try again.")
 
     add_button.callback = add_word_callback
+    is_adding_word = False  # إيقاف الفحص بعد الانتهاء
 
     # عند الضغط على زر "List Banned Words"
     async def list_words_callback(interaction):
