@@ -109,8 +109,11 @@ async def on_ready():
     for guild in bot.guilds:
         guild_id = str(guild.id)
 
-        # استرجاع القنوات المستثناة من قاعدة البيانات مع الصلاحيات
-        exception_channels_data = exception_manager.get_exceptions(guild_id)
+        # التحقق مما إذا كان السيرفر موجودًا في قاعدة البيانات، وإضافته إن لم يكن موجودًا
+        server_data = guilds_collection.find_one({"guild_id": guild_id})
+        if not server_data:
+            guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
+            print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
 
         # التحقق مما إذا كانت رتبة 'Prisoner' موجودة، وإن لم تكن موجودة يتم إنشاؤها
         prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
@@ -122,29 +125,26 @@ async def on_ready():
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
 
+        # استرجاع القنوات المستثناة من قاعدة البيانات
+        exception_channels_data = exception_manager.get_exceptions(guild_id)
+
         # تحديث صلاحيات القنوات
         for channel in guild.channels:
-            if str(channel.id) in exception_channels_data:
-                # استرجاع صلاحيات القناة
-                channel_permissions = exception_channels_data[str(channel.id)]  
-
+            # التحقق إذا كانت القناة موجودة في قائمة الاستثناءات
+            exception = next((item for item in exception_channels_data if item['channel_id'] == str(channel.id)), None)
+            
+            if exception:
+                # إذا كانت القناة موجودة في الاستثناءات، استرجاع الصلاحيات
+                permissions = exception.get('permissions', [])
+                
                 if isinstance(channel, discord.TextChannel):
-                    perms = discord.Permissions.none()
-                    for perm in channel_permissions:
-                        if hasattr(perms, perm):
-                            setattr(perms, perm, True)
-                    await channel.set_permissions(prisoner_role, overwrite=perms)
+                    await channel.set_permissions(prisoner_role, read_messages='read_messages' in permissions, send_messages='send_messages' in permissions)
                     print(f"Restored exception permissions for text channel: {channel.name} in {guild.name}.")
-
                 elif isinstance(channel, discord.VoiceChannel):
-                    perms = discord.Permissions.none()
-                    for perm in channel_permissions:
-                        if hasattr(perms, perm):
-                            setattr(perms, perm, True)
-                    await channel.set_permissions(prisoner_role, overwrite=perms)
+                    await channel.set_permissions(prisoner_role, connect='connect' in permissions, speak='speak' in permissions)
                     print(f"Restored exception permissions for voice channel: {channel.name} in {guild.name}.")
             else:
-                # إعادة الصلاحيات الافتراضية للقنوات غير المستثناة
+                # إذا لم تكن القناة ضمن الاستثناءات، تعيين الصلاحيات إلى "عدم السماح"
                 await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False, connect=False, speak=False)
 
     print("✅ All exceptions have been restored successfully!")
