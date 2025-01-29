@@ -699,6 +699,8 @@ async def عفو(ctx, member: discord.Member = None):
 @commands.has_permissions(administrator=True)
 async def words(ctx):
     global is_adding_word
+    print(f"Command 'words' triggered by {ctx.author.name}")  # رسالة تصحيح للتأكد من أن الأمر يتم استدعاؤه
+
     # جلب الكلمات المحظورة من قاعدة البيانات
     banned_words = [word['word'] for word in words_collection.find()]
     
