@@ -142,7 +142,7 @@ async def on_ready():
 
     print("✅ All exceptions have been restored successfully!")
 
-data = guilds_collection.find_one({"guild_id": GUILD_ID_HERE})
+data = guilds_collection.find_one({"guild_id": 1049390476479963138})
 print(data)
 
 # on message
