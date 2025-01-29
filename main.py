@@ -675,8 +675,12 @@ async def عفو(ctx, member: discord.Member = None):
 
     data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
     if not data:
-        await ctx.message.reply(f"{member.mention} is not in jail.")
-        return
+        if prisoner_role in member.roles:
+            await ctx.message.reply(f"{member.mention} has the prisoner role but is not found in the database! Fixing...")
+            collection.insert_one({"user_id": member.id, "guild_id": guild.id, "roles": []})  # إصلاح المشكلة
+        else:
+            await ctx.message.reply(f"{member.mention} is not in jail.")
+            return
 
     if prisoner_role and prisoner_role in member.roles:
         await member.remove_roles(prisoner_role)
