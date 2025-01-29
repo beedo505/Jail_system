@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ui import Button, View
 from pymongo import MongoClient
 import pymongo
 import logging
@@ -29,7 +28,6 @@ db = client["Prison"]
 collection = db["user"]
 exceptions_collection = db['exceptions']
 guilds_collection = db["guilds"]
-words_collection = db['banned_words']
 
 try:
     client.admin.command('ping')
@@ -85,7 +83,6 @@ intents.members = True  # تفعيل الصلاحية للوصول إلى الأ
 intents.messages = True  # تفعيل صلاحية قراءة الرسائل
 intents.guilds = True
 intents.message_content = True # صلاحية الرد والتفاعل مع الرسائل
-is_adding_word = False  # متغير للتحكم في إضافة الكلمات
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -151,30 +148,9 @@ print(data)
 # on message
 @bot.event
 async def on_message(message):
-    global is_adding_word
-    
+    # Ignore bot messages
     if message.author.bot:
         return
-        
-    # if is_adding_word:
-    #     return  # لا نقوم بحظر الأعضاء عندما نضيف كلمة جديدة
-
-    # # جلب الكلمات المحظورة من قاعدة البيانات
-    # banned_words = [word['word'] for word in words_collection.find()]
-
-    # # تحقق إذا كانت الرسالة تحتوي على كلمة محظورة
-    # for word in banned_words:
-    #     if word in message.content.lower():
-    #         try:
-    #             # حظر العضو
-    #             await message.author.ban(reason=f"Used a banned word: {word}")
-    #             await message.channel.send(f"❌ {message.author.mention} has been banned for using a banned word: {word}.")
-    #             break  # إيقاف عملية الفحص بعد الحظر
-    #         except discord.Forbidden:
-    #             await message.channel.send(f"❌ I do not have permission to ban {message.author.mention}.")
-    #         except discord.HTTPException as e:
-    #             await message.channel.send(f"❌ Error occurred while banning {message.author.mention}: {e}")
-    #         break  # إيقاف التحقق بعد الحظر
 
     # Log user messages
     user_id = message.author.id
@@ -695,91 +671,5 @@ async def عفو(ctx, member: discord.Member = None):
 
     await ctx.message.reply(f"✅ {member.mention} has been pardoned!")
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def words(ctx):
-    global is_adding_word
-    print(f"Command 'words' triggered by {ctx.author.name}")  # رسالة تصحيح للتأكد من أن الأمر يتم استدعاؤه
-
-    # جلب الكلمات المحظورة من قاعدة البيانات
-    banned_words = [word['word'] for word in words_collection.find()]
-    
-    embed = discord.Embed(title="📋 Manage Banned Words", description="Here you can manage the banned words in the server.", color=0xFF5733)
-
-    # إذا كانت هناك كلمات محظورة، اعرضها
-    if banned_words:
-        embed.add_field(name="Banned Words", value="\n".join(banned_words), inline=False)
-    else:
-        embed.add_field(name="Banned Words", value="No words have been banned yet.", inline=False)
-
-    # أزرار للتفاعل
-    add_button = Button(label="Add Banned Word", style=discord.ButtonStyle.green)
-    list_button = Button(label="List Banned Words", style=discord.ButtonStyle.blurple)
-    remove_button = Button(label="Remove Banned Word", style=discord.ButtonStyle.red)
-
-    # إنشاء الواجهة التي تحتوي على الأزرار
-    view = View()
-    view.add_item(add_button)
-    view.add_item(list_button)
-    view.add_item(remove_button)
-
-    # عند الضغط على زر "Add Banned Word"
-    async def add_word_callback(interaction):
-        global is_adding_word
-        is_adding_word = True
-        
-        await interaction.response.send_message("📝 Please type the word you want to add to the banned list.", ephemeral=True)
-        try:
-            message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
-            word = message.content.lower()
-
-            # تأكد إذا الكلمة موجودة مسبقاً
-            if words_collection.find_one({"word": word}):
-                await interaction.followup.send(f"❌ The word '{word}' is already banned.")
-            else:
-                words_collection.insert_one({"word": word})
-                await interaction.followup.send(f"✅ The word '{word}' has been successfully added to the banned list.")
-        except asyncio.TimeoutError:
-            await interaction.followup.send("❌ You took too long to provide a word. Try again.")
-
-    is_adding_word = False  # إيقاف الفحص بعد الانتهاء
-    add_button.callback = add_word_callback
-
-    # عند الضغط على زر "List Banned Words"
-    async def list_words_callback(interaction):
-        banned_words = [word['word'] for word in words_collection.find()]
-        if banned_words:
-            await interaction.response.send_message(f"📝 Banned Words:\n{', '.join(banned_words)}")
-        else:
-            await interaction.response.send_message("❌ No banned words have been added yet.")
-
-    list_button.callback = list_words_callback
-    
-# عند الضغط على زر "Remove Banned Word"
-    async def remove_word_callback(interaction):
-        banned_words = [word['word'] for word in words_collection.find()]
-        if not banned_words:
-            await interaction.response.send_message("❌ No banned words to remove.")
-            return
-        
-        await interaction.response.send_message("⚙️ Choose the word to remove.", ephemeral=True)
-        for word in banned_words:
-            await interaction.followup.send(f"🛑 **{word}** - To remove it, reply with the word.")
-
-        try:
-            message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
-            word_to_remove = message.content.lower()
-            result = words_collection.delete_one({"word": word_to_remove})
-
-            if result.deleted_count == 0:
-                await interaction.followup.send(f"❌ The word '{word_to_remove}' was not found.")
-            else:
-                await interaction.followup.send(f"✅ The word '{word_to_remove}' has been removed from the banned list.")
-        except asyncio.TimeoutError:
-            await interaction.followup.send("❌ You took too long to provide a word to remove.")
-        
-    remove_button.callback = remove_word_callback
-
-    await ctx.send(embed=embed, view=view)
 
 bot.run(os.environ['B'])
