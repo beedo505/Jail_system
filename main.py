@@ -151,7 +151,8 @@ print(data)
 # on message
 @bot.event
 async def on_message(message):
-    # Ignore bot messages
+    global is_adding_word
+    
     if message.author.bot:
         return
         
@@ -697,6 +698,7 @@ async def عفو(ctx, member: discord.Member = None):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def words(ctx):
+    global is_adding_word
     # جلب الكلمات المحظورة من قاعدة البيانات
     banned_words = [word['word'] for word in words_collection.find()]
     
@@ -721,6 +723,9 @@ async def words(ctx):
 
     # عند الضغط على زر "Add Banned Word"
     async def add_word_callback(interaction):
+        global is_adding_word
+        is_adding_word = True
+        
         await interaction.response.send_message("📝 Please type the word you want to add to the banned list.", ephemeral=True)
         try:
             message = await bot.wait_for('message', check=lambda m: m.author == interaction.user, timeout=60.0)
@@ -735,8 +740,8 @@ async def words(ctx):
         except asyncio.TimeoutError:
             await interaction.followup.send("❌ You took too long to provide a word. Try again.")
 
-    add_button.callback = add_word_callback
     is_adding_word = False  # إيقاف الفحص بعد الانتهاء
+    add_button.callback = add_word_callback
 
     # عند الضغط على زر "List Banned Words"
     async def list_words_callback(interaction):
