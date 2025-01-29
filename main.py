@@ -475,25 +475,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
-    if not server_data:
-        await ctx.message.reply("The bot is not properly set up for this server.")
-        return
-
-    prisoner_role_id = server_data.get('prisoner_role_id')
-    if not prisoner_role_id:
-        await ctx.message.reply("The 'Prisoner' role is not set.")
-        return
-
-    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
-    if not prisoner_role:
-        await ctx.message.reply("The 'Prisoner' role no longer exists.")
-        return
-
-    if prisoner_role in member.roles:
-        await ctx.message.reply(f"❌ | {member.mention} is already in prison.")
-        return
-
-    if member is None:
+        if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -سجن \n",
@@ -522,6 +504,24 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         )
 
         await ctx.message.reply(embed=embed)
+        return
+
+    if not server_data:
+        await ctx.message.reply("The bot is not properly set up for this server.")
+        return
+
+    prisoner_role_id = server_data.get('prisoner_role_id')
+    if not prisoner_role_id:
+        await ctx.message.reply("The 'Prisoner' role is not set.")
+        return
+
+    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        await ctx.message.reply("The 'Prisoner' role no longer exists.")
+        return
+
+    if prisoner_role in member.roles:
+        await ctx.message.reply(f"❌ | {member.mention} is already in prison.")
         return
 
     if isinstance(member, discord.Member):
@@ -631,7 +631,35 @@ async def عفو(ctx, member: discord.Member = None):
         return
 
     if member is None:
-        await ctx.message.reply("⚠️ You must mention a member to pardon!")
+        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
+        usage_lines = [
+            "•  الأمر        :  -عفو \n",
+            "•  الوظيفة        :  العفو عن العضو المسجون \n"
+        ]
+
+        aliases_lines = [
+            "•  -اعفي \n",
+            "•  -اعفاء \n",
+            "•  -اخرج \n",
+            "•  -سامح \n",
+            "•  -طلع \n",
+            "•  -اخراج \n",
+            "•  -اطلع \n",
+        ]
+
+        embed.add_field(
+            name="📌 معلومات الأمر",
+            value=f"{''.join(usage_lines)}",
+            inline=False
+        )
+
+        embed.add_field(
+            name="💡 الاختصارات المتاحة",
+            value=f"{''.join(aliases_lines)}",
+            inline=False
+        )
+
+        await ctx.message.reply(embed=embed)
         return
 
     if isinstance(member, str):
