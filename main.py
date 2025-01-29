@@ -103,6 +103,7 @@ async def on_ready():
         if not server_data:
             guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
             print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
+            server_data = {"guild_id": guild_id, "exception_channels": []}  # تعيين قيمة افتراضية للبيانات
 
         # استرجاع إعدادات الرتبة "Prisoner" من قاعدة البيانات
         prisoner_settings = server_data.get('prisoner_role', {})
