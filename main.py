@@ -147,12 +147,17 @@ async def on_ready():
 data = guilds_collection.find_one({"guild_id": 1049390476479963138})
 print(data)
 
+is_adding_word = False  # متغير للتحكم في إضافة الكلمات
+
 # on message
 @bot.event
 async def on_message(message):
     # Ignore bot messages
     if message.author.bot:
         return
+        
+    if is_adding_word:
+        return  # لا نقوم بحظر الأعضاء عندما نضيف كلمة جديدة
 
     # جلب الكلمات المحظورة من قاعدة البيانات
     banned_words = [word['word'] for word in words_collection.find()]
