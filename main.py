@@ -499,6 +499,31 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         await asyncio.sleep(delta.total_seconds())
         await release_member(ctx, member)
 
+async def release_member(ctx, member: discord.Member):
+    guild = ctx.guild
+    prisoner_role = discord.utils.get(guild.roles, name="Prisoner")
+
+    # Fetch member's data from the database
+    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
+    if not data:
+        return
+
+    # Remove the "Prisoner" role
+    if prisoner_role and prisoner_role in member.roles:
+        await member.remove_roles(prisoner_role)
+
+    # Restore the member's previous roles
+    previous_roles = [guild.get_role(role_id) for role_id in data.get("roles", []) if guild.get_role(role_id)]
+    if previous_roles:
+        await member.edit(roles=previous_roles)
+    else:
+        await member.edit(roles=[guild.default_role])  # Assign default role if no previous roles exist
+
+    # Remove jail data from the database
+    collection.delete_one({"user_id": member.id, "guild_id": guild.id})
+
+    await ctx.send(f"{member.mention} has been released from jail.")
+
 # Pardon command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
