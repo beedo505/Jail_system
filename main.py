@@ -120,7 +120,8 @@ async def on_ready():
         # تحديث صلاحيات القنوات
         for channel in guild.channels:
             if str(channel.id) in exception_channels_data:
-                channel_permissions = exception_channels_data[str(channel.id)]  # استرجاع الصلاحيات للقناة
+                # استرجاع الصلاحيات للقناة
+                channel_permissions = exception_channels_data[str(channel.id)]  
 
                 if isinstance(channel, discord.TextChannel):
                     # تعيين الصلاحيات على القناة النصية
