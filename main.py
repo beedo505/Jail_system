@@ -156,25 +156,25 @@ async def on_message(message):
     if message.author.bot:
         return
         
-    if is_adding_word:
-        return  # لا نقوم بحظر الأعضاء عندما نضيف كلمة جديدة
+    # if is_adding_word:
+    #     return  # لا نقوم بحظر الأعضاء عندما نضيف كلمة جديدة
 
-    # جلب الكلمات المحظورة من قاعدة البيانات
-    banned_words = [word['word'] for word in words_collection.find()]
+    # # جلب الكلمات المحظورة من قاعدة البيانات
+    # banned_words = [word['word'] for word in words_collection.find()]
 
-    # تحقق إذا كانت الرسالة تحتوي على كلمة محظورة
-    for word in banned_words:
-        if word in message.content.lower():
-            try:
-                # حظر العضو
-                await message.author.ban(reason=f"Used a banned word: {word}")
-                await message.channel.send(f"❌ {message.author.mention} has been banned for using a banned word: {word}.")
-                break  # إيقاف عملية الفحص بعد الحظر
-            except discord.Forbidden:
-                await message.channel.send(f"❌ I do not have permission to ban {message.author.mention}.")
-            except discord.HTTPException as e:
-                await message.channel.send(f"❌ Error occurred while banning {message.author.mention}: {e}")
-            break  # إيقاف التحقق بعد الحظر
+    # # تحقق إذا كانت الرسالة تحتوي على كلمة محظورة
+    # for word in banned_words:
+    #     if word in message.content.lower():
+    #         try:
+    #             # حظر العضو
+    #             await message.author.ban(reason=f"Used a banned word: {word}")
+    #             await message.channel.send(f"❌ {message.author.mention} has been banned for using a banned word: {word}.")
+    #             break  # إيقاف عملية الفحص بعد الحظر
+    #         except discord.Forbidden:
+    #             await message.channel.send(f"❌ I do not have permission to ban {message.author.mention}.")
+    #         except discord.HTTPException as e:
+    #             await message.channel.send(f"❌ Error occurred while banning {message.author.mention}: {e}")
+    #         break  # إيقاف التحقق بعد الحظر
 
     # Log user messages
     user_id = message.author.id
