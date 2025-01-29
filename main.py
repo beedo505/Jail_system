@@ -124,7 +124,7 @@ async def on_ready():
                     await channel.set_permissions(prisoner_role, read_messages=True, send_messages=True)
                     print(f"Restored exception permissions for text channel: {channel.name} in {guild.name}.")
                 elif isinstance(channel, discord.VoiceChannel):
-                    await channel.set_permissions(prisoner_role, connect=True, speak=True)
+                    await channel.set_permissions(prisoner_role, view_channel=True, connect=True, speak=True)
                     print(f"Restored exception permissions for voice channel: {channel.name} in {guild.name}.")
             else:
                 await channel.set_permissions(prisoner_role, read_messages=False, send_messages=False, connect=False, speak=False)
