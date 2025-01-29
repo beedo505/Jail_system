@@ -232,15 +232,17 @@ async def role(ctx):
     button_name = Button(label="Change Name", style=discord.ButtonStyle.primary)
     button_color = Button(label="Change Color", style=discord.ButtonStyle.success)
     button_permissions = Button(label="Change Permissions", style=discord.ButtonStyle.danger)
+    button_icon = Button(label="Change Icon", style=discord.ButtonStyle.secondary)
 
     # تعريف الواجهة التي تحتوي على الأزرار
     view = View()
     view.add_item(button_name)
     view.add_item(button_color)
     view.add_item(button_permissions)
+    view.add_item(button_icon)
 
     # إرسال الرسالة
-    await ctx.send("Choose an option to modify the 'Prisoner' role:", view=view)
+    await ctx.message.reply("Choose an option to modify the 'Prisoner' role:", view=view)
 
     # وظيفة الزر: تغيير الاسم
     async def change_name(interaction: discord.Interaction):
@@ -285,10 +287,26 @@ async def role(ctx):
         
         await interaction.followup.send(f"The 'Prisoner' role permissions have been updated to: {new_permissions}")
 
+    async def change_icon(interaction: discord.Interaction):
+        await interaction.response.send_message("Please enter the URL for the new icon for the 'Prisoner' role:")
+        icon_message = await bot.wait_for('message', check=lambda m: m.author == interaction.user and m.channel == ctx.channel)
+        new_icon_url = icon_message.content.strip()
+        
+        guild_id = str(ctx.guild.id)
+        prisoner_settings = guilds_collection.find_one({"guild_id": guild_id})['prisoner_role']
+        prisoner_settings['icon'] = new_icon_url
+        guilds_collection.update_one({"guild_id": guild_id}, {"$set": {"prisoner_role": prisoner_settings}})
+        
+        prisoner_role = discord.utils.get(ctx.guild.roles, name=prisoner_settings['name'])
+        await prisoner_role.edit(icon=new_icon_url)
+        
+        await interaction.followup.send(f"The 'Prisoner' role icon has been updated.")
+
     # ربط الوظائف بالأزرار
     button_name.callback = change_name
     button_color.callback = change_color
     button_permissions.callback = change_permissions
+    button_icon.callback = change_icon
 
 # Add command
 @bot.command()
