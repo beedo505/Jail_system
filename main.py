@@ -475,6 +475,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
 
     if prisoner_role in member.roles:
         await ctx.message.reply(f"❌ | {member.mention} is already in prison.")
+        return
 
     if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
