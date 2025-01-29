@@ -27,6 +27,7 @@ client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison"]
 collection = db["user"]
 exceptions_collection = db['exceptions']
+guilds_collection = db["guilds"]
 
 try:
     client.admin.command('ping')
