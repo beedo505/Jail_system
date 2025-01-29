@@ -771,6 +771,7 @@ async def words(ctx):
     remove_button.callback = remove_word_callback
 
     await ctx.message.reply(embed=embed, view=view)
+    return
 
 
 bot.run(os.environ['B'])
