@@ -172,7 +172,7 @@ async def on_message(message):
             break  # إيقاف التحقق بعد الحظر
             
     # تأكد من إرسال الرسائل التي لا تحتوي على كلمات محظورة
-    await bot.process_commands(message)
+    # await bot.process_commands(message)
 
 
     # Log user messages
