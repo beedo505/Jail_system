@@ -233,7 +233,7 @@ async def set(ctx, role: discord.Role = None):
     # استرجاع البيانات المخزنة من قاعدة البيانات
     server_data = guilds_collection.find_one({"guild_id": guild_id})
     current_role_id = server_data.get("prisoner_role_id") if server_data else None
-    excluded_channels = server_data.get("excluded_channels", []) if server_data else []
+    exception_channels = server_data.get("exception_channels", []) if server_data else []
 
     # إذا كانت نفس الرتبة المخزنة، لا داعي للحفظ مرة أخرى
     if current_role_id == str(role.id):
