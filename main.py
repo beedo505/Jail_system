@@ -803,4 +803,6 @@ async def words(ctx):
         except asyncio.TimeoutError:
             await interaction.followup.send("❌ You took too long to provide a word to remove.")
 
+    await ctx.message.reply(embed=embed)
+
 bot.run(os.environ['B'])
