@@ -757,30 +757,30 @@ async def words(ctx):
     
     # عند الضغط على زر "Remove Banned Word"
     async def remove_word_callback(interaction):
-    banned_words = [word['word'] for word in words_collection.find()]
-    if not banned_words:
-        await interaction.response.send_message("❌ No banned words to remove.")
-        return
+        banned_words = [word['word'] for word in words_collection.find()]
+        if not banned_words:
+            await interaction.response.send_message("❌ No banned words to remove.")
+            return
 
-    # إرسال Embed بالكلمات المحظورة
-    embed = discord.Embed(
-        title="⚙️ Choose the word to remove",
-        description="Please type the word you want to remove, or click 'Back' to return to the main menu.",
-        color=0xFF5733
-    )
-    embed.add_field(name="Banned Words", value="\n".join([f"🛑 **{word}**" for word in banned_words]), inline=False)
+        # إرسال Embed بالكلمات المحظورة
+        embed = discord.Embed(
+            title="⚙️ Choose the word to remove",
+            description="Please type the word you want to remove, or click 'Back' to return to the main menu.",
+            color=0xFF5733
+        )
+        embed.add_field(name="Banned Words", value="\n".join([f"🛑 **{word}**" for word in banned_words]), inline=False)
 
-    # أزرار للتفاعل
-    cancel_button = Button(label="Back", style=discord.ButtonStyle.red)
+        # أزرار للتفاعل
+        cancel_button = Button(label="Back", style=discord.ButtonStyle.red)
 
-    # إنشاء الواجهة التي تحتوي على الأزرار
-    view = View()
-    view.add_item(cancel_button)
+        # إنشاء الواجهة التي تحتوي على الأزرار
+        view = View()
+        view.add_item(cancel_button)
 
-    # إرسال Embed مع الأزرار
-    await interaction.response.send_message(embed=embed, view=view)
+        # إرسال Embed مع الأزرار
+        await interaction.response.send_message(embed=embed, view=view)
 
-    # تعريف التفاعل مع زر "Back"
+        # تعريف التفاعل مع زر "Back"
     async def back_callback(interaction):
         await interaction.response.send_message("❌ Word removal process has been canceled.", ephemeral=True)
         await words(ctx)
