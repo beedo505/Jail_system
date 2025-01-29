@@ -155,6 +155,13 @@ async def on_message(message):
         return
 
     # جلب الكلمات المحظورة من قاعدة البيانات
+    @bot.event
+async def on_message(message):
+    # تجاهل الرسائل من البوت
+    if message.author == bot.user:
+        return
+
+    # جلب الكلمات المحظورة من قاعدة البيانات
     banned_words = [word['word'] for word in words_collection.find()]
 
     # تحقق إذا كانت الرسالة تحتوي على كلمة محظورة
@@ -170,8 +177,10 @@ async def on_message(message):
             except discord.HTTPException as e:
                 await message.channel.send(f"❌ Error occurred while banning {message.author.mention}: {e}")
             break  # إيقاف التحقق بعد الحظر
+            
     # تأكد من إرسال الرسائل التي لا تحتوي على كلمات محظورة
-    await bot.process_commands(message)
+    await bot.process_commands(message)  # معالجة الأوامر بعد معالجة الرسائل
+
 
     # Log user messages
     user_id = message.author.id
@@ -771,7 +780,6 @@ async def words(ctx):
     remove_button.callback = remove_word_callback
 
     await ctx.message.reply(embed=embed, view=view)
-    return
 
 
 bot.run(os.environ['B'])
