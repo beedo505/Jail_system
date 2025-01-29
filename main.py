@@ -103,7 +103,6 @@ async def on_ready():
         if not server_data:
             guilds_collection.insert_one({"guild_id": guild_id, "exception_channels": []})
             print(f"Initialized database entry for guild {guild.name} (ID: {guild.id}).")
-            server_data = {"guild_id": guild_id, "exception_channels": []}  # تعيين قيمة افتراضية للبيانات
 
         # استرجاع إعدادات الرتبة "Prisoner" من قاعدة البيانات
         prisoner_settings = server_data.get('prisoner_role', {})
@@ -120,6 +119,19 @@ async def on_ready():
                 color=discord.Color(prisoner_color)
             )
             print(f"Created 'Prisoner' role in {guild.name}.")
+
+            # حفظ الرتبة في قاعدة البيانات بعد إنشائها
+            guilds_collection.update_one(
+                {"guild_id": guild_id},
+                {"$set": {
+                    "prisoner_role": {
+                        "name": prisoner_name,
+                        "color": prisoner_color,
+                        "permissions": prisoner_permissions
+                    }
+                }}
+            )
+            print(f"Saved 'Prisoner' role data in the database for {guild.name}.")
         else:
             # تحديث لون الرتبة إذا كان مختلفًا
             if prisoner_role.color != discord.Color(prisoner_color):
