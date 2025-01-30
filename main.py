@@ -152,10 +152,6 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # Ignore admins
-    # if message.author.guild_permissions.administrator:
-    #     return
-
     # Log user messages
     user_id = message.author.id
     current_time = message.created_at.timestamp()
@@ -170,35 +166,39 @@ async def on_message(message):
         if current_time - msg_time <= SPAM_TIME_FRAME
     ]
 
-    # Check for spam
+    # Check for spam (Ignore admins in this check)
     if len(user_messages[user_id]) == SPAM_THRESHOLD:
-        try:
-            if TIMEOUT_DURATION_MINUTES is None:
-                raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
+        if not message.author.guild_permissions.administrator:
+            try:
+                if TIMEOUT_DURATION_MINUTES is None:
+                    raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
 
-            # Convert min to sec
-            timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
+                # Convert min to sec
+                timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
 
-            timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
-            await message.author.timeout(timeout_until, reason="Spam detected")
-            await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
-            # Clear the user's message log after punishment
+                timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
+                await message.author.timeout(timeout_until, reason="Spam detected")
+                await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
+                # Clear the user's message log after punishment
+                user_messages[user_id] = []
+            except discord.Forbidden:
+                await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
+            except ValueError as ve:
+                print(f"Error: {ve}")
+                await message.channel.send(f"❌ Error: {ve}")
+            except Exception as e:
+                print(f"Error: {e}")
+                await message.channel.send("❌ An unexpected error occurred")
+        else:
+            # If the spammer is an admin, do nothing and don't send a message
             user_messages[user_id] = []
-        except discord.Forbidden:
-            await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
-        except ValueError as ve:
-            print(f"Error: {ve}")
-            await message.channel.send(f"❌ Error: {ve}")
-        except Exception as e:
-            print(f"Error: {e}")
-            await message.channel.send("❌ An unexpected error occurred")
 
     if message.content.startswith("-"):
-        command_name = message.content.split(" ")[0][1:]  # استخراج اسم الأمر
+        command_name = message.content.split(" ")[0][1:]  # Extract command name
         if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
-            return  # تجاهل الأوامر غير الموجودة
+            return  # Ignore unknown commands
 
-    # متابعة معالجة الأوامر الأخرى
+    # Continue processing other commands
     await bot.process_commands(message)
 
 @bot.event
