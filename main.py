@@ -152,6 +152,10 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    # Ignore admins
+    if message.author.guild_permissions.administrator:
+        return
+
     # Log user messages
     user_id = message.author.id
     current_time = message.created_at.timestamp()
