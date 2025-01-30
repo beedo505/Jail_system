@@ -153,8 +153,8 @@ async def on_message(message):
         return
 
     # Ignore admins
-    if message.author.guild_permissions.administrator:
-        return
+    # if message.author.guild_permissions.administrator:
+    #     return
 
     # Log user messages
     user_id = message.author.id
