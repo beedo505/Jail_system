@@ -617,6 +617,33 @@ async def release_member(ctx, member: discord.Member):
 
     await ctx.send(f"{member.mention} has been released from jail.")
 
+# Prisoners command
+@commands.has_permissions(administrator=True)
+@bot.command(aliases=['مساجين', 'مسجون', 'مسجونين', 'عرض'])
+async def سجين(ctx):
+    guild = ctx.guild
+    prisoners_data = collection.find({"guild_id": guild.id})
+    
+    embed = discord.Embed(title="🔒 Currently Jailed Members", color=0x2f3136)
+    count = 0
+    
+    jailed_list = []
+    for prisoner in prisoners_data:
+        member = guild.get_member(prisoner["user_id"])
+        release_time = prisoner.get("release_time")
+        release_time_str = release_time.strftime("%Y-%m-%d %H:%M UTC") if release_time else "Unknown"
+        
+        if member:
+            jailed_list.append(f"{member.mention} - 📆 Release: {release_time_str}")
+            count += 1
+    
+    if count == 0:
+        embed.description = "There are no members currently jailed."
+    else:
+        embed.description = "\n".join(jailed_list)
+    
+    await ctx.message.reply(embed=embed)
+
 # Pardon command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
