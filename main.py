@@ -223,6 +223,28 @@ async def on_command_error(ctx, error):
     """else:
         await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
 
+# on_member_join
+@bot.event
+async def on_member_join(member: discord.Member):
+    guild = member.guild
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+
+    if not server_data:
+        return
+
+    prisoner_role_id = server_data.get("prisoner_role_id")
+    if not prisoner_role_id:
+        return
+
+    prisoner_role = guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        return
+
+    # التحقق مما إذا كان العضو مسجونًا في قاعدة البيانات
+    data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
+    if data:
+        await member.edit(roles=[prisoner_role])
+        await member.send(f"⚠️ {member.mention} You have been back to jail!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
