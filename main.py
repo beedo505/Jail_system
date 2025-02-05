@@ -578,18 +578,18 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
     if duration is None:
         duration = "8h"
 
-    if duration[-1] not in ["m", "h", "d", "mo"]:
-        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d, 1mo).")
+    if duration[-1] not in ["m", "h", "d", "o"]:
+        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d, 1o).")
         return
 
-    time_units = {"m": "minutes", "h": "hours", "d": "days", "mo": "days"}
+    time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "days"}
     try:
         time_value = int(duration[:-1])
     except ValueError:
-        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, d, or mo.")
+        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, d, or o.")
         return
 
-    if duration[-2:] == "mo":
+    if duration[-1] == "o":
         delta = timedelta(days=time_value * 30)
     else:
         delta = timedelta(**{time_units[duration[-1]]: time_value})
