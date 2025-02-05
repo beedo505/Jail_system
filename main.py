@@ -578,18 +578,22 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
     if duration is None:
         duration = "8h"
 
-    if duration[-1] not in ["m", "h", "d"]:
-        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d).")
+    if duration[-1] not in ["m", "h", "d", "mo"]:
+        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d, 1mo).")
         return
 
-    time_units = {"m": "minutes", "h": "hours", "d": "days"}
+    time_units = {"m": "minutes", "h": "hours", "d": "days", "mo": "days"}
     try:
         time_value = int(duration[:-1])
     except ValueError:
-        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, or d.")
+        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, d, or mo.")
         return
 
-    delta = timedelta(**{time_units[duration[-1]]: time_value})
+    if duration[-2:] == "mo":
+        delta = timedelta(days=time_value * 30)
+    else:
+        delta = timedelta(**{time_units[duration[-1]]: time_value})
+
     release_time = datetime.now(timezone.utc) + delta
     
     # Save member's roles and jail them
