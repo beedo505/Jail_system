@@ -246,6 +246,29 @@ async def on_member_join(member: discord.Member):
         await member.edit(roles=[prisoner_role])
         await member.send(f"⚠️ {member.mention} You have been back to jail!")
 
+@bot.event
+async def on_member_update(before: discord.Member, after: discord.Member):
+    guild = after.guild
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+
+    if not server_data:
+        return
+
+    prisoner_role_id = server_data.get("prisoner_role_id")
+    if not prisoner_role_id:
+        return
+
+    prisoner_role = guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        return
+
+    # التأكد أن العضو لديه رتبة السجن
+    if prisoner_role in after.roles:
+        for role in after.roles:
+            if role != prisoner_role and role != guild.default_role:  # استثناء الرتبة الافتراضية
+                await after.remove_roles(role)
+                print(f"🚨 Removed {role.name} from {after.display_name} because they are jailed.")
+
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def set(ctx, role: discord.Role = None):
@@ -642,35 +665,6 @@ async def release_member(ctx, member: discord.Member):
     collection.delete_one({"user_id": member.id, "guild_id": guild.id})
 
     await ctx.send(f"{member.mention} has been released from jail.")
-
-@bot.event
-async def on_member_update(before: discord.Member, after: discord.Member):
-    guild = after.guild
-    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
-
-    if not server_data:
-        return
-
-    prisoner_role_id = server_data.get("prisoner_role_id")
-    if not prisoner_role_id:
-        return
-
-    prisoner_role = guild.get_role(int(prisoner_role_id))
-    if not prisoner_role:
-        return
-
-    # التحقق مما إذا كان العضو مسجونًا
-    if prisoner_role in after.roles:
-        roles_to_remove = [role for role in after.roles if role != prisoner_role and guild.get_role(role.id)]
-
-        if roles_to_remove:  
-            try:
-                await after.remove_roles(*roles_to_remove)
-                print(f"✅ Removed extra roles from {after.name} (prisoner).")
-            except discord.Forbidden:
-                print(f"❌ I don't have permission to remove roles from {after.name}.")
-            except discord.HTTPException as e:
-                print(f"⚠️ Failed to remove roles from {after.name}: {e}")
 
 # Prisoners command
 @commands.has_permissions(administrator=True)
