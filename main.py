@@ -659,14 +659,19 @@ async def on_member_update(before: discord.Member, after: discord.Member):
     if not prisoner_role:
         return
 
+    # التحقق مما إذا كان العضو مسجونًا
     if prisoner_role in after.roles:
-        allowed_roles = [prisoner_role]  # فقط رتبة السجين مسموح بها
-        if set(after.roles) != set(allowed_roles):  # إذا تغيرت الرتب
+        # البحث عن أي رتب إضافية غير رتبة السجين
+        roles_to_remove = [role for role in after.roles if role != prisoner_role]
+
+        if roles_to_remove:  # إذا كان لديه رتب إضافية
             try:
-                await after.edit(roles=allowed_roles)
-                print(f"✅ Removed unauthorized roles from {after.name}")
+                await after.remove_roles(*roles_to_remove)
+                print(f"✅ Removed extra roles from {after.name} (prisoner).")
             except discord.Forbidden:
-                print(f"⚠️ Missing permissions to modify roles for {after.name}")
+                print(f"❌ I don't have permission to remove roles from {after.name}.")
+            except discord.HTTPException as e:
+                print(f"⚠️ Failed to remove roles from {after.name}: {e}")
 
 # Prisoners command
 @commands.has_permissions(administrator=True)
