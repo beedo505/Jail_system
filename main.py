@@ -661,13 +661,9 @@ async def on_member_update(before: discord.Member, after: discord.Member):
 
     # التحقق مما إذا كان العضو مسجونًا
     if prisoner_role in after.roles:
-        # البحث عن الرتب التي تمت إضافتها بعد التحديث
-        new_roles = set(after.roles) - set(before.roles)
+        roles_to_remove = [role for role in after.roles if role != prisoner_role and guild.get_role(role.id)]
 
-        # التأكد من أن هناك أدوار جديدة تمت إضافتها، ولا تكون رتبة السجين
-        roles_to_remove = [role for role in new_roles if role != prisoner_role and guild.get_role(role.id)]
-
-        if roles_to_remove:  # إذا تم إضافة رتب غير رتبة السجين
+        if roles_to_remove:  
             try:
                 await after.remove_roles(*roles_to_remove)
                 print(f"✅ Removed extra roles from {after.name} (prisoner).")
