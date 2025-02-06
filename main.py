@@ -244,7 +244,11 @@ async def on_member_join(member: discord.Member):
     data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
     if data:
         await member.edit(roles=[prisoner_role])
-        await member.send(f"⚠️ {member.mention} You have been back to jail!")
+        
+        try:
+            await member.send(f"⚠️ {member.mention} You have been sent back to jail!")
+        except discord.Forbidden:
+            print(f"⚠️ Cannot send DM to {member.name}#{member.discriminator}. They might have DMs disabled.")
 
 @bot.event
 async def on_member_update(before: discord.Member, after: discord.Member):
