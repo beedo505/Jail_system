@@ -643,6 +643,31 @@ async def release_member(ctx, member: discord.Member):
 
     await ctx.send(f"{member.mention} has been released from jail.")
 
+@bot.event
+async def on_member_update(before: discord.Member, after: discord.Member):
+    guild = after.guild
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+
+    if not server_data:
+        return
+
+    prisoner_role_id = server_data.get("prisoner_role_id")
+    if not prisoner_role_id:
+        return
+
+    prisoner_role = guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        return
+
+    if prisoner_role in after.roles:
+        allowed_roles = [prisoner_role]  # فقط رتبة السجين مسموح بها
+        if set(after.roles) != set(allowed_roles):  # إذا تغيرت الرتب
+            try:
+                await after.edit(roles=allowed_roles)
+                print(f"✅ Removed unauthorized roles from {after.name}")
+            except discord.Forbidden:
+                print(f"⚠️ Missing permissions to modify roles for {after.name}")
+
 # Prisoners command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['مساجين', 'مسجون', 'مسجونين', 'عرض'])
