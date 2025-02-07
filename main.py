@@ -226,7 +226,9 @@ async def on_message(message):
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
     message_words = re.findall(r'\b\w+\b', message.content.lower())  # Extract words from message
-    if any(word in message_words or re.search(rf'\b{word}\b', message.content.lower()) for word in offensive_words):
+    matched_word = next((word for word in offensive_words if word in message_words or re.search(rf'\b{word}\b', message.content.lower())), None)
+    
+    if matched_word:
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
                 bot_member = guild.get_member(bot.user.id)
