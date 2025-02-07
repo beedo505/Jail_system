@@ -541,8 +541,8 @@ async def abad(ctx, *, words: str):
     word_list = [word.strip().lower() for word in words.split(",")]
     added_words = []
     for word in word_list:
-        if not offensive_words_collection.find_one({"word": word}):
-            offensive_words_collection.insert_one({"word": word})
+        if not offensive_words_collection.find_one({"word": word, "server_id": ctx.guild.id}):
+            offensive_words_collection.insert_one({"word": word, "server_id": ctx.guild.id})
             added_words.append(word)
     if added_words:
         await ctx.message.reply(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
@@ -551,23 +551,27 @@ async def abad(ctx, *, words: str):
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def rbad(ctx, word: str):
-    if offensive_words_collection.find_one({"word": word}):
-        offensive_words_collection.delete_one({"word": word})
-        updated_words = [w["word"] for w in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
-        await ctx.message.reply(f"✅ Removed '{word}' from the offensive words list!")
+async def rbad(ctx, *, words: str):
+    word_list = [word.strip().lower() for word in words.split(",")]
+    removed_words = []
+    for word in word_list:
+        if offensive_words_collection.find_one({"word": word, "server_id": ctx.guild.id}):
+            offensive_words_collection.delete_one({"word": word, "server_id": ctx.guild.id})
+            removed_words.append(word)
+    if removed_words:
+        await ctx.message.reply(f"✅ Removed: {', '.join(removed_words)} from the offensive words list!")
     else:
-        await ctx.message.reply("⚠️ This word is saved!")
+        await ctx.message.reply("⚠️ None of the provided words were found in the database!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def lbad(ctx):
-    words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+    words = [word["word"] for word in offensive_words_collection.find({"server_id": ctx.guild.id}, {"_id": 0, "word": 1})]
     if words:
         await ctx.message.reply(f"📝 Offensive Words: {', '.join(words)}")
     else:
         await ctx.message.reply("✅ No offensive words in the database!")
-
+        
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def pbad(ctx):
