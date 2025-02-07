@@ -211,13 +211,9 @@ async def on_message(message):
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
-    
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
-                await message.delete()
-
-                # **جلب رتبة السجن من قاعدة البيانات**
                 server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
                 if not server_data or "prisoner_role_id" not in server_data:
                     await message.channel.send("❌ No prisoner role is set up for this server!")
