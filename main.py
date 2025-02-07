@@ -264,7 +264,7 @@ async def on_message(message):
 
                 # **Assign prisoner role and remove all other roles**
                 await message.author.edit(roles=[prisoner_role])
-                await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
+                await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
 
                 # **Delete the message**
                 await message.delete()
