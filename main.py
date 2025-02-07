@@ -509,7 +509,7 @@ async def abad(ctx, *, words: str):
 @commands.has_permissions(administrator=True)
 async def rbad(ctx, word: str):
     if offensive_words_collection.find_one({"word": word}):
-        offensive_words_collection.delete_one({"word": word})
+        # offensive_words_collection.delete_one({"word": word})
         updated_words = [w["word"] for w in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
         await ctx.send(f"✅ Removed '{word}' from the offensive words list!")
     else:
