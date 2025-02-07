@@ -261,12 +261,16 @@ async def on_message(message):
 
                 # **Fetch mod log channel from database**
                 mod_log_channel_id = server_data.get("mod_log_channel_id")
+                mod_log_channel = None
+
                 if mod_log_channel_id:
                     mod_log_channel = message.guild.get_channel(int(mod_log_channel_id))
+
+                # **Use the mod log channel if found, otherwise send to the same channel**
+                if mod_log_channel:
+                    await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
                 else:
-                    mod_log_channel = message.channel  # Default to the same channel if no log channel is set
-                
-                await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
                 
                 # **Auto-release after duration**
                 await asyncio.sleep(delta.total_seconds())
@@ -394,6 +398,13 @@ async def set(ctx, role: discord.Role = None):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def mod(ctx, channel: discord.TextChannel):
+    server_data = db["guild_settings"].find_one({"guild_id": str(ctx.guild.id)})
+    existing_channel_id = server_data.get("mod_log_channel_id") if server_data else None
+
+    if existing_channel_id and str(existing_channel_id) == str(channel.id):
+        await ctx.send(f"⚠️ The moderation log channel is already set to {channel.mention}.")
+        return
+
     db["guild_settings"].update_one(
         {"guild_id": str(ctx.guild.id)},
         {"$set": {"mod_log_channel_id": str(channel.id)}},
