@@ -211,7 +211,6 @@ async def on_message(message):
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
-    
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
@@ -219,37 +218,44 @@ async def on_message(message):
 
                 # Fetch prisoner role ID from the database
                 server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
-                if server_data and "prisoner_role_id" in server_data:
-                    prisoner_role_id = int(server_data["prisoner_role_id"])
-                    prisoner_role = message.guild.get_role(prisoner_role_id)
-                    
-                    if prisoner_role:
-                        default_duration = "8h"
-                        time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "days"}
-                        time_value = int(default_duration[:-1])
-                        delta = timedelta(**{time_units[default_duration[-1]]: time_value})
+                if not server_data or "prisoner_role_id" not in server_data:
+                    await message.channel.send("❌ No prisoner role is set up for this server!")
+                    return
 
-                        release_time = datetime.now(timezone.utc) + delta
+                prisoner_role_id = int(server_data["prisoner_role_id"])
+                prisoner_role = message.guild.get_role(prisoner_role_id)
 
-                        # حفظ الرتب السابقة في قاعدة البيانات
-                        previous_roles = [role.id for role in message.author.roles if role != message.guild.default_role]
-                        collection.update_one(
-                            {"user_id": message.author.id, "guild_id": message.guild.id},
-                            {"$set": {"roles": previous_roles, "release_time": release_time}},
-                            upsert=True
-                        )
+                if not prisoner_role:
+                    await message.channel.send("❌ Prisoner role not found! Please check the setup.")
+                    return
 
-                        # إزالة جميع الرتب وإعطاء رتبة السجن فقط
-                        await message.author.edit(roles=[prisoner_role])
-                        await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
+                # مدة السجن الافتراضية مثل أمر `سجن`
+                default_duration = "8h"
+                time_units = {"m": "minutes", "h": "hours", "d": "days"}
+                time_value = int(default_duration[:-1])
+                delta = timedelta(**{time_units[default_duration[-1]]: time_value})
 
-                        # فك السجن تلقائيًا بعد انتهاء المدة
-                        await asyncio.sleep(delta.total_seconds())
-                        await release_member(message.guild, message.author)
+                release_time = datetime.now(timezone.utc) + delta
+
+                # حفظ الرتب السابقة في قاعدة البيانات
+                previous_roles = [role.id for role in message.author.roles if role != message.guild.default_role and role != prisoner_role]
+                collection.update_one(
+                    {"user_id": message.author.id, "guild_id": message.guild.id},
+                    {"$set": {"roles": previous_roles, "release_time": release_time}},
+                    upsert=True
+                )
+
+                # إزالة جميع الرتب وإعطاء رتبة السجن فقط
+                await message.author.edit(roles=[prisoner_role])
+                await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
+
+                # فك السجن تلقائيًا بعد انتهاء المدة
+                await asyncio.sleep(delta.total_seconds())
+                await release_member(message.guild, message.author)
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to jail {message.author.mention}.")
-            except discord.HTTPException as e:
-                print(f"Error deleting message: {e}")
+            except Exception as e:
+                print(f"Error in auto-jail: {e}")
 
     if message.content.startswith("-"):
         command_name = message.content.split(" ")[0][1:]  # Extract command name
