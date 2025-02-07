@@ -260,13 +260,23 @@ async def on_message(message):
                 await message.delete()
 
                 # Fetch mod log channel from database
-                mod_log_channel_id = server_data.get("mod_log_channel_id")
-                mod_log_channel = message.guild.get_channel(int(mod_log_channel_id)) if mod_log_channel_id else None
+                server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
+                mod_log_channel = None  # افتراضيًا لا يوجد روم مخصص
 
-                if mod_log_channel is None:
-                    mod_log_channel = message.channel  # Default to the same channel if no log channel is set
+                if server_data and "mod_log_channel_id" in server_data:
+                    try:
+                        mod_log_channel_id = int(server_data["mod_log_channel_id"])  # تحويل إلى رقم صحيح
+                        mod_log_channel = bot.get_channel(mod_log_channel_id)  # استرجاع القناة
 
-                await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                        if mod_log_channel is None:
+                            print(f"⚠️ تحذير: القناة المحددة كـ mod_log (ID: {mod_log_channel_id}) غير موجودة أو لم يتم تحميلها.")
+                    except ValueError:
+                        print(f"❌ خطأ: المعرف المحفوظ للقناة ({server_data['mod_log_channel_id']}) ليس رقماً صحيحًا.")
+
+                if mod_log_channel:
+                    await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                else:
+                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
                 
                 # Auto-release after duration
                 await asyncio.sleep(delta.total_seconds())
