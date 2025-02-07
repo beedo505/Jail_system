@@ -226,25 +226,16 @@ async def on_message(message):
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
     message_words = re.findall(r'\b\w+\b', message.content.lower())  # Extract words from message
-    
     if any(word in message_words or re.search(rf'\b{word}\b', message.content.lower()) for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
-                server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
-                if not server_data or "prisoner_role_id" not in server_data:
-                    await message.channel.send("❌ No prisoner role is set up for this server!")
-                    return
-
-                prisoner_role_id = int(server_data["prisoner_role_id"])
-                prisoner_role = message.guild.get_role(prisoner_role_id)
-
-                if not prisoner_role:
-                    await message.channel.send("❌ Prisoner role not found! Please check the setup.")
-                    return
-
-                bot_member = message.guild.get_member(bot.user.id)
+                bot_member = guild.get_member(bot.user.id)
                 if prisoner_role >= bot_member.top_role:
                     await message.channel.send("❌ I don't have permission to assign the prisoner role!")
+                    return
+
+                if prisoner_role in message.author.roles:
+                    await message.channel.send(f"❌ {message.author.mention} is already jailed!")
                     return
 
                 default_duration = "8h"
