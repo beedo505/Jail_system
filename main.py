@@ -258,7 +258,14 @@ async def on_message(message):
                 await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
 
                 # ✅ حذف الرسالة المخالفة
+                try:
                 await message.delete()
+            except discord.Forbidden:
+                await message.channel.send(f"❌ I don't have permission to delete messages, please check my permissions.")
+            except discord.NotFound:
+                pass
+            except Exception as e:
+                print(f"Error deleting message: {e}")
 
                 # ✅ إطلاق سراح العضو تلقائيًا بعد المدة المحددة
                 await asyncio.sleep(delta.total_seconds())
@@ -511,9 +518,9 @@ async def abad(ctx, *, words: str):
             offensive_words_collection.insert_one({"word": word})
             added_words.append(word)
     if added_words:
-        await ctx.send(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
+        await ctx.message.reply(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
     else:
-        await ctx.send("⚠️ All words are already saved!")
+        await ctx.message.reply("⚠️ All words are already saved!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -521,23 +528,23 @@ async def rbad(ctx, word: str):
     if offensive_words_collection.find_one({"word": word}):
         offensive_words_collection.delete_one({"word": word})
         updated_words = [w["word"] for w in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
-        await ctx.send(f"✅ Removed '{word}' from the offensive words list!")
+        await ctx.message.reply(f"✅ Removed '{word}' from the offensive words list!")
     else:
-        await ctx.send("⚠️ This word is saved!")
+        await ctx.message.reply("⚠️ This word is saved!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def lbad(ctx):
     words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
     if words:
-        await ctx.send(f"📝 Offensive Words: {', '.join(words)}")
+        await ctx.message.reply(f"📝 Offensive Words: {', '.join(words)}")
     else:
-        await ctx.send("✅ No offensive words in the database!")
+        await ctx.message.reply("✅ No offensive words in the database!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def pbad(ctx):
-    await ctx.send("🔧 Manage Offensive Words:", view=BadWordsView())
+    await ctx.message.reply("🔧 Manage Offensive Words:", view=BadWordsView())
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
