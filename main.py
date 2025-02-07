@@ -544,7 +544,7 @@ async def lbad(ctx):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def pbad(ctx):
-    await ctx.message.reply("🔧 Manage Offensive Words:", view=BadWordsView(), ephemeral=True)
+    await ctx.message.reply("🔧 Manage Offensive Words:", view=BadWordsView())
 
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
