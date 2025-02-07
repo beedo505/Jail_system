@@ -108,7 +108,7 @@ logging.basicConfig(level=logging.ERROR)
 bot = commands.Bot(command_prefix='-', intents=intents)
 
 prison_data = {}  # تخزين رتب الأعضاء المسجونين
-SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
+SPAM_THRESHOLD = 10  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
