@@ -213,11 +213,15 @@ async def on_message(message):
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
-            prisoner_role_id = "your_prisoner_role_id"  # Replace with the actual prisoner role ID
-            prisoner_role = message.guild.get_role(int(prisoner_role_id))
-            if prisoner_role:
-                await message.author.add_roles(prisoner_role, reason="Used offensive language")
-                await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
+            # Fetch prisoner role ID from the database
+            server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
+            if server_data and "prisoner_role_id" in server_data:
+                prisoner_role_id = int(server_data["prisoner_role_id"])
+                prisoner_role = message.guild.get_role(prisoner_role_id)
+                
+                if prisoner_role:
+                    await message.author.add_roles(prisoner_role, reason="Used offensive language")
+                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
 
     if message.content.startswith("-"):
         command_name = message.content.split(" ")[0][1:]  # Extract command name
