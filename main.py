@@ -28,6 +28,7 @@ db = client["Prison"]
 collection = db["user"]
 exceptions_collection = db['exceptions']
 guilds_collection = db["guilds"]
+offensive_words_collection = db["offensive_words"]
 
 try:
     client.admin.command('ping')
@@ -73,10 +74,28 @@ class ExceptionManager:
     def is_exception(self, guild_id, channel_id):
         return channel_id in self.get_exceptions(guild_id)
 
-
-
 exception_manager = ExceptionManager(db)
-        
+
+class BadWordsView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+    @discord.ui.button(label="Add Bad Words", style=discord.ButtonStyle.primary)
+    async def add_words(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Use `-add_badword word1, word2, word3` to add bad words.", ephemeral=True)
+
+    @discord.ui.button(label="Remove Bad Words", style=discord.ButtonStyle.danger)
+    async def remove_words(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Use `-remove_badword word` to remove a bad word.", ephemeral=True)
+
+    @discord.ui.button(label="List Bad Words", style=discord.ButtonStyle.secondary)
+    async def list_words(self, interaction: discord.Interaction, button: discord.ui.Button):
+        words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+        if words:
+            await interaction.response.send_message(f"📝 Offensive Words: {', '.join(words)}", ephemeral=True)
+        else:
+            await interaction.response.send_message("✅ No offensive words in the database!", ephemeral=True)
+
 # تفعيل صلاحيات البوت المطلوبة
 intents = discord.Intents.default()
 intents.members = True  # تفعيل الصلاحية للوصول إلى الأعضاء
@@ -88,9 +107,7 @@ logging.basicConfig(level=logging.ERROR)
 
 bot = commands.Bot(command_prefix='-', intents=intents)
 
-# تخزين رتب الأعضاء المسجونين
-prison_data = {}
-
+prison_data = {}  # تخزين رتب الأعضاء المسجونين
 SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
@@ -190,8 +207,16 @@ async def on_message(message):
                 print(f"Error: {e}")
                 await message.channel.send("❌ An unexpected error occurred")
         else:
-            # If the spammer is an admin, do nothing and don't send a message
             user_messages[user_id] = []
+
+    # Offensive word detection
+    offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+    if any(word in message.content.lower() for word in offensive_words):
+        prisoner_role_id = "your_prisoner_role_id"  # Replace with the actual prisoner role ID
+        prisoner_role = message.guild.get_role(int(prisoner_role_id))
+        if prisoner_role:
+            await message.author.add_roles(prisoner_role, reason="Used offensive language")
+            await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
 
     if message.content.startswith("-"):
         command_name = message.content.split(" ")[0][1:]  # Extract command name
@@ -424,7 +449,44 @@ async def list(ctx):
             await ctx.message.reply("⚠ No valid exception channels found.")
     else:
         await ctx.message.reply("⚠ No exception channels found in this server.")
-        
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def abad(ctx, *, words: str):
+    word_list = [word.strip().lower() for word in words.split(",")]
+    added_words = []
+    for word in word_list:
+        if not offensive_words_collection.find_one({"word": word}):
+            offensive_words_collection.insert_one({"word": word})
+            added_words.append(word)
+    if added_words:
+        await ctx.send(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
+    else:
+        await ctx.send("⚠️ All words are already in the database!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def rbad(ctx, word: str):
+    if offensive_words_collection.find_one({"word": word}):
+        offensive_words_collection.delete_one({"word": word})
+        await ctx.send(f"✅ Removed '{word}' from the offensive words list!")
+    else:
+        await ctx.send("⚠️ This word is not in the database!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def lbad(ctx):
+    words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+    if words:
+        await ctx.send(f"📝 Offensive Words: {', '.join(words)}")
+    else:
+        await ctx.send("✅ No offensive words in the database!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def pbad(ctx):
+    await ctx.send("🔧 Manage Offensive Words:", view=BadWordsView())
+
 # Ban command
 @bot.command(aliases = ['افتح', 'اغرق', 'برا', 'افتحك', 'اشخطك', 'انهي'])
 @commands.has_permissions(ban_members=True)
