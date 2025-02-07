@@ -215,7 +215,7 @@ async def on_message(message):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
                 server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
-                prisoner_role_id = int(server_data["prisoner_role_id"])
+                prisoner_role_id = server_data.get('prisoner_role_id')
                 if not server_data or "prisoner_role_id" not in server_data:
                     await message.channel.send("❌ No prisoner role is set up for this server!")
                     return
