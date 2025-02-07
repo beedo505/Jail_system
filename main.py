@@ -82,11 +82,11 @@ class BadWordsView(discord.ui.View):
 
     @discord.ui.button(label="Add Bad Words", style=discord.ButtonStyle.primary)
     async def add_words(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("Use `-add_badword word1, word2, word3` to add bad words.", ephemeral=True)
+        await interaction.response.send_message("Use `-abad word1, word2, word3` to add bad words.", ephemeral=True)
 
     @discord.ui.button(label="Remove Bad Words", style=discord.ButtonStyle.danger)
     async def remove_words(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("Use `-remove_badword word` to remove a bad word.", ephemeral=True)
+        await interaction.response.send_message("Use `-rbad word` to remove a bad word.", ephemeral=True)
 
     @discord.ui.button(label="List Bad Words", style=discord.ButtonStyle.secondary)
     async def list_words(self, interaction: discord.Interaction, button: discord.ui.Button):
