@@ -257,10 +257,13 @@ async def on_message(message):
 
                 # **Assign prisoner role and remove all other roles**
                 await message.author.edit(roles=[prisoner_role])
-                await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
-
-                # **Delete the message**
                 await message.delete()
+
+                # **Fetch mod log channel from database**
+                mod_log_channel_id = server_data.get("mod_log_channel_id")
+                mod_log_channel = message.guild.get_channel(int(mod_log_channel_id)) if mod_log_channel_id else message.channel
+
+                await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
                 
                 # **Auto-release after duration**
                 await asyncio.sleep(delta.total_seconds())
@@ -385,6 +388,15 @@ async def set(ctx, role: discord.Role = None):
 
     await ctx.message.reply(f"✅ The prisoner role has been set to: **{role.name}**.")
 
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def mod(ctx, channel: discord.TextChannel):
+    db["guild_settings"].update_one(
+        {"guild_id": str(ctx.guild.id)},
+        {"$set": {"mod_log_channel_id": str(channel.id)}},
+        upsert=True
+    )
+    await ctx.send(f"✅ The moderation log channel has been set to {channel.mention}")
 
 # Add command
 # Add channel to exceptions
