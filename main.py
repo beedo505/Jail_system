@@ -210,7 +210,7 @@ async def on_message(message):
             user_messages[user_id] = []
 
     # Offensive word detection
-    offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+    """offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
@@ -257,7 +257,7 @@ async def on_message(message):
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to jail {message.author.mention}.")
             except Exception as e:
-                print(f"Error in auto-jail: {e}")
+                print(f"Error in auto-jail: {e}")"""
 
     if message.content.startswith("-"):
         command_name = message.content.split(" ")[0][1:]  # Extract command name
