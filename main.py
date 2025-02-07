@@ -260,19 +260,19 @@ async def on_message(message):
                 await message.delete()
 
                 # Fetch mod log channel from database
-                mod_log_channel_id = guild_settings.get("mod_log_channel_id")
+                mod_log_channel_id = server_data.get("mod_log_channel_id")
                 mod_log_channel = None
-
+                
                 if mod_log_channel_id:
                     mod_log_channel = message.guild.get_channel(int(mod_log_channel_id))
 
-                # **Use the mod log channel if found, otherwise send to the same channel**
-                if mod_log_channel:
-                    await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
-                else:
-                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                # Check if mod log channel exists in the guild
+                if not mod_log_channel:
+                    mod_log_channel = message.channel  # Use same channel as fallback
+                    
+                await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
                 
-                # **Auto-release after duration**
+                # Auto-release after duration
                 await asyncio.sleep(delta.total_seconds())
                 await release_member(message.guild, message.author)
 
