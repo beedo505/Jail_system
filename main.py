@@ -259,13 +259,13 @@ async def on_message(message):
 
                 # ✅ حذف الرسالة المخالفة
                 try:
-                await message.delete()
-            except discord.Forbidden:
-                await message.channel.send(f"❌ I don't have permission to delete messages, please check my permissions.")
-            except discord.NotFound:
-                pass
-            except Exception as e:
-                print(f"Error deleting message: {e}")
+                    await message.delete()
+                except discord.Forbidden:
+                    await message.channel.send(f"❌ I don't have permission to delete messages, please check my permissions.")
+                except discord.NotFound:
+                    pass
+                except Exception as e:
+                    print(f"Error deleting message: {e}")
 
                 # ✅ إطلاق سراح العضو تلقائيًا بعد المدة المحددة
                 await asyncio.sleep(delta.total_seconds())
