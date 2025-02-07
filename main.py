@@ -170,8 +170,22 @@ async def on_message(message):
         return
 
     # Log user messages
+    guild = message.guild
     user_id = message.author.id
     current_time = message.created_at.timestamp()
+
+    server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
+    if not server_data or "prisoner_role_id" not in server_data:
+        return
+
+    prisoner_role_id = server_data.get("prisoner_role_id")
+    if not prisoner_role_id:
+        return
+
+    prisoner_role = guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        return
+        
     if user_id not in user_messages:
         user_messages[user_id] = []
 
@@ -214,45 +228,41 @@ async def on_message(message):
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
-                server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
-                if not server_data or "prisoner_role_id" not in server_data:
-                    await message.channel.send("❌ No prisoner role is set up for this server!")
-                    return
-
-                prisoner_role_id = int(server_data["prisoner_role_id"])
-                prisoner_role = message.guild.get_role(prisoner_role_id)
-
-                if not prisoner_role:
-                    await message.channel.send("❌ Prisoner role not found! Please check the setup.")
-                    return
-
-                bot_member = message.guild.get_member(bot.user.id)
+                bot_member = guild.get_member(bot.user.id)
                 if prisoner_role >= bot_member.top_role:
                     await message.channel.send("❌ I don't have permission to assign the prisoner role!")
                     return
 
+                if prisoner_role in message.author.roles:
+                    await message.channel.send(f"❌ {message.author.mention} is already jailed!")
+                    return
+
+                # ✅ تحديد مدة السجن الافتراضية
                 default_duration = "8h"
-                time_units = {"m": "minutes", "h": "hours", "d": "days"}
+                time_units = {"m": "minutes", "h": "days"}
                 time_value = int(default_duration[:-1])
                 delta = timedelta(**{time_units[default_duration[-1]]: time_value})
 
                 release_time = datetime.now(timezone.utc) + delta
 
-                # **حفظ الرتب السابقة في قاعدة البيانات**
-                previous_roles = [role.id for role in message.author.roles if role != message.guild.default_role and role != prisoner_role]
+                # ✅ حفظ الرتب السابقة قبل السجن
+                previous_roles = [role.id for role in message.author.roles if role != guild.default_role and role != prisoner_role]
                 collection.update_one(
-                    {"user_id": message.author.id, "guild_id": message.guild.id},
+                    {"user_id": user_id, "guild_id": guild.id},
                     {"$set": {"roles": previous_roles, "release_time": release_time}},
                     upsert=True
                 )
 
-                # **إزالة جميع الرتب وإعطاء رتبة السجن فقط**
+                # ✅ تطبيق السجن: إزالة الرتب وإعطاء رتبة السجن
                 await message.author.edit(roles=[prisoner_role])
                 await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
 
-                # **فك السجن تلقائيًا بعد انتهاء المدة**
+                # ✅ حذف الرسالة المخالفة
+                await message.delete()
+
+                # ✅ إطلاق سراح العضو تلقائيًا بعد المدة المحددة
                 await asyncio.sleep(delta.total_seconds())
-                await release_member(message.guild, message.author)
+                await release_member(message.author)
 
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to jail {message.author.mention}.")
