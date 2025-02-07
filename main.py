@@ -211,12 +211,13 @@ async def on_message(message):
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
+    
     if any(word in message.content.lower() for word in offensive_words):
         if not message.content.startswith("-") and not message.author.guild_permissions.administrator:
             try:
                 await message.delete()
 
-                # Fetch prisoner role ID from the database
+                # **جلب رتبة السجن من قاعدة البيانات**
                 server_data = db["guild_settings"].find_one({"guild_id": str(message.guild.id)})
                 if not server_data or "prisoner_role_id" not in server_data:
                     await message.channel.send("❌ No prisoner role is set up for this server!")
@@ -229,7 +230,11 @@ async def on_message(message):
                     await message.channel.send("❌ Prisoner role not found! Please check the setup.")
                     return
 
-                # مدة السجن الافتراضية مثل أمر `سجن`
+                bot_member = message.guild.get_member(bot.user.id)
+                if prisoner_role >= bot_member.top_role:
+                    await message.channel.send("❌ I don't have permission to assign the prisoner role!")
+                    return
+
                 default_duration = "8h"
                 time_units = {"m": "minutes", "h": "hours", "d": "days"}
                 time_value = int(default_duration[:-1])
@@ -237,7 +242,7 @@ async def on_message(message):
 
                 release_time = datetime.now(timezone.utc) + delta
 
-                # حفظ الرتب السابقة في قاعدة البيانات
+                # **حفظ الرتب السابقة في قاعدة البيانات**
                 previous_roles = [role.id for role in message.author.roles if role != message.guild.default_role and role != prisoner_role]
                 collection.update_one(
                     {"user_id": message.author.id, "guild_id": message.guild.id},
@@ -245,13 +250,14 @@ async def on_message(message):
                     upsert=True
                 )
 
-                # إزالة جميع الرتب وإعطاء رتبة السجن فقط
+                # **إزالة جميع الرتب وإعطاء رتبة السجن فقط**
                 await message.author.edit(roles=[prisoner_role])
                 await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!")
 
-                # فك السجن تلقائيًا بعد انتهاء المدة
+                # **فك السجن تلقائيًا بعد انتهاء المدة**
                 await asyncio.sleep(delta.total_seconds())
                 await release_member(message.guild, message.author)
+
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to jail {message.author.mention}.")
             except Exception as e:
@@ -501,7 +507,7 @@ async def abad(ctx, *, words: str):
     if added_words:
         await ctx.send(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
     else:
-        await ctx.send("⚠️ All words are already in the database!")
+        await ctx.send("⚠️ All words are already saved!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -511,7 +517,7 @@ async def rbad(ctx, word: str):
         updated_words = [w["word"] for w in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
         await ctx.send(f"✅ Removed '{word}' from the offensive words list!")
     else:
-        await ctx.send("⚠️ This word is not in the database!")
+        await ctx.send("⚠️ This word is saved!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
