@@ -259,8 +259,8 @@ async def on_message(message):
                 await message.author.edit(roles=[prisoner_role])
                 await message.delete()
 
-                # **Fetch mod log channel from database**
-                mod_log_channel_id = server_data.get("mod_log_channel_id")
+                # Fetch mod log channel from database
+                mod_log_channel_id = guild_settings.get("mod_log_channel_id")
                 mod_log_channel = None
 
                 if mod_log_channel_id:
@@ -402,7 +402,7 @@ async def mod(ctx, channel: discord.TextChannel):
     existing_channel_id = server_data.get("mod_log_channel_id") if server_data else None
 
     if existing_channel_id and str(existing_channel_id) == str(channel.id):
-        await ctx.send(f"⚠️ The moderation log channel is already set to {channel.mention}.")
+        await ctx.message.reply(f"⚠️ The moderation log channel is already set to {channel.mention}.")
         return
 
     db["guild_settings"].update_one(
@@ -410,7 +410,7 @@ async def mod(ctx, channel: discord.TextChannel):
         {"$set": {"mod_log_channel_id": str(channel.id)}},
         upsert=True
     )
-    await ctx.send(f"✅ The moderation log channel has been set to {channel.mention}")
+    await ctx.message.reply(f"✅ The moderation log channel has been set to {channel.mention}")
 
 # Add command
 # Add channel to exceptions
