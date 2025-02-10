@@ -292,7 +292,7 @@ async def on_message(message):
         if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
             return  # Ignore unknown commands
 
-    # Continue processing other commands
+print(f"Received message: {message.content}")
     await bot.process_commands(message)
 
 @bot.event
