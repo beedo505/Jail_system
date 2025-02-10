@@ -293,7 +293,6 @@ async def on_message(message):
             return  # Ignore unknown commands
 
     await bot.process_commands(message)
-    print(f"Received message: {message.content}")
 
 @bot.event
 async def on_command_error(ctx, error):
