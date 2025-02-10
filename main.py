@@ -105,7 +105,7 @@ intents.message_content = True # صلاحية الرد والتفاعل مع ا�
 
 logging.basicConfig(level=logging.ERROR)
 
-bot = commands.Bot(command_prefix='-', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 prison_data = {}  # تخزين رتب الأعضاء المسجونين
 SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
