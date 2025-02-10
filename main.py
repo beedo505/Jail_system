@@ -457,7 +457,7 @@ async def add(ctx, *, channel=None):
     if isinstance(channel_to_add, discord.VoiceChannel):
         await channel_to_add.set_permissions(prisoner_role, view_channel=True, speak=True, connect=True)
     elif isinstance(channel_to_add, discord.TextChannel):
-        await channel_to_add.set_permissions(prisoner_role, read_messages=True, send_messages=True)
+        await channel_to_add.set_permissions(prisoner_role, view_channel=True, read_messages=True)
 
     await ctx.message.reply(f"✅ Channel {channel_to_add.name} has been added to exceptions.")
 
