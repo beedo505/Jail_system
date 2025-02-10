@@ -395,7 +395,7 @@ async def set(ctx, role: discord.Role = None):
 
     # إخفاء كل القنوات عن الرتبة المختارة باستثناء القنوات المستثناة
     for channel in guild.channels:
-        if str(channel.id) not in excluded_channels:
+        if str(channel.id) not in exception_channels:
             await channel.set_permissions(role, view_channel=False)
 
     await ctx.message.reply(f"✅ The prisoner role has been set to: **{role.name}**.")
