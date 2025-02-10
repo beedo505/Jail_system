@@ -178,13 +178,13 @@ async def on_message(message):
     # if not server_data or "prisoner_role_id" not in server_data:
     #     return
 
-    prisoner_role_id = server_data.get("prisoner_role_id")
-    if not prisoner_role_id:
-        return
+    # prisoner_role_id = server_data.get("prisoner_role_id")
+    # if not prisoner_role_id:
+    #     return
 
-    prisoner_role = guild.get_role(int(prisoner_role_id))
-    if not prisoner_role:
-        return
+    # prisoner_role = guild.get_role(int(prisoner_role_id))
+    # if not prisoner_role:
+    #     return
         
     if user_id not in user_messages:
         user_messages[user_id] = []
