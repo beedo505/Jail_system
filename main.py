@@ -108,7 +108,7 @@ logging.basicConfig(level=logging.ERROR)
 bot = commands.Bot(command_prefix='-', intents=intents)
 
 prison_data = {}  # تخزين رتب الأعضاء المسجونين
-SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
+SPAM_THRESHOLD = 10  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
@@ -677,7 +677,7 @@ async def فك(ctx, *, user_input=None):
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
 # Jail command
-# @commands.has_permissions(administrator=True)
+@commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
 async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
