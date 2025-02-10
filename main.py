@@ -178,6 +178,8 @@ async def on_message(message):
     if not server_data or "prisoner_role_id" not in server_data:
         return
 
+    print(f"Server data: {server_data}")  
+
     prisoner_role_id = server_data.get("prisoner_role_id")
     if not prisoner_role_id:
         return
