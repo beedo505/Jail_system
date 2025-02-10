@@ -182,7 +182,7 @@ async def on_message(message):
     # if not prisoner_role_id:
     #     return
 
-    # prisoner_role = guild.get_role(int(prisoner_role_id))
+    prisoner_role = guild.get_role(int(prisoner_role_id))
     # if not prisoner_role:
     #     return
         
