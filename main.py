@@ -15,11 +15,11 @@ import time
 from datetime import datetime, timedelta, timezone
 TOKEN = os.getenv('B')
 
-print(discord.__version__)
-def get_current_ip():
-    response = requests.get('https://api.ipify.org')
-    return response.text
-print(get_current_ip())
+# print(discord.__version__)
+# def get_current_ip():
+#     response = requests.get('https://api.ipify.org')
+#     return response.text
+# print(get_current_ip())
 
 uri = "mongodb+srv://Bedo:gAOAs1tXfPFYEE0b@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
