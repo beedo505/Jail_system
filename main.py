@@ -677,7 +677,7 @@ async def فك(ctx, *, user_input=None):
         await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
         
 # Jail command
-@commands.has_permissions(administrator=True)
+# @commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
 async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
