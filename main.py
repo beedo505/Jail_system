@@ -175,10 +175,8 @@ async def on_message(message):
     current_time = message.created_at.timestamp()
 
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
-    if not server_data or "prisoner_role_id" not in server_data:
-        return
-
-    print(f"Server data: {server_data}")  
+    # if not server_data or "prisoner_role_id" not in server_data:
+    #     return
 
     prisoner_role_id = server_data.get("prisoner_role_id")
     if not prisoner_role_id:
