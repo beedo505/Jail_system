@@ -175,16 +175,16 @@ async def on_message(message):
     current_time = message.created_at.timestamp()
 
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
-    # if not server_data or "prisoner_role_id" not in server_data:
-    #     return
+    if not server_data or "prisoner_role_id" not in server_data:
+        return
 
-    # prisoner_role_id = server_data.get("prisoner_role_id")
-    # if not prisoner_role_id:
-    #     return
+    prisoner_role_id = server_data.get("prisoner_role_id")
+    if not prisoner_role_id:
+        return
 
-    # prisoner_role = guild.get_role(int(prisoner_role_id))
-    # if not prisoner_role:
-    #     return
+    prisoner_role = guild.get_role(int(prisoner_role_id))
+    if not prisoner_role:
+        return
         
     if user_id not in user_messages:
         user_messages[user_id] = []
@@ -292,7 +292,6 @@ async def on_message(message):
         if not bot.get_command(command_name) and not any(command_name in cmd.aliases for cmd in bot.commands):
             return  # Ignore unknown commands
 
-    print(f"Processing command: {message.content}")
     await bot.process_commands(message)
 
 @bot.event
@@ -418,7 +417,7 @@ async def mod(ctx, channel: discord.TextChannel):
     )
     await ctx.message.reply(f"✅ The moderation log channel has been set to {channel.mention}")
 
-# Add command
+
 # Add channel to exceptions
 @bot.command()
 @commands.has_permissions(administrator=True)
