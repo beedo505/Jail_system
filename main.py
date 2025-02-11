@@ -188,6 +188,14 @@ async def on_message(message):
     # if not prisoner_role:
     #     return
         
+    if user_id in punished_users:
+        timeout_expiration = punished_users[user_id]
+        if current_time >= timeout_expiration:
+            punished_users.pop(user_id)  # Remove user from punished list
+        else:
+            return  # Skip further processing if still punished
+
+    # Initialize user data if not exists
     if user_id not in user_messages:
         user_messages[user_id] = []
         user_spam_messages[user_id] = []
@@ -210,10 +218,8 @@ async def on_message(message):
     # Check for spam (Ignore admins)
     if len(user_messages[user_id]) >= SPAM_THRESHOLD:
         if not message.author.guild_permissions.administrator:
-
-            # ✅ Check if user is already punished
-            if user_id in punished_users:
-                return  # Skip if the user is already punished
+            
+            punished_users[user_id] = current_time + timedelta(minutes=TIMEOUT_DURATION_MINUTES)
 
             try:
                 # Ensure timeout duration is defined
@@ -224,12 +230,9 @@ async def on_message(message):
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
                 timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)
 
-                # Apply timeout punishment first
+                # Apply timeout punishment
                 await message.author.timeout(timeout_until, reason="Spam detected")
                 await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
-
-                # ✅ Mark user as punished to prevent duplicate actions
-                punished_users.add(user_id)
 
                 # Delete all spam messages AFTER timeout
                 deleted_count = 0
@@ -238,7 +241,7 @@ async def on_message(message):
                         await msg.delete()
                         deleted_count += 1
                     except discord.NotFound:
-                        pass  # Message is already deleted
+                        pass
                     except discord.Forbidden:
                         await message.channel.send(f"❌ I don't have permission to delete messages from {message.author.mention}")
                         break
@@ -246,10 +249,9 @@ async def on_message(message):
                 if deleted_count > 0:
                     await message.channel.send(f"🗑️ Deleted {deleted_count} spam messages from {message.author.mention}")
 
-                # Clear user data after punishment
                 user_messages[user_id] = []
                 user_spam_messages[user_id] = []
-                
+
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
             except ValueError as ve:
