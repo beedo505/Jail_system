@@ -218,19 +218,24 @@ async def on_message(message):
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
                 timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)  # Use offset-aware datetime
 
-                # Delete all spam messages from the user
+                # Apply timeout punishment first
+                await message.author.timeout(timeout_until, reason="Spam detected")
+                await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
+
+                # Delete all spam messages AFTER timeout
+                deleted_count = 0
                 for msg in user_spam_messages[user_id]:
                     try:
                         await msg.delete()
+                        deleted_count += 1
                     except discord.NotFound:
                         pass  # Message is already deleted
                     except discord.Forbidden:
                         await message.channel.send(f"❌ I don't have permission to delete messages from {message.author.mention}")
                         break
 
-                # Apply timeout punishment
-                await message.author.timeout(timeout_until, reason="Spam detected")
-                await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
+                if deleted_count > 0:
+                    await message.channel.send(f"🗑️ Deleted {deleted_count} spam messages from {message.author.mention}")
 
                 # Clear user data after punishment
                 user_messages[user_id] = []
