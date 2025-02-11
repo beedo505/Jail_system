@@ -108,7 +108,7 @@ logging.basicConfig(level=logging.ERROR)
 bot = commands.Bot(command_prefix='-', intents=intents)
 
 prison_data = {}  # تخزين رتب الأعضاء المسجونين
-SPAM_THRESHOLD = 10  # عدد الرسائل المسموح بها
+SPAM_THRESHOLD = 5  # عدد الرسائل المسموح بها
 SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
@@ -159,8 +159,9 @@ async def on_ready():
 
     print("✅ All exceptions have been restored successfully!")
 
-# data = guilds_collection.find_one({"guild_id": 1049390476479963138})
-# print(data)
+
+user_messages = {}
+user_spam_messages = {}
 
 # on message
 @bot.event
@@ -172,7 +173,7 @@ async def on_message(message):
     # Log user messages
     guild = message.guild
     user_id = message.author.id
-    current_time = message.created_at.timestamp()
+    current_time = datetime.utcnow()
 
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
     # if not server_data or "prisoner_role_id" not in server_data:
@@ -188,30 +189,53 @@ async def on_message(message):
         
     if user_id not in user_messages:
         user_messages[user_id] = []
+        user_spam_messages[user_id] = []  # Store messages for deletion
 
+    # Store message timestamp and actual message
     user_messages[user_id].append(current_time)
+    user_spam_messages[user_id].append(message)
 
-    # Remove messages outside the time frame
+    # Remove old messages outside the time frame
     user_messages[user_id] = [
         msg_time for msg_time in user_messages[user_id] 
-        if current_time - msg_time <= SPAM_TIME_FRAME
+        if current_time - msg_time <= timedelta(seconds=SPAM_TIME_FRAME)
     ]
 
-    # Check for spam (Ignore admins in this check)
-    if len(user_messages[user_id]) == SPAM_THRESHOLD:
+    user_spam_messages[user_id] = [
+        msg for msg in user_spam_messages[user_id]
+        if current_time - msg.created_at <= timedelta(seconds=SPAM_TIME_FRAME)
+    ]
+
+    # Check for spam (Ignore admins)
+    if len(user_messages[user_id]) >= SPAM_THRESHOLD:
         if not message.author.guild_permissions.administrator:
             try:
+                # Ensure timeout duration is defined
                 if TIMEOUT_DURATION_MINUTES is None:
                     raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
 
-                # Convert min to sec
+                # Convert minutes to seconds
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
-
                 timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
+
+                # Delete all spam messages from the user
+                for msg in user_spam_messages[user_id]:
+                    try:
+                        await msg.delete()
+                    except discord.NotFound:
+                        pass  # Message is already deleted
+                    except discord.Forbidden:
+                        await message.channel.send(f"❌ I don't have permission to delete messages from {message.author.mention}")
+                        break
+
+                # Apply timeout punishment
                 await message.author.timeout(timeout_until, reason="Spam detected")
                 await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
-                # Clear the user's message log after punishment
+
+                # Clear user data after punishment
                 user_messages[user_id] = []
+                user_spam_messages[user_id] = []
+                
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
             except ValueError as ve:
@@ -222,6 +246,7 @@ async def on_message(message):
                 await message.channel.send("❌ An unexpected error occurred")
         else:
             user_messages[user_id] = []
+            user_spam_messages[user_id] = []
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
