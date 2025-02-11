@@ -162,6 +162,7 @@ async def on_ready():
 
 user_messages = {}
 user_spam_messages = {}
+punished_users = set()
 
 # on message
 @bot.event
@@ -189,7 +190,7 @@ async def on_message(message):
         
     if user_id not in user_messages:
         user_messages[user_id] = []
-        user_spam_messages[user_id] = []  # Store messages for deletion
+        user_spam_messages[user_id] = []
 
     # Store message timestamp and actual message
     user_messages[user_id].append(current_time)
@@ -209,6 +210,11 @@ async def on_message(message):
     # Check for spam (Ignore admins)
     if len(user_messages[user_id]) >= SPAM_THRESHOLD:
         if not message.author.guild_permissions.administrator:
+
+            # ✅ Check if user is already punished
+            if user_id in punished_users:
+                return  # Skip if the user is already punished
+
             try:
                 # Ensure timeout duration is defined
                 if TIMEOUT_DURATION_MINUTES is None:
@@ -216,14 +222,14 @@ async def on_message(message):
 
                 # Convert minutes to seconds
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
-                timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)  # Use offset-aware datetime
-
-                if message.author.timed_out_until and message.author.timed_out_until > current_time:
-                    return  # Skip if the user is already timed out
+                timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)
 
                 # Apply timeout punishment first
                 await message.author.timeout(timeout_until, reason="Spam detected")
                 await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
+
+                # ✅ Mark user as punished to prevent duplicate actions
+                punished_users.add(user_id)
 
                 # Delete all spam messages AFTER timeout
                 deleted_count = 0
@@ -252,9 +258,6 @@ async def on_message(message):
             except Exception as e:
                 print(f"Error: {e}")
                 await message.channel.send("❌ An unexpected error occurred")
-        else:
-            user_messages[user_id] = []
-            user_spam_messages[user_id] = []
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
