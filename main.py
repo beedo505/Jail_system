@@ -162,7 +162,7 @@ async def on_ready():
 
 user_messages = {}
 user_spam_messages = {}
-punished_users = set()
+punished_users = {}
 
 # on message
 @bot.event
