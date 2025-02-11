@@ -218,6 +218,9 @@ async def on_message(message):
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
                 timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)  # Use offset-aware datetime
 
+                if message.author.timed_out_until and message.author.timed_out_until > current_time:
+                    return  # Skip if the user is already timed out
+
                 # Apply timeout punishment first
                 await message.author.timeout(timeout_until, reason="Spam detected")
                 await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
