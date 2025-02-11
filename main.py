@@ -173,7 +173,7 @@ async def on_message(message):
     # Log user messages
     guild = message.guild
     user_id = message.author.id
-    current_time = datetime.utcnow()
+    current_time = datetime.now(timezone.utc)
 
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
     # if not server_data or "prisoner_role_id" not in server_data:
@@ -216,7 +216,7 @@ async def on_message(message):
 
                 # Convert minutes to seconds
                 timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
-                timeout_until = message.created_at + timedelta(seconds=timeout_duration_seconds)
+                timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)  # Use offset-aware datetime
 
                 # Delete all spam messages from the user
                 for msg in user_spam_messages[user_id]:
