@@ -29,6 +29,7 @@ collection = db["user"]
 exceptions_collection = db['exceptions']
 guilds_collection = db["guilds"]
 offensive_words_collection = db["offensive_words"]
+punished_collection = db["punished_users"]
 
 try:
     client.admin.command('ping')
@@ -115,11 +116,29 @@ TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 user_messages = defaultdict(list)
 user_messages = {}
 user_spam_messages = {}
+punished_users = {}
+
+async def load_punished_users():
+    global punished_users
+    punished_users.clear()
+    
+    current_time = datetime.now(timezone.utc)
+    punished_list = punished_collection.find({})
+    
+    for entry in punished_list:
+        user_id = entry["user_id"]
+        timeout_expiration = entry["timeout_expiration"]
+        
+        if current_time < timeout_expiration:
+            punished_users[user_id] = timeout_expiration
+        else:
+            punished_collection.delete_one({"user_id": user_id})  # Remove expired entries
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     exception_manager = ExceptionManager(db)
+    await load_punished_users()
 
     for guild in bot.guilds:
         guild_id = str(guild.id)
@@ -185,9 +204,16 @@ async def on_message(message):
     # if not prisoner_role:
     #     return
         
+    if user_id in punished_users:
+        member = message.guild.get_member(user_id)
+        if member and not member.is_timed_out():
+            punished_users.pop(user_id)
+            punished_collection.delete_one({"user_id": user_id})
+
+    # Initialize user data if not exists
     if user_id not in user_messages:
         user_messages[user_id] = []
-        user_spam_messages[user_id] = []  # Store messages for deletion
+        user_spam_messages[user_id] = []
 
     # Store message timestamp and actual message
     user_messages[user_id].append(current_time)
@@ -207,20 +233,18 @@ async def on_message(message):
     # Check for spam (Ignore admins)
     if len(user_messages[user_id]) >= SPAM_THRESHOLD:
         if not message.author.guild_permissions.administrator:
+            
+            timeout_until = current_time + timedelta(minutes=TIMEOUT_DURATION_MINUTES)
+            punished_users[user_id] = timeout_until
+
+            # ✅ Save to database
+            punished_collection.update_one(
+                {"user_id": user_id},
+                {"$set": {"timeout_expiration": timeout_until}},
+                upsert=True
+            )
+
             try:
-                # Ensure timeout duration is defined
-                if TIMEOUT_DURATION_MINUTES is None:
-                    raise ValueError("TIMEOUT_DURATION_MINUTES is not defined")
-
-                # Convert minutes to seconds
-                timeout_duration_seconds = TIMEOUT_DURATION_MINUTES * 60
-                timeout_until = current_time + timedelta(seconds=timeout_duration_seconds)  # Use offset-aware datetime
-
-                # ✅ Check if the user is already timed out
-                if message.author.timed_out_until and message.author.timed_out_until > current_time:
-                    return  # Skip if the user is already timed out
-
-                # Apply timeout punishment first
                 await message.author.timeout(timeout_until, reason="Spam detected")
                 await message.channel.send(f"🚫 {message.author.mention} has been timed out for spamming")
 
@@ -231,7 +255,7 @@ async def on_message(message):
                         await msg.delete()
                         deleted_count += 1
                     except discord.NotFound:
-                        pass  # Message is already deleted
+                        pass  # Message already deleted
                     except discord.Forbidden:
                         await message.channel.send(f"❌ I don't have permission to delete messages from {message.author.mention}")
                         break
@@ -242,18 +266,12 @@ async def on_message(message):
                 # Clear user data after punishment
                 user_messages[user_id] = []
                 user_spam_messages[user_id] = []
-                
+
             except discord.Forbidden:
                 await message.channel.send(f"❌ I don't have permission to timeout {message.author.mention}")
-            except ValueError as ve:
-                print(f"Error: {ve}")
-                await message.channel.send(f"❌ Error: {ve}")
             except Exception as e:
                 print(f"Error: {e}")
                 await message.channel.send("❌ An unexpected error occurred")
-        else:
-            user_messages[user_id] = []
-            user_spam_messages[user_id] = []
 
     # Offensive word detection
     offensive_words = [word["word"] for word in offensive_words_collection.find({}, {"_id": 0, "word": 1})]
