@@ -113,6 +113,8 @@ SPAM_TIME_FRAME = 10  # إطار زمني بالثواني
 TIMEOUT_DURATION_MINUTES = 10  # None تعني تايم أوت دائم
 
 user_messages = defaultdict(list)
+user_messages = {}
+user_spam_messages = {}
 
 @bot.event
 async def on_ready():
@@ -158,10 +160,6 @@ async def on_ready():
                 print(f"Applied restricted permissions for channel: {channel.name} in {guild.name}.")
 
     print("✅ All exceptions have been restored successfully!")
-
-
-user_messages = {}
-user_spam_messages = {}
 
 # on message
 @bot.event
