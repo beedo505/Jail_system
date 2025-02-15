@@ -1,4 +1,4 @@
-import discord
+"""import discord
 from discord.ext import commands
 from pymongo import MongoClient
 import pymongo
@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 import time
 from datetime import datetime, timedelta, timezone
-TOKEN = os.getenv('')
+TOKEN = os.getenv('')"""
 
 # print(discord.__version__)
 # def get_current_ip():
