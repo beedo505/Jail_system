@@ -480,15 +480,7 @@ async def add(ctx, *, channel=None):
 
     # Add the channel to exceptions
     exception_manager = ExceptionManager(db)
-    if not exception_manager.add_exception(guild_id, str(channel_to_add.id)):  
-        await ctx.message.reply(f"⚠ Channel {channel_to_add.name} is already in the exception list!")
-        return
-
-    # Update permissions
-    if isinstance(channel_to_add, discord.VoiceChannel):
-        await channel_to_add.set_permissions(prisoner_role, view_channel=True, speak=True, connect=True)
-    elif isinstance(channel_to_add, discord.TextChannel):
-        await channel_to_add.set_permissions(prisoner_role, view_channel=True, read_messages=True)
+    exception_manager.add_exception(guild_id, str(channel_to_add.id))  # No restriction on duplicates
 
     await ctx.message.reply(f"✅ Channel {channel_to_add.name} has been added to exceptions.")
 
@@ -522,20 +514,9 @@ async def rem(ctx, *, channel=None):
     else:
         channel_to_remove = ctx.channel
 
-    # Check if the channel is in exceptions
-    exception_manager = ExceptionManager(db)
-    if not exception_manager.is_exception(guild_id, str(channel_to_remove.id)):
-        await ctx.message.reply(f"⚠ Channel {channel_to_remove.mention} is not in the exception list.")
-        return
-
     # Remove channel from exceptions
+    exception_manager = ExceptionManager(db)
     exception_manager.remove_exception(guild_id, str(channel_to_remove.id))
-
-    # Update channel permissions
-    if isinstance(channel_to_remove, discord.VoiceChannel):
-        await channel_to_remove.set_permissions(prisoner_role, speak=False, connect=False)
-    elif isinstance(channel_to_remove, discord.TextChannel):
-        await channel_to_remove.set_permissions(prisoner_role, read_messages=False, send_messages=False)
 
     await ctx.message.reply(f"✅ Channel {channel_to_remove.mention} has been removed from exceptions.")
 
@@ -564,6 +545,7 @@ async def list(ctx):
             await ctx.message.reply("⚠ No valid exception channels found.")
     else:
         await ctx.message.reply("⚠ No exception channels found in this server.")
+
 
 @bot.command()
 @commands.has_permissions(administrator=True)
