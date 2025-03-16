@@ -868,6 +868,17 @@ async def عفو(ctx, member: discord.Member = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
+    if member and member.lower() in ['الكل', 'الجميع', 'all', 'All']:
+        prisoners_data = collection.find({"guild_id": ctx.guild.id})
+        count = 0
+        for prisoner in prisoners_data:
+            member = ctx.guild.get_member(prisoner["user_id"])
+            if member:
+                await release_member(ctx, member)
+                count += 1
+        await ctx.message.reply(f"✅ تم العفو عن {count} مسجون(ين)!")
+        return
+
     if not server_data:
         await ctx.message.reply("⚠️ The bot is not properly set up for this server.")
         return
