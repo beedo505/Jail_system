@@ -146,7 +146,12 @@ async def on_ready():
         # استرجاع القنوات المستثناة من قاعدة البيانات
         exception_channels = exception_manager.get_exceptions(guild_id)
 
-        # استرجاع الاستثناءات التي تمت من قبل المستخدم
+        # إخفاء جميع القنوات عن الرتبة
+        for channel in guild.channels:
+            if str(channel.id) not in exception_channels:
+                await channel.set_permissions(prisoner_role, view_channel=False, read_messages=False, send_messages=False, connect=False, speak=False)
+                print(f"Restricted access to {channel.name} for prisoner role in {guild.name}.")
+
         print(f"✅ Restored exception settings for {guild.name}.")
         
     print("✅ All exceptions have been restored successfully!")
