@@ -1,4 +1,4 @@
-"""import discord
+import discord
 from discord.ext import commands
 from pymongo import MongoClient
 import pymongo
@@ -13,7 +13,7 @@ import os
 from collections import defaultdict
 import time
 from datetime import datetime, timedelta, timezone
-TOKEN = os.getenv('')"""
+TOKEN = os.getenv('BS')
 
 # print(discord.__version__)
 # def get_current_ip():
@@ -21,7 +21,7 @@ TOKEN = os.getenv('')"""
 #     return response.text
 # print(get_current_ip())
 
-uri = "mongodb+srv://Bedo:gAOAs1tXfPFYEE0b@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison"]
@@ -970,4 +970,4 @@ async def عفو(ctx, member: discord.Member = None):
     await ctx.message.reply(f"✅ {member.mention} has been pardoned!")
 
 
-# bot.run(os.environ[''])
+bot.run(os.environ['BS'])
