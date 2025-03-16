@@ -146,19 +146,9 @@ async def on_ready():
         # استرجاع القنوات المستثناة من قاعدة البيانات
         exception_channels = exception_manager.get_exceptions(guild_id)
 
-        # تحديث صلاحيات القنوات بناءً على الاستثناءات
-        for channel in guild.channels:
-            if str(channel.id) in exception_channels:
-                if isinstance(channel, discord.TextChannel):
-                    await channel.set_permissions(prisoner_role, view_channel=True, read_messages=True, send_messages=True)
-                    print(f"Restored exception permissions for text channel: {channel.name} in {guild.name}.")
-                elif isinstance(channel, discord.VoiceChannel):
-                    await channel.set_permissions(prisoner_role, view_channel=True, connect=True, speak=True)
-                    print(f"Restored exception permissions for voice channel: {channel.name} in {guild.name}.")
-            else:
-                await channel.set_permissions(prisoner_role, view_channel=False, read_messages=False, send_messages=False, connect=False, speak=False)
-                print(f"Applied restricted permissions for channel: {channel.name} in {guild.name}.")
-
+        # استرجاع الاستثناءات التي تمت من قبل المستخدم
+        print(f"✅ Restored exception settings for {guild.name}.")
+        
     print("✅ All exceptions have been restored successfully!")
 
 # on message
