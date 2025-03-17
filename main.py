@@ -150,9 +150,14 @@ async def on_ready():
         for channel in guild.channels:
             if str(channel.id) not in exception_channels:
                 await channel.set_permissions(prisoner_role, view_channel=False, read_messages=False, send_messages=False, connect=False, speak=False)
-                print(f"Restricted access to {channel.name} for prisoner role in {guild.name}.")
+                restricted_channels.append(channel.name)
+                
+        if restricted_channels:
+            print(f"Restricted access to {len(restricted_channels)} channels in {guild.name} for prisoner role.")
+        else:
+            print(f"No restrictions were needed in {guild.name}.")
 
-        print(f"✅ Restored exception settings for {guild.name}.")
+        print(f"✅ Restored exception settings for {guild.name}. User-defined exceptions are maintained.")
         
     print("✅ All exceptions have been restored successfully!")
 
