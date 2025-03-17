@@ -519,6 +519,8 @@ async def rem(ctx, *, channel=None):
     exception_manager = ExceptionManager(db)
     exception_manager.remove_exception(guild_id, str(channel_to_remove.id))
 
+    await channel_to_remove.set_permissions(prisoner_role, view_channel=False, read_messages=False, send_messages=False, connect=False, speak=False)
+
     await ctx.message.reply(f"✅ Channel {channel_to_remove.mention} has been removed from exceptions.")
 
 
