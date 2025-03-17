@@ -146,6 +146,8 @@ async def on_ready():
         # استرجاع القنوات المستثناة من قاعدة البيانات
         exception_channels = exception_manager.get_exceptions(guild_id)
 
+        restricted_channels = []
+
         # إخفاء جميع القنوات عن الرتبة
         for channel in guild.channels:
             if str(channel.id) not in exception_channels:
