@@ -339,8 +339,7 @@ async def on_command_error(ctx, error):
         await ctx.message.reply("❌ | This command does not exist")
         return
         
-    """else:
-        await ctx.message.reply(f"❌ | An error occurred: {str(error)}")"""
+    # else: await ctx.message.reply(f"❌ | An error occurred: {str(error)}")
 
 # on_member_join
 @bot.event
