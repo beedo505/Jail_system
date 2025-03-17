@@ -562,7 +562,7 @@ async def abad(ctx, *, words: str):
     if added_words:
         await ctx.message.reply(f"✅ Added: {', '.join(added_words)} to the offensive words list!")
     else:
-        await ctx.message.reply("⚠️ All words are already saved!")
+        await ctx.message.reply("⚠ All words are already saved!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
