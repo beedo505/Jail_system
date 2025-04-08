@@ -188,6 +188,9 @@ async def on_message(message):
 
     if "من الاونر؟" in message.content.strip():
         await message.reply("طبعًا انا 😎🔥")
+
+    if "من سواك؟" in message.content.strip():
+        await message.reply("لا يوجد مصطلح يصفه 😟🔥")
         
     if user_id not in user_messages:
         user_messages[user_id] = []
