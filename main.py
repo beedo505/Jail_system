@@ -870,84 +870,58 @@ async def عفو(ctx, *, member: str = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
-    if member is None or isinstance(member, str) and member.lower() in ['الكل', 'الجميع', 'all', 'All']:
-        prisoners_data = collection.find({"guild_id": ctx.guild.id})
-        count = 0
+    if member is None or member.lower() in ['الكل', 'الجميع', 'all', 'All']:
+        prisoners_data = collection.find({"guild_id": guild.id})
         pardoned_members = []
-        
+
         for prisoner in prisoners_data:
-            target_member = ctx.guild.get_member(prisoner["user_id"])
-            if target_member:
-                await release_member(ctx, target_member)
-                count += 1
-                pardoned_members.append(target_member.mention)
+            member_obj = guild.get_member(prisoner["user_id"])
+            if member_obj:
+                await release_member(ctx, member_obj)
+                pardoned_members.append(member_obj.mention)
 
-        if count == 0:
-            await ctx.message.reply("⚠️ There are no prisoners to pardon.")
+        if pardoned_members:
+            names = '\n'.join(pardoned_members)
+            await ctx.reply(f"✅ {len(pardoned_members)} prisoner(s) have been pardoned:\n{names}")
         else:
-            members_list = "\n".join(f"• {mention}" for mention in pardoned_members)
-            embed = discord.Embed(
-                title="✅ Mass Pardon Executed!",
-                description=f"Total pardoned: **{count}**\n\n{members_list}",
-                color=0x2ecc71
-            )
-            await ctx.message.reply(embed=embed)
-
+            await ctx.reply("⚠️ No prisoners found to pardon.")
         return
-
-
 
     if not server_data:
         await ctx.message.reply("⚠️ The bot is not properly set up for this server.")
         return
 
-    prisoner_role_id = server_data.get("prisoner_role_id") if server_data else None
+    prisoner_role_id = server_data.get("prisoner_role_id")
     if not prisoner_role_id:
         await ctx.message.reply("⚠️ The 'Prisoner' role is not set.")
         return
 
-    prisoner_role = guild.get_role(int(prisoner_role_id)) if prisoner_role_id else None
+    prisoner_role = guild.get_role(int(prisoner_role_id))
     if not prisoner_role:
         await ctx.message.reply("⚠️ The saved prisoner role does not exist anymore.")
         return
 
-    if member is None:
-        embed = discord.Embed(title="📝 أمر العفو", color=0x2f3136)
-        usage_lines = [
-            "•  الأمر        :  -عفو \n",
-            "•  الوظيفة        :  العفو عن العضو المسجون \n"
-        ]
-
-        aliases_lines = [
-            "•  -اعفي \n",
-            "•  -اعفاء \n",
-            "•  -اخرج \n",
-            "•  -سامح \n",
-            "•  -طلع \n",
-            "•  -اخراج \n",
-            "•  -اطلع \n",
-        ]
-
-        embed.add_field(
-            name="📌 معلومات الأمر",
-            value=f"{''.join(usage_lines)}",
-            inline=False
-        )
-
-        embed.add_field(
-            name="💡 الاختصارات المتاحة",
-            value=f"{''.join(aliases_lines)}",
-            inline=False
-        )
-
-        await ctx.message.reply(embed=embed)
-        return
-
+    # Try to get the member if it's a string
     if isinstance(member, str):
-        member = guild.get_member(int(member))
-        if not member:
-            await ctx.message.reply("❌ Member not found. Please provide a valid ID or mention.")
-            return
+        member_id = None
+        if member.startswith("<@") and member.endswith(">"):
+            member_id = member.replace("<@", "").replace("!", "").replace(">", "")
+        elif member.isdigit():
+            member_id = member
+        else:
+            # Try find by name
+            target = discord.utils.find(lambda m: m.name == member or m.display_name == member, guild.members)
+            if target:
+                member = target
+            else:
+                await ctx.reply("❌ | The mention is incorrect. Please mention a valid member or use a valid ID.")
+                return
+
+        if member_id:
+            member = guild.get_member(int(member_id))
+            if not member:
+                await ctx.reply("❌ | Member not found. Please provide a valid ID or mention.")
+                return
 
     if member == ctx.author:
         await ctx.message.reply("❌ You cannot pardon yourself!")
