@@ -21,7 +21,7 @@ TOKEN = os.getenv('BS')
 #     return response.text
 # print(get_current_ip())
 
-uri = "mongodb+srv://Bedo:kbdB8CRrOOCuJdpz@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb+srv://Bedo:bb35gFNqZyCo1rRQ@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
 db = client["Prison"]
