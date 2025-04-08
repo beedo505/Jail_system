@@ -183,8 +183,8 @@ async def on_message(message):
     if prisoner_role_id:
         prisoner_role = guild.get_role(int(prisoner_role_id))
     
-    if "بدر" in message.content:
-        await message.message.reply("بدر عمي وعمك وعم الجميع 😎🔥")
+    if "بدر" in message.content.strip():
+        await message.reply("بدر عمي وعمك وعم الجميع 😎🔥")
         
     if user_id not in user_messages:
         user_messages[user_id] = []
