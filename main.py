@@ -182,14 +182,14 @@ async def on_message(message):
     prisoner_role_id = server_data.get("prisoner_role_id")
     
     if not prisoner_role_id:
-    print(f"⚠️ No prisoner_role_id found for guild {guild.id}")
-    return
+        print(f"⚠️ No prisoner_role_id found for guild {guild.id}")
+        return
 
     prisoner_role = guild.get_role(int(prisoner_role_id))
     
     if prisoner_role is None:
-    print(f"⚠️ Role with ID {prisoner_role_id} not found in guild {guild.id}")
-    return
+        print(f"⚠️ Role with ID {prisoner_role_id} not found in guild {guild.id}")
+        return
     
     if "بدر" in message.content:
         await message.message.reply("بدر عمي وعمك وعم الجميع 😎🔥")
