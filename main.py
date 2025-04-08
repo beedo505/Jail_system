@@ -870,21 +870,23 @@ async def عفو(ctx, *, member: str = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
-    if member is None or member.lower() in ['الكل', 'الجميع', 'all', 'All']:
-        prisoners_data = collection.find({"guild_id": guild.id})
+    if member is None or isinstance(member, str) and member.lower() in ['الكل', 'الجميع', 'all', 'All']:
+        prisoners_data = collection.find({"guild_id": ctx.guild.id})
         pardoned_members = []
 
         for prisoner in prisoners_data:
-            member_obj = guild.get_member(prisoner["user_id"])
+            member_obj = ctx.guild.get_member(prisoner["user_id"])
             if member_obj:
                 await release_member(ctx, member_obj)
-                pardoned_members.append(member_obj.mention)
+                pardoned_members.append(member_obj)
 
         if pardoned_members:
-            names = '\n'.join(pardoned_members)
-            await ctx.reply(f"✅ {len(pardoned_members)} prisoner(s) have been pardoned:\n{names}")
+            mentions = ", ".join(member.mention for member in pardoned_members)
+            await ctx.message.reply(
+                f"✅ {len(pardoned_members)} prisoner(s) have been pardoned:\n{mentions}"
+            )
         else:
-            await ctx.reply("⚠️ No prisoners found to pardon.")
+            await ctx.message.reply("⚠️ No prisoners found to pardon.")
         return
 
     if not server_data:
