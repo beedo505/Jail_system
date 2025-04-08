@@ -806,7 +806,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         await asyncio.sleep(delta.total_seconds())
         await release_member(ctx, member)
 
-async def release_member(ctx, member: discord.Member):
+async def release_member(ctx, member: discord.Member, silent=False):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
@@ -834,7 +834,9 @@ async def release_member(ctx, member: discord.Member):
 
     collection.delete_one({"user_id": member.id, "guild_id": guild.id})
 
-    await ctx.send(f"{member.mention} has been released from jail.")
+    # Only send the message if silent is False
+    if not silent:
+        await ctx.send(f"{member.mention} has been released from jail.")
 
 # Prisoners command
 @commands.has_permissions(administrator=True)
@@ -877,7 +879,7 @@ async def عفو(ctx, *, member: str = None):
         for prisoner in prisoners_data:
             member_obj = ctx.guild.get_member(prisoner["user_id"])
             if member_obj:
-                await release_member(ctx, member_obj)
+                await release_member(ctx, member_obj, silent=True)  # Pass silent=True
                 pardoned_members.append(member_obj)
 
         if pardoned_members:
