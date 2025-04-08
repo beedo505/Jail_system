@@ -1,7 +1,7 @@
-discord.py>=2.4.0
+discord.py
 python-dotenv
 Flask
-pymongo>=3.11
+pymongo
 requests
 dnspython
 arabic-reshaper
