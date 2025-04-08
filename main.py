@@ -176,20 +176,12 @@ async def on_message(message):
     current_time = datetime.now(timezone.utc)
 
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
-    # if not server_data or "prisoner_role_id" not in server_data:
-    #     return
 
-    prisoner_role_id = server_data.get("prisoner_role_id")
+    prisoner_role_id = server_data.get("prisoner_role_id") if server_data else None
+    prisoner_role = None
     
-    if not prisoner_role_id:
-        print(f"⚠️ No prisoner_role_id found for guild {guild.id}")
-        return
-
-    prisoner_role = guild.get_role(int(prisoner_role_id))
-    
-    if prisoner_role is None:
-        print(f"⚠️ Role with ID {prisoner_role_id} not found in guild {guild.id}")
-        return
+    if prisoner_role_id:
+        prisoner_role = guild.get_role(int(prisoner_role_id))
     
     if "بدر" in message.content:
         await message.message.reply("بدر عمي وعمك وعم الجميع 😎🔥")
