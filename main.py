@@ -866,7 +866,7 @@ async def سجين(ctx):
 # Pardon command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['اعفاء', 'اخراج', 'طلع', 'سامح', 'اخرج', 'اطلع', 'اعفي'])
-async def عفو(ctx, member: discord.Member = None):
+async def عفو(ctx, *, member: str = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
@@ -874,12 +874,13 @@ async def عفو(ctx, member: discord.Member = None):
         prisoners_data = collection.find({"guild_id": ctx.guild.id})
         count = 0
         for prisoner in prisoners_data:
-            member = ctx.guild.get_member(prisoner["user_id"])
-            if member:
-                await release_member(ctx, member)
+            target = ctx.guild.get_member(prisoner["user_id"])  # 👈 استخدم اسم مختلف
+            if target:
+                await release_member(ctx, target)
                 count += 1
         await ctx.message.reply(f"✅ {count} prisoner(s) have been pardoned!")
         return
+
 
     if not server_data:
         await ctx.message.reply("⚠️ The bot is not properly set up for this server.")
