@@ -873,13 +873,28 @@ async def عفو(ctx, *, member: str = None):
     if member is None or isinstance(member, str) and member.lower() in ['الكل', 'الجميع', 'all', 'All']:
         prisoners_data = collection.find({"guild_id": ctx.guild.id})
         count = 0
+        pardoned_members = []
+        
         for prisoner in prisoners_data:
-            target = ctx.guild.get_member(prisoner["user_id"])  # 👈 استخدم اسم مختلف
-            if target:
-                await release_member(ctx, target)
+            target_member = ctx.guild.get_member(prisoner["user_id"])
+            if target_member:
+                await release_member(ctx, target_member)
                 count += 1
-        await ctx.message.reply(f"✅ {count} prisoner(s) have been pardoned!")
+                pardoned_members.append(target_member.mention)
+
+        if count == 0:
+            await ctx.message.reply("⚠️ There are no prisoners to pardon.")
+        else:
+            members_list = "\n".join(f"• {mention}" for mention in pardoned_members)
+            embed = discord.Embed(
+                title="✅ Mass Pardon Executed!",
+                description=f"Total pardoned: **{count}**\n\n{members_list}",
+                color=0x2ecc71
+            )
+            await ctx.message.reply(embed=embed)
+
         return
+
 
 
     if not server_data:
