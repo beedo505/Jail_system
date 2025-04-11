@@ -829,8 +829,8 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     embed.set_footer(text=f"Neral • {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}")
     await ctx.message.reply(embed=embed)
 
-        await asyncio.sleep(delta.total_seconds())
-        await release_member(ctx, member)
+    await asyncio.sleep(delta.total_seconds())
+    await release_member(ctx, member)
 
 async def release_member(ctx, member: discord.Member, silent=False):
     guild = ctx.guild
