@@ -269,7 +269,7 @@ async def on_message(message):
                     return
 
                 if prisoner_role in message.author.roles:
-                    await message.channel.send(f"❌ {message.author.mention} is already jailed!")
+                    print(f"User {message.author.mention} is already jailed. No action taken.")
                     return
 
                 default_duration = "8h"
