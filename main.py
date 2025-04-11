@@ -13,7 +13,6 @@ import os
 from collections import defaultdict
 import time
 from datetime import datetime, timedelta, timezone
-from dateutil import parser
 TOKEN = os.getenv('B')
 
 # print(discord.__version__)
