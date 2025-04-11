@@ -720,7 +720,7 @@ async def فك(ctx, *, user_input=None):
 # Jail command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['كوي', 'عدس', 'ارمي', 'اشخط', 'احبس', 'حبس'])
-async def سجن(ctx, member: discord.Member = None, duration: str = None, *, reason: str = "No reason"):
+async def سجن(ctx, member: discord.Member = None, duration: str = None):
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
@@ -774,7 +774,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         return
 
     if isinstance(member, discord.Member):
-        pass
+        member = member
     else:
         try:
             member = guild.get_member(int(member))
@@ -794,18 +794,14 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
-    # Default values
-    default_duration = "8h"
-    if duration and duration[-1] in ["m", "h", "d", "o"]:
-        duration_value = duration
-    else:
-        reason = f"{duration} {reason}".strip() if duration else reason
-        duration_value = default_duration
+    if duration is None:
+        duration = "8h"
 
-    if not reason:
-        reason = "No reason provided"
+    if duration[-1] not in ["m", "h", "d", "o"]:
+        await ctx.message.reply("Please specify a valid duration, like: (30m, 1h, 1d, 1o).")
+        return
 
-    time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "months"}
+    time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "days"}
     try:
         time_value = int(duration[:-1])
     except ValueError:
@@ -818,31 +814,24 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         delta = timedelta(**{time_units[duration[-1]]: time_value})
 
     release_time = datetime.now(timezone.utc) + delta
-
-    if not member:
-        await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
-        return
     
     # Save member's roles and jail them
     previous_roles = [role.id for role in member.roles if role != guild.default_role]
     await member.edit(roles=[prisoner_role])
 
+    # Save roles to MongoDB
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
         {"$set": {"roles": previous_roles, "release_time": release_time}},
         upsert=True
     )
 
-    # Send embed
-    embed = discord.Embed(title="تم السجن بنجاح", color=0x2f3136)
-    embed.add_field(name="الشخص:", value=f"{member.mention}", inline=False)
-    embed.add_field(name="المدة:", value=f"{time_value} ثواني" if duration_value[-1] == "m" and time_value < 1 else f"{duration_value}", inline=False)
-    embed.add_field(name="السبب:", value=f"{reason}", inline=False)
-    embed.set_footer(text=f"Neral • {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}")
-    await ctx.message.reply(embed=embed)
+    await ctx.message.reply(f"{member.mention} has been jailed for {duration}.")
 
-    await asyncio.sleep(delta.total_seconds())
-    await release_member(ctx, member)
+    if duration:
+        await asyncio.sleep(delta.total_seconds())
+        await release_member(ctx, member)
+
 
 async def release_member(ctx, member: discord.Member, silent=False):
     guild = ctx.guild
