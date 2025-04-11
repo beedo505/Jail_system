@@ -163,31 +163,31 @@ async def on_ready():
         
     print("✅ All exceptions have been restored successfully!")
 
-    # Release members whose jail time has expired
-    now = datetime.now(timezone.utc)
-    jailed_users = collection.find({})
+    # # Release members whose jail time has expired
+    # now = datetime.now(timezone.utc)
+    # jailed_users = collection.find({})
 
-    for user_data in jailed_users:
-        release_time = user_data.get("release_time")
+    # for user_data in jailed_users:
+    #     release_time = user_data.get("release_time")
     
-    # إذا كان release_time موجودًا وتحين وقت الإفراج
-        if release_time:
-            if isinstance(release_time, str):
-                release_time = parser.parse(release_time)
+    # # إذا كان release_time موجودًا وتحين وقت الإفراج
+    #     if release_time:
+    #         if isinstance(release_time, str):
+    #             release_time = parser.parse(release_time)
 
-        # التحقق إذا كانت فترة السجن قد انتهت
-            if release_time <= now:
-                guild = bot.get_guild(user_data["guild_id"])
-                if not guild:
-                    continue
+    #     # التحقق إذا كانت فترة السجن قد انتهت
+    #         if release_time <= now:
+    #             guild = bot.get_guild(user_data["guild_id"])
+    #             if not guild:
+    #                 continue
 
-                member = guild.get_member(user_data["user_id"])
-                if member:
-                    try:
-                        await release_member(discord.Object(id=guild.id), member, silent=True)
-                        print(f"✅ Released {member.name} from jail in {guild.name} (auto-release).")
-                    except Exception as e:
-                        print(f"❌ Failed to release {member.id} in {guild.id}: {e}")
+    #             member = guild.get_member(user_data["user_id"])
+    #             if member:
+    #                 try:
+    #                     await release_member(discord.Object(id=guild.id), member, silent=True)
+    #                     print(f"✅ Released {member.name} from jail in {guild.name} (auto-release).")
+    #                 except Exception as e:
+    #                     print(f"❌ Failed to release {member.id} in {guild.id}: {e}")
 
 # on message
 @bot.event
