@@ -830,9 +830,9 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 
     # Send embed
     embed = discord.Embed(title="تم السجن بنجاح", color=0x2f3136)
-    embed.add_field(name="الشخص:", value=f"{member.mention}", inline=True)
-    embed.add_field(name="المدة:", value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", inline=True)
-    embed.add_field(name="السبب:", value=f"{reason}", inline=True)
+    embed.add_field(name="الشخص:", value=f"{member.mention}", inline=False)
+    embed.add_field(name="المدة:", value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", inline=False)
+    embed.add_field(name="السبب:", value=f"{reason}", inline=False)
     
     server_icon_url = guild.icon.url
     embed.set_footer(text=f"Neral • {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}", icon_url=server_icon_url)
