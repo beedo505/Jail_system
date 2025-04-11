@@ -724,7 +724,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     guild = ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
-    if member is None and duration is None:
+    if member is None:
         embed = discord.Embed(title="📝 أمر السجن", color=0x2f3136)
         usage_lines = [
             "•  الأمر        :  -سجن \n",
@@ -774,7 +774,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         return
 
     if isinstance(member, discord.Member):
-        member = member
+        pass
     else:
         try:
             member = guild.get_member(int(member))
