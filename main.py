@@ -306,9 +306,9 @@ async def on_message(message):
                         print(f"❌ خطأ: المعرف المحفوظ للقناة ({server_data['mod_log_channel_id']}) ليس رقماً صحيحًا.")
 
                 if mod_log_channel:
-                    await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                    await mod_log_channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`\nFull message: `{message.content}`")
                 else:
-                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`")
+                    await message.channel.send(f"⚠️ {message.author.mention} has been jailed for using offensive language!\n🚫 Offending word: `{matched_word}`\nFull message: `{message.content}`")
                 
                 # Auto-release after duration
                 await asyncio.sleep(delta.total_seconds())
