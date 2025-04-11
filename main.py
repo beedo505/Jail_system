@@ -774,12 +774,12 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None):
         return
 
     if isinstance(member, discord.Member):
-        member = member
+        pass
     else:
         try:
-            member = guild.get_member(int(member))
+            member = guild.get_member(int(member.id))
             if not member:
-                member = await bot.fetch_user(int(member))
+                member = await bot.fetch_user(int(member.id))
             if not member:
                 raise ValueError("Member not found.")
         except (ValueError, discord.NotFound):
