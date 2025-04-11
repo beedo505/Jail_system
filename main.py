@@ -818,6 +818,10 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         delta = timedelta(**{time_units[duration[-1]]: time_value})
 
     release_time = datetime.now(timezone.utc) + delta
+
+    if not member:
+        await ctx.message.reply("Member not found. Please provide a valid ID or mention.")
+        return
     
     # Save member's roles and jail them
     previous_roles = [role.id for role in member.roles if role != guild.default_role]
