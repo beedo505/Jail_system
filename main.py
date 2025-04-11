@@ -794,22 +794,21 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
         await ctx.message.reply("I cannot jail this member because their role is equal to or higher than mine.")
         return
 
-    # Default values
-    default_duration = "8h"
-    if duration and duration[-1] in ["m", "h", "d", "o"]:
-        duration_value = duration
-    else:
-        reason = f"{duration} {reason}".strip() if duration else reason
-        duration_value = default_duration
-
+    if duration is None:
+        duration = "8h"  # default to 8 hours
     if reason is None:
-        reason = "No reason provided"
+        reason = "No reason provided"  # default reason
 
-    time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "months"}
-    try:
-        time_value = int(duration[:-1])
-    except ValueError:
-        await ctx.message.reply("Invalid duration. Use numbers followed by m, h, d, or o.")
+    time_units = {"m": "minutes", "h": "hours", "d": "days", "o": "days"}  # assuming "o" is months
+
+    if duration[-1] in time_units:
+        try:
+            time_value = int(duration[:-1])
+        except ValueError:
+            await ctx.message.reply("Invalid duration. Use numbers followed by m, h, d, or o.")
+            return
+    else:
+        await ctx.message.reply("Invalid duration format. Use m, h, d, or o.")
         return
 
     if duration[-1] == "o":
