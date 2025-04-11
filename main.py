@@ -834,7 +834,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     embed.add_field(name="المدة:", value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", inline=True)
     embed.add_field(name="السبب:", value=f"{reason}", inline=True)
     
-    server_icon_url = ctx.guild.icon_url
+    server_icon_url = guild.icon.url
     embed.set_footer(text=f"Neral • {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}", icon_url=server_icon_url)
     await ctx.message.reply(embed=embed)
 
