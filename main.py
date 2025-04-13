@@ -16,12 +16,6 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 TOKEN = os.getenv('B')
 
-# print(discord.__version__)
-# def get_current_ip():
-#     response = requests.get('https://api.ipify.org')
-#     return response.text
-# print(get_current_ip()
-
 uri = "mongodb+srv://user_b:kzsF5rOLS61wHqYU@cluster0.zriaf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(uri, tlsAllowInvalidCertificates=True)
