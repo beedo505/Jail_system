@@ -931,27 +931,47 @@ async def سجين(ctx):
     
     embed = discord.Embed(title="🔒 Currently Jailed Members", color=0x2f3136)
     count = 0
-    
     jailed_list = []
+
     saudi_tz = ZoneInfo("Asia/Riyadh")
-    
+    now = datetime.now(saudi_tz)
+
     for prisoner in prisoners_data:
         member = guild.get_member(prisoner["user_id"])
         release_time = prisoner.get("release_time")
-        release_time_str = (
-            release_time.astimezone(saudi_tz).strftime("%Y-%m-%d %I:%M %p Saudi") 
-            if release_time else "Unknown"
-        )
-        
+
+        if release_time:
+            # If release_time is a string, convert it to a datetime object first
+            if isinstance(release_time, str):
+                release_time = datetime.fromisoformat(release_time)
+
+            # Now that release_time is a datetime object, convert to Saudi time
+            release_time = release_time.replace(tzinfo=timezone.utc).astimezone(saudi_tz)
+            remaining = release_time - now
+
+            if remaining.total_seconds() > 0:
+                hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+                minutes, _ = divmod(remainder, 60)
+                remaining_str = f"{hours}h {minutes}m remaining"
+            else:
+                remaining_str = "Time's up (release pending)"
+
+            release_time_str = release_time.strftime("%Y-%m-%d %I:%M %p Saudi")
+        else:
+            release_time_str = "Unknown"
+            remaining_str = "Unknown"
+
         if member:
-            jailed_list.append(f"{member.mention} - 📆 Release: {release_time_str}")
+            jailed_list.append(
+                f"{member.mention} — 📆 Release: {release_time_str} | ⏳ {remaining_str}"
+            )
             count += 1
-    
+
     if count == 0:
         embed.description = "There are no members currently jailed."
     else:
         embed.description = "\n".join(jailed_list)
-    
+
     await ctx.message.reply(embed=embed)
 
 # Pardon command
