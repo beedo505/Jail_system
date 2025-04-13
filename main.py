@@ -123,17 +123,16 @@ async def check_prisoners_loop():
 
             for prisoner in prisoners_data:
                 release_time = prisoner.get("release_time")
-                
                 if release_time:
                     if isinstance(release_time, str):
                         release_time = datetime.fromisoformat(release_time)
 
-                    if release_time <= now:
-                        member = guild.get_member(prisoner["user_id"])
-                        if member:
-                            await release_member(None, member, silent=True)
-                            collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
-
+                if release_time <= now:
+                    member = guild.get_member(prisoner["user_id"])
+                    if member:
+                        await release_member(None, member, silent=True)
+                        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+        
         await asyncio.sleep(60)
 
 @bot.event
