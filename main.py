@@ -825,8 +825,6 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
             continue
         if role.is_premium_subscriber():
             continue
-        if role.managed:
-            continue
         previous_roles.append(role.id)
 
     await member.edit(roles=[prisoner_role] + [r for r in member.roles if r.is_premium_subscriber()])
