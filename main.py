@@ -817,7 +817,8 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     else:
         delta = timedelta(**{time_units[duration[-1]]: time_value})
 
-    release_time = datetime.now(timezone.utc) + delta
+    saudi_tz = ZoneInfo("Asia/Riyadh")
+    release_time = datetime.now(saudi_tz) + delta
     
     # Save member's roles and jail them
     previous_roles = []
@@ -832,7 +833,10 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
 
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
-        {"$set": {"roles": previous_roles, "release_time": release_time}},
+        {"$set": {
+            "roles": previous_roles,
+            "release_time": release_time.astimezone(timezone.utc).isoformat()
+        }},
         upsert=True
     )
 
