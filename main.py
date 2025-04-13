@@ -121,7 +121,7 @@ async def check_prisoners_loop():
     await bot.wait_until_ready()  # انتظر حتى يشتغل البوت بالكامل
 
     while not bot.is_closed():
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)  # وقت UTC الحالي
 
         for guild in bot.guilds:
             guild_id = str(guild.id)
@@ -129,16 +129,21 @@ async def check_prisoners_loop():
 
             for prisoner in prisoners_data:
                 release_time = prisoner.get("release_time")
+                
                 if release_time:
+                    # إذا كان release_time سلسلة نصية، نرجعها إلى كائن datetime
                     if isinstance(release_time, str):
                         release_time = datetime.fromisoformat(release_time)
 
-                if release_time <= now:
-                    member = guild.get_member(prisoner["user_id"])
-                    if member:
-                        await release_member(None, member, silent=True)
-                        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+                    # إذا حان وقت الإفراج
+                    if release_time <= now:
+                        member = guild.get_member(prisoner["user_id"])
+                        
+                        if member:
+                            await release_member(None, member, silent=True)
+                            collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
         
+        # النوم لمدة 60 ثانية قبل التحقق مرة أخرى
         await asyncio.sleep(60)
 
 @bot.event
