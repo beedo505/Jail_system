@@ -819,8 +819,16 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     release_time = datetime.now(timezone.utc) + delta
     
     # Save member's roles and jail them
-    previous_roles = [role.id for role in member.roles if role != guild.default_role]
-    await member.edit(roles=[prisoner_role])
+    previous_roles = []
+    for role in member.roles:
+        if role == guild.default_role:
+            continue
+        if role.is_premium_subscriber():
+            continue
+        previous_roles.append(role.id)
+
+    await member.edit(roles=[prisoner_role])  # حذف كل الرتب وإعطاء رتبة السجن
+
 
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
@@ -872,6 +880,34 @@ async def release_member(ctx, member: discord.Member, silent=False):
     # Only send the message if silent is False
     if not silent:
         await ctx.send(f"{member.mention} has been released from jail.")
+
+@bot.command(aliases=['باقي', 'مدة_السجن', 'remaining'])
+async def كم(ctx):
+    member = ctx.author
+    data = collection.find_one({"user_id": member.id, "guild_id": ctx.guild.id})
+
+    if not data or "release_time" not in data:
+        await ctx.reply("❌ | You are not currently in jail.")
+        return
+
+    release_time = data["release_time"]
+
+    # تحويل `release_time` ل datetime كائن لو جاي كـ String من Mongo
+    if isinstance(release_time, str):
+        release_time = datetime.fromisoformat(release_time)
+
+    now = datetime.now(timezone.utc)
+    remaining = release_time - now
+
+    if remaining.total_seconds() <= 0:
+        await ctx.reply("✅ | Your jail time has expired, you should be released soon!")
+    else:
+        hours, remainder = divmod(int(remaining.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        await ctx.reply(
+            f"⏳ | Remaining jail time: `{hours}h {minutes}m {seconds}s`"
+        )
 
 # Prisoners command
 @commands.has_permissions(administrator=True)
