@@ -819,8 +819,15 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     release_time = datetime.now(timezone.utc) + delta
     
     # Save member's roles and jail them
-    previous_roles = [role.id for role in member.roles if role != guild.default_role]
-    await member.edit(roles=[prisoner_role])
+    previous_roles = []
+    for role in member.roles:
+        if role == guild.default_role:
+            continue
+        if role.is_premium_subscriber():
+            continue
+        previous_roles.append(role.id)
+
+    await member.edit(roles=[prisoner_role])  # حذف كل الرتب وإعطاء رتبة السجن
 
     collection.update_one(
         {"user_id": member.id, "guild_id": ctx.guild.id},
