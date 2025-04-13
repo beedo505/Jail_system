@@ -144,11 +144,14 @@ async def on_ready():
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     exception_manager = ExceptionManager(db)
 
-    for guild in bot.guilds:
-        guild_id = str(guild.id)
+        # Call check_prisoners once at startup
+        await check_prisoners()
 
         # Start checking for released prisoners every minute after the bot is ready
         bot.loop.create_task(check_prisoners())
+
+    for guild in bot.guilds:
+        guild_id = str(guild.id)
 
         # التحقق مما إذا كان السيرفر موجودًا في قاعدة البيانات، وإضافته إن لم يكن موجودًا
         server_data = guilds_collection.find_one({"guild_id": guild_id})
