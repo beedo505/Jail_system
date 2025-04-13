@@ -936,7 +936,7 @@ async def سجين(ctx):
     saudi_tz = ZoneInfo("Asia/Riyadh")
     now = datetime.now(saudi_tz)
 
-    for prisoner in prisoners_data:
+    for idx, prisoner in enumerate(prisoners_data, 1):
         member = guild.get_member(prisoner["user_id"])
         release_time = prisoner.get("release_time")
 
@@ -963,7 +963,7 @@ async def سجين(ctx):
 
         if member:
             jailed_list.append(
-                f"{member.mention} — 📆 Release: {release_time_str} | ⏳ {remaining_str}"
+                f"{idx}- {member.mention} — 📆 Release: {release_time_str} | ⏳ {remaining_str}"
             )
             count += 1
 
