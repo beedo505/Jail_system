@@ -13,6 +13,7 @@ import os
 from collections import defaultdict
 import time
 from datetime import datetime, timedelta, timezone
+import pytz
 TOKEN = os.getenv('B')
 
 # print(discord.__version__)
@@ -891,11 +892,20 @@ async def كم(ctx):
 
     release_time = data["release_time"]
 
-    # تحويل `release_time` ل datetime كائن لو جاي كـ String من Mongo
+    # لو من Mongo جاي String, حوّله لتاريخ مع توقيت UTC
     if isinstance(release_time, str):
         release_time = datetime.fromisoformat(release_time)
+        if release_time.tzinfo is None:
+            release_time = release_time.replace(tzinfo=timezone.utc)
 
-    now = datetime.now(timezone.utc)
+    # تحويل `release_time` إلى توقيت السعودية (UTC+3)
+    saudi_timezone = pytz.timezone('Asia/Riyadh')
+    release_time = release_time.astimezone(saudi_timezone)
+
+    # الحصول على الوقت الحالي بتوقيت السعودية
+    now = datetime.now(saudi_timezone)
+
+    # حساب الوقت المتبقي
     remaining = release_time - now
 
     if remaining.total_seconds() <= 0:
@@ -904,10 +914,14 @@ async def كم(ctx):
         hours, remainder = divmod(int(remaining.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        await ctx.reply(
-            f"⏳ | Remaining jail time: `{hours}h {minutes}m {seconds}s`"
-        )
+        # عرض الوقت بصيغة 12 ساعة مع AM/PM
+        remaining_time_str = f"{hours}h {minutes}m {seconds}s"
+        release_time_str = release_time.strftime("%I:%M %p")  # صيغة 12 ساعة مع AM/PM
 
+        await ctx.reply(
+            f"⏳ | Remaining jail time: `{remaining_time_str}`\nTime remaining until release: `{release_time_str}`"
+        )
+        
 # Prisoners command
 @commands.has_permissions(administrator=True)
 @bot.command(aliases=['مساجين', 'مسجون', 'مسجونين', 'عرض'])
