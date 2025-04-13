@@ -933,10 +933,15 @@ async def سجين(ctx):
     count = 0
     
     jailed_list = []
+    saudi_tz = ZoneInfo("Asia/Riyadh")
+    
     for prisoner in prisoners_data:
         member = guild.get_member(prisoner["user_id"])
         release_time = prisoner.get("release_time")
-        release_time_str = release_time.strftime("%Y-%m-%d %H:%M UTC") if release_time else "Unknown"
+        release_time_str = (
+            release_time.astimezone(saudi_tz).strftime("%Y-%m-%d %I:%M %p Saudi") 
+            if release_time else "Unknown"
+        )
         
         if member:
             jailed_list.append(f"{member.mention} - 📆 Release: {release_time_str}")
