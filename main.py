@@ -117,6 +117,28 @@ user_messages = defaultdict(list)
 user_messages = {}
 user_spam_messages = {}
 
+async def check_prisoners():
+    now = datetime.now(timezone.utc)
+    
+    for guild in bot.guilds:
+        guild_id = str(guild.id)
+        prisoners_data = collection.find({"guild_id": guild_id})
+
+        for prisoner in prisoners_data:
+            release_time = prisoner.get("release_time")
+            if release_time and release_time <= now:
+                member = guild.get_member(prisoner["user_id"])
+                if member:
+                    # Call the release function
+                    await release_member(None, member, silent=True)  # Call release_member with silent=True to avoid messages
+                    
+                    # Optionally remove the record from the database if the member is released
+                    collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+
+    # Call this function periodically (e.g., every minute) to check for released prisoners
+    await asyncio.sleep(60)
+    await check_prisoners()
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
@@ -124,6 +146,9 @@ async def on_ready():
 
     for guild in bot.guilds:
         guild_id = str(guild.id)
+
+    # Start checking for released prisoners every minute after the bot is ready
+    bot.loop.create_task(check_prisoners())
 
         # التحقق مما إذا كان السيرفر موجودًا في قاعدة البيانات، وإضافته إن لم يكن موجودًا
         server_data = guilds_collection.find_one({"guild_id": guild_id})
