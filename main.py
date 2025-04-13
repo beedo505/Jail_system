@@ -117,27 +117,28 @@ user_messages = defaultdict(list)
 user_messages = {}
 user_spam_messages = {}
 
-async def check_prisoners():
-    now = datetime.now(timezone.utc)
-    
-    for guild in bot.guilds:
-        guild_id = str(guild.id)
-        prisoners_data = collection.find({"guild_id": guild_id})
+async def check_prisoners_loop():
+    await bot.wait_until_ready()  # انتظر حتى يشتغل البوت بالكامل
 
-        for prisoner in prisoners_data:
-            release_time = prisoner.get("release_time")
-            if release_time and release_time <= now:
-                member = guild.get_member(prisoner["user_id"])
-                if member:
-                    # Call the release function
-                    await release_member(None, member, silent=True)  # Call release_member with silent=True to avoid messages
-                    
-                    # Optionally remove the record from the database if the member is released
-                    collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+    while not bot.is_closed():
+        now = datetime.now(timezone.utc)
 
-    # Call this function periodically (e.g., every minute) to check for released prisoners
-    await asyncio.sleep(60)
-    await check_prisoners()
+        for guild in bot.guilds:
+            guild_id = str(guild.id)
+            prisoners_data = collection.find({"guild_id": guild_id})
+
+            for prisoner in prisoners_data:
+                release_time = prisoner.get("release_time")
+                if release_time:
+                    if isinstance(release_time, str):
+                        release_time = datetime.fromisoformat(release_time)
+
+                    if release_time <= now:
+                        member = guild.get_member(prisoner["user_id"])
+                        if member:
+                            await release_member(None, member, silent=True)
+
+        await asyncio.sleep(60)
 
 @bot.event
 async def on_ready():
@@ -145,7 +146,7 @@ async def on_ready():
     exception_manager = ExceptionManager(db)
 
     # Call check_prisoners once at startup
-    await check_prisoners()
+    await check_prisoners_loop()
 
     # Start checking for released prisoners every minute after the bot is ready
     bot.loop.create_task(check_prisoners())
@@ -884,7 +885,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     await release_member(ctx, member)
 
 async def release_member(ctx, member: discord.Member, silent=False):
-    guild = ctx.guild
+    guild = member.guild if ctx is None else ctx.guild
     server_data = guilds_collection.find_one({"guild_id": str(guild.id)})
 
     if not server_data:
@@ -894,7 +895,7 @@ async def release_member(ctx, member: discord.Member, silent=False):
     if not prisoner_role_id:
         return
 
-    prisoner_role = ctx.guild.get_role(int(prisoner_role_id))
+    prisoner_role = guild.get_role(int(prisoner_role_id))
 
     data = collection.find_one({"user_id": member.id, "guild_id": guild.id})
     if not data:
@@ -911,8 +912,7 @@ async def release_member(ctx, member: discord.Member, silent=False):
 
     collection.delete_one({"user_id": member.id, "guild_id": guild.id})
 
-    # Only send the message if silent is False
-    if not silent:
+    if not silent and ctx:
         await ctx.send(f"{member.mention} has been released from jail.")
 
 @bot.command(aliases=['باقي', 'مدة_السجن', 'remaining'])
