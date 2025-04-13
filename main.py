@@ -849,7 +849,8 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     server_icon_url = guild.icon.url
     saudi_tz = ZoneInfo("Asia/Riyadh")
     now_saudi = datetime.now(saudi_tz)
-    embed.set_footer(text=f"Neral • {now_saudi.strftime('%-m/%-d/%Y %-I:%M %p')}", icon_url=server_icon_url)    await ctx.message.reply(embed=embed)
+    embed.set_footer(text=f"Neral • {now_saudi.strftime('%-m/%-d/%Y %-I:%M %p')}", icon_url=server_icon_url)
+    await ctx.message.reply(embed=embed)
     
     await asyncio.sleep(delta.total_seconds())
     await release_member(ctx, member)
