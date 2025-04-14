@@ -928,6 +928,7 @@ async def كم(ctx):
 
     if not data or "release_time" not in data:
         await ctx.reply("❌ | You are not currently in jail.", delete_after=15)
+        await ctx.message.delete(delay=15)
         return
 
     release_time = data["release_time"]
@@ -945,6 +946,7 @@ async def كم(ctx):
 
     if remaining.total_seconds() <= 0:
         await ctx.reply("✅ | Your jail time has expired, you should be released soon!", delete_after=15)
+        await ctx.message.delete(delay=15)
     else:
         hours, remainder = divmod(int(remaining.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -956,6 +958,7 @@ async def كم(ctx):
             f"⏰ | Release time (Saudi): `{release_time_str}`",
             delete_after=15
         )
+        await ctx.message.delete(delay=15)
         
 # Prisoners command
 @commands.has_permissions(administrator=True)
