@@ -927,7 +927,7 @@ async def كم(ctx):
     data = collection.find_one({"user_id": member.id, "guild_id": ctx.guild.id})
 
     if not data or "release_time" not in data:
-        await ctx.reply("❌ | You are not currently in jail.")
+        await ctx.reply("❌ | You are not currently in jail.", delete_after=15)
         return
 
     release_time = data["release_time"]
@@ -944,7 +944,7 @@ async def كم(ctx):
     remaining = release_time - now
 
     if remaining.total_seconds() <= 0:
-        await ctx.reply("✅ | Your jail time has expired, you should be released soon!")
+        await ctx.reply("✅ | Your jail time has expired, you should be released soon!", delete_after=15)
     else:
         hours, remainder = divmod(int(remaining.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -953,7 +953,8 @@ async def كم(ctx):
 
         await ctx.reply(
             f"⏳ | Remaining jail time: `{hours}h {minutes}m {seconds}s`\n"
-            f"⏰ | Release time (Saudi): `{release_time_str}`"
+            f"⏰ | Release time (Saudi): `{release_time_str}`",
+            delete_after=15
         )
         
 # Prisoners command
