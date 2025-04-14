@@ -1010,7 +1010,8 @@ async def سجين(ctx):
     else:
         embed.description = "\n".join(jailed_list)
 
-    await ctx.message.reply(embed=embed)
+    await ctx.message.reply(embed=embed, delete_after=15)
+    await ctx.message.delete(delay=15)
 
 # Pardon command
 @commands.has_permissions(administrator=True)
