@@ -695,7 +695,7 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
 
     try:
         fetched_user = await bot.fetch_user(user.id)
-        await ctx.guild.ban(fetched_user, reason=reason)
+        await ctx.guild.ban(fetched_user, delete_message_days=0, reason=reason)
 
         embed = discord.Embed(
             title="✅ User Banned!",
