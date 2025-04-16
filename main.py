@@ -693,28 +693,25 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
         await ctx.message.reply("You cannot ban yourself!")
         return
 
-    # if user.top_role >= ctx.guild.me.top_role:
-    #     await ctx.message.reply("❌ | I cannot jail this member because their role is equal to or higher than mine.")
-    #     return
-
     try:
-        if user:
-            user_id = user.id
+        fetched_user = await bot.fetch_user(user.id)
+        await ctx.guild.ban(fetched_user, reason=reason)
 
-        # محاولة الحصول على المستخدم من السيرفر
-        member = ctx.guild.get_member(user_id)
+        embed = discord.Embed(
+            title="✅ User Banned!",
+            description=f"**User:** {fetched_user.mention} (`{fetched_user.id}`)\n**Reason:** {reason}",
+            color=discord.Color.red()
+        )
+        embed.set_footer(text=f"Banned by {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
 
-        if member:
-            await member.ban(reason=reason)
-            await ctx.message.reply(f"{member.mention} has been banned. Reason: {reason}")
-        else:
-            # إذا كان العضو غير موجود في السيرفر
-            await ctx.message.reply(f"User with ID `{user_id}` is not in the server, so the ban cannot be applied.")
+        await ctx.message.reply(embed=embed)
 
+    except discord.NotFound:
+        await ctx.message.reply("❌ User not found. Make sure the ID is correct.")
+    except discord.Forbidden:
+        await ctx.message.reply("❌ I don't have permission to ban this user.")
     except discord.HTTPException as e:
-        # إذا حدث خطأ في واجهة Discord API
         await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
-
 
 # Unban command
 @bot.command(aliases=['unban', 'un'])
