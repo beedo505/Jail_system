@@ -898,13 +898,16 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     # Send embed
     embed = discord.Embed(title="تم السجن بنجاح", color=0x2f3136)
     embed.add_field(name="الشخص:", value=f"{member.mention}", inline=False)
-    embed.add_field(name="المدة:", value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", inline=False)
+    embed.add_field(
+        name="المدة:", 
+        value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", 
+        inline=False
+    )
     embed.add_field(name="السبب:", value=f"{reason}", inline=False)
     
-    server_icon_url = guild.icon.url
-    saudi_tz = ZoneInfo("Asia/Riyadh")
-    now_saudi = datetime.now(saudi_tz)
-    embed.set_footer(text=f"Neral • {now_saudi.strftime('%-m/%-d/%Y %-I:%M %p')}", icon_url=server_icon_url)
+    embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+    embed.timestamp = datetime.utcnow()
+    
     await ctx.message.reply(embed=embed)
     
     await asyncio.sleep(delta.total_seconds())
