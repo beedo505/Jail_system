@@ -896,14 +896,15 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     )
 
     # Send embed
-    embed = discord.Embed(title="تم السجن بنجاح", color=0x2f3136)
-    embed.add_field(name="الشخص:", value=f"{member.mention}", inline=False)
-    embed.add_field(
-        name="المدة:", 
-        value=f"{time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"{duration}", 
-        inline=False
+    embed = discord.Embed(
+        title="**تم السجن بنجاح**",
+        description=(
+            f"الشخص: {member.mention}\n"
+            f"المدة: {time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"المدة: {duration}\n"
+            f"السبب: {reason}"
+        ),
+        color=0x2f3136
     )
-    embed.add_field(name="السبب:", value=f"{reason}", inline=False)
     
     embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
     embed.timestamp = datetime.utcnow()
