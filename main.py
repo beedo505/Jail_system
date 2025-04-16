@@ -713,42 +713,65 @@ async def زوطلي(ctx, user: discord.User = None, *, reason = "No reason"):
     except discord.HTTPException as e:
         await ctx.message.reply(f"An error occurred while trying to ban the user: {e}")
 
-# Unban command
 @bot.command(aliases=['unban', 'un'])
 @commands.has_permissions(ban_members=True)
 async def فك(ctx, *, user_input=None):
     if user_input is None:
-        await ctx.message.reply("Please mention the user or their ID to unban")
-        return
-
-    if user_input == ctx.author:
-        await ctx.message.reply("You cannot unban yourself")
+        await ctx.reply("Please mention the user or their ID to unban.")
         return
 
     try:
-        # تحقق إذا كان المدخل هو منشن أو ID
+        # تحديد الـ ID سواء من منشن أو ID مباشرة
         if user_input.startswith("<@") and user_input.endswith(">"):
             user_id = int(user_input[2:-1].replace("!", ""))  # استخراج ID من المنشن
         else:
-            user_id = int(user_input)  # استخدام ID مباشرةً
+            user_id = int(user_input)  # استخدام ID مباشرة
 
-        # محاولة الحصول على قائمة الباندات باستخدام async for
+        # البحث في قائمة الباندات
         async for ban_entry in ctx.guild.bans():
             if ban_entry.user.id == user_id:
-                # إذا كان العضو محظورًا
-                await ctx.guild.unban(ban_entry.user)  # إلغاء الحظر باستخدام كائن user من BanEntry
-                await ctx.message.reply(f"User with ID `{user_id}` has been unbanned.")
+                await ctx.guild.unban(ban_entry.user)  # فك الباند
+
+                embed = discord.Embed(
+                    title="✅ Unban Successful",
+                    description=f"User {ban_entry.user.mention} (`{ban_entry.user.id}`) has been unbanned.",
+                    color=discord.Color.green()
+                )
+                embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+                embed.timestamp = ctx.message.created_at  # الوقت
+
+                await ctx.reply(embed=embed)
                 return
 
-        # إذا لم يكن العضو متبندًا
-        await ctx.message.reply(f"User with ID `{user_id}` is not banned.")
+        # لو ما كان متبند
+        embed = discord.Embed(
+            title="❌ Unban Failed",
+            description=f"User with ID `{user_id}` is not banned.",
+            color=discord.Color.red()
+        )
+        embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+        embed.timestamp = ctx.message.created_at
+        await ctx.reply(embed=embed)
 
     except ValueError:
-        # إذا لم يكن المدخل صالحًا (ليس ID أو منشن صحيح)
-        await ctx.message.reply("Invalid input. Please mention a user (`@username`) or their ID.")
+        embed = discord.Embed(
+            title="⚠️ Invalid Input",
+            description="Please mention a user (`@username`) or enter their ID correctly.",
+            color=discord.Color.orange()
+        )
+        embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+        embed.timestamp = ctx.message.created_at
+        await ctx.reply(embed=embed)
+
     except discord.HTTPException as e:
-        # إذا حدث خطأ آخر في واجهة Discord API
-        await ctx.message.reply(f"An error occurred while trying to unban the user: {e}")
+        embed = discord.Embed(
+            title="❌ An Error Occurred",
+            description=f"Failed to unban the user: `{e}`",
+            color=discord.Color.red()
+        )
+        embed.set_footer(text=f"Action by: {ctx.author}", icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+        embed.timestamp = ctx.message.created_at
+        await ctx.reply(embed=embed)
         
 # Jail command
 @commands.has_permissions(administrator=True)
