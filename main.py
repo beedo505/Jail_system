@@ -896,11 +896,16 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     )
 
     # Send embed
+    if duration[-1] == "m" and time_value < 1:
+        duration_text = f"المدة: {time_value} ثواني"
+    else:
+        duration_text = f"المدة: {duration}"
+        
     embed = discord.Embed(
         title="**تم السجن بنجاح**",
         description=(
             f"الشخص: {member.mention}\n"
-            f"المدة: {time_value} ثواني" if duration[-1] == "m" and time_value < 1 else f"المدة: {duration}\n"
+            f"{duration_text}\n"
             f"السبب: {reason}"
         ),
         color=0x2f3136
