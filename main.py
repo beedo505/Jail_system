@@ -232,10 +232,9 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    blacklisted_users = [1345047775909380126]
+    blacklisted_users = [1345047775909380126, 828944958354489345]
 
     if message.author.id in blacklisted_users:
-        await message.channel.send("You are banned from using bot commands.")
         return  # نوقف أي أوامر من التنفيذ
 
     # Log user messages
