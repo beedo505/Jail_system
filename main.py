@@ -232,11 +232,6 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    blacklisted_users = [1345047775909380126, 828944958354489345]
-
-    if message.author.id in blacklisted_users:
-        return  # نوقف أي أوامر من التنفيذ
-
     # Log user messages
     guild = message.guild
     user_id = message.author.id
