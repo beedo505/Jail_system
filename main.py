@@ -124,7 +124,7 @@ async def check_prisoners_loop():
         now = datetime.now(timezone.utc)  # وقت UTC الحالي
 
         for guild in bot.guilds:
-            guild_id = str(guild.id)
+            guild_id = guild.id
             prisoners_data = collection.find({"guild_id": guild_id})
 
             for prisoner in prisoners_data:
@@ -150,7 +150,7 @@ async def check_prisoners_once():
     now = datetime.now(timezone.utc)
 
     for guild in bot.guilds:
-        guild_id = str(guild.id)
+        guild_id = guild.id
         prisoners_data = collection.find({"guild_id": guild_id})
 
         for prisoner in prisoners_data:
