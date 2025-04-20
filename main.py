@@ -146,13 +146,34 @@ async def check_prisoners_loop():
         # النوم لمدة 60 ثانية قبل التحقق مرة أخرى
         await asyncio.sleep(60)
 
+async def check_prisoners_once():
+    now = datetime.now(timezone.utc)
+
+    for guild in bot.guilds:
+        guild_id = str(guild.id)
+        prisoners_data = collection.find({"guild_id": guild_id})
+
+        for prisoner in prisoners_data:
+            release_time = prisoner.get("release_time")
+            if release_time:
+                if isinstance(release_time, str):
+                    release_time = datetime.fromisoformat(release_time)
+
+                if release_time <= now:
+                    member = guild.get_member(prisoner["user_id"])
+                    if member:
+                        await release_member(None, member, silent=True)
+                        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+                    else:
+                        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+                        
 @bot.event
 async def on_ready():
     print(f"✅ Bot is ready! Logged in as {bot.user.name}")
     exception_manager = ExceptionManager(db)
 
     # Call check_prisoners once at startup
-    await check_prisoners_loop()
+    await check_prisoners_once()
 
     # Start checking for released prisoners every minute after the bot is ready
     bot.loop.create_task(check_prisoners_loop())
