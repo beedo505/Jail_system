@@ -122,6 +122,16 @@ async def check_prisoners_loop():
 
     while not bot.is_closed():
         now = datetime.now(timezone.utc)  # وقت UTC الحالي
+        
+    channel_id = prisoner.get("channel_id")
+    channel = guild.get_channel(channel_id) if channel_id else None
+    
+    if member:
+        await release_member(None, member, silent=True)
+        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+        
+    if channel:
+        await channel.send(f"✅ {member.mention} has been automatically released from jail!")
 
         for guild in bot.guilds:
             guild_id = guild.id
@@ -148,6 +158,16 @@ async def check_prisoners_loop():
 
 async def check_prisoners_once():
     now = datetime.now(timezone.utc)
+
+    channel_id = prisoner.get("channel_id")
+    channel = guild.get_channel(channel_id) if channel_id else None
+    
+    if member:
+        await release_member(None, member, silent=True)
+        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+        
+    if channel:
+        await channel.send(f"✅ {member.mention} has been automatically released from jail!")
 
     for guild in bot.guilds:
         guild_id = guild.id
@@ -922,6 +942,7 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
             "roles": previous_roles,
             "release_time": release_time.astimezone(timezone.utc).isoformat()
         }},
+        "channel_id": ctx.channel.id,
         upsert=True
     )
 
