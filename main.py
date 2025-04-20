@@ -155,17 +155,23 @@ async def check_prisoners_once():
 
         for prisoner in prisoners_data:
             release_time = prisoner.get("release_time")
+            print(f"Checking prisoner {prisoner['user_id']} in guild {guild_id} | Release Time: {release_time}")
+
             if release_time:
                 if isinstance(release_time, str):
                     release_time = datetime.fromisoformat(release_time)
+
+                print(f"Current UTC: {now} | Scheduled Release: {release_time}")
 
                 if release_time <= now:
                     member = guild.get_member(prisoner["user_id"])
                     if member:
                         await release_member(None, member, silent=True)
                         collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+                        print(f"✅ Released prisoner {prisoner['user_id']} from guild {guild_id}")
                     else:
                         collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
+                        print(f"⚠️ Member {prisoner['user_id']} not found in guild {guild_id}, entry deleted.")
                         
 @bot.event
 async def on_ready():
