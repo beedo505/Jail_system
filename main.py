@@ -122,16 +122,6 @@ async def check_prisoners_loop():
 
     while not bot.is_closed():
         now = datetime.now(timezone.utc)  # وقت UTC الحالي
-        
-    channel_id = prisoner.get("channel_id")
-    channel = guild.get_channel(channel_id) if channel_id else None
-    
-    if member:
-        await release_member(None, member, silent=True)
-        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
-        
-    if channel:
-        await channel.send(f"✅ {member.mention} has been automatically released from jail!")
 
         for guild in bot.guilds:
             guild_id = guild.id
@@ -148,9 +138,18 @@ async def check_prisoners_loop():
                     # إذا حان وقت الإفراج
                     if release_time <= now:
                         member = guild.get_member(prisoner["user_id"])
-                        
+
+                        # احصل على الـ channel_id
+                        channel_id = prisoner.get("channel_id")  # يجب أن يكون هنا
+
                         if member:
                             await release_member(None, member, silent=True)
+
+                            if channel_id:  # إذا كان هناك channel_id
+                                channel = guild.get_channel(channel_id)
+                                if channel:
+                                    await channel.send(f"✅ <@{member.id}> has been automatically released!")
+
                             collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
         
         # النوم لمدة 60 ثانية قبل التحقق مرة أخرى
@@ -159,23 +158,12 @@ async def check_prisoners_loop():
 async def check_prisoners_once():
     now = datetime.now(timezone.utc)
 
-    channel_id = prisoner.get("channel_id")
-    channel = guild.get_channel(channel_id) if channel_id else None
-    
-    if member:
-        await release_member(None, member, silent=True)
-        collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
-        
-    if channel:
-        await channel.send(f"✅ {member.mention} has been automatically released from jail!")
-
     for guild in bot.guilds:
         guild_id = guild.id
         prisoners_data = collection.find({"guild_id": guild_id})
 
         for prisoner in prisoners_data:
             release_time = prisoner.get("release_time")
-            print(f"Checking prisoner {prisoner['user_id']} in guild {guild_id} | Release Time: {release_time}")
 
             if release_time:
                 if isinstance(release_time, str):
@@ -184,17 +172,20 @@ async def check_prisoners_once():
                 if release_time.tzinfo is None:
                     release_time = release_time.replace(tzinfo=timezone.utc)
 
-                print(f"Current UTC: {now} | Scheduled Release: {release_time}")
-
                 if release_time <= now:
+                    channel_id = prisoner.get("channel_id")  # ← هذا يكون هنا
                     member = guild.get_member(prisoner["user_id"])
                     if member:
                         await release_member(None, member, silent=True)
+                        
+                        if channel_id:
+                            channel = guild.get_channel(channel_id)
+                            if channel:
+                                await channel.send(f"✅ <@{member.id}> has been automatically released!")
+                        
                         collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
-                        print(f"✅ Released prisoner {prisoner['user_id']} from guild {guild_id}")
                     else:
                         collection.delete_one({"user_id": prisoner["user_id"], "guild_id": guild_id})
-                        print(f"⚠️ Member {prisoner['user_id']} not found in guild {guild_id}, entry deleted.")
                         
 @bot.event
 async def on_ready():
