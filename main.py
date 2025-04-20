@@ -937,12 +937,11 @@ async def سجن(ctx, member: discord.Member = None, duration: str = None, *, re
     await member.edit(roles=[prisoner_role])  # حذف كل الرتب وإعطاء رتبة السجن
 
     collection.update_one(
-        {"user_id": member.id, "guild_id": ctx.guild.id},
+        {"user_id": member.id, "guild_id": ctx.guild.id, "channel_id": ctx.channel.id},
         {"$set": {
             "roles": previous_roles,
             "release_time": release_time.astimezone(timezone.utc).isoformat()
         }},
-        "channel_id": ctx.channel.id,
         upsert=True
     )
 
