@@ -160,6 +160,9 @@ async def check_prisoners_once():
             if release_time:
                 if isinstance(release_time, str):
                     release_time = datetime.fromisoformat(release_time)
+                
+                if release_time.tzinfo is None:
+                    release_time = release_time.replace(tzinfo=timezone.utc)
 
                 print(f"Current UTC: {now} | Scheduled Release: {release_time}")
 
